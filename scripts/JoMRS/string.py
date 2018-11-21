@@ -75,8 +75,7 @@ def replaceInvalidPrefix(string):
         logger.log(
             level='warning', message='Prefix should specifide a side',
             logger=moduleLogger)
-    rePattern = re.compile(
-        "_[lrmn]+_|_[LRMN]+_|^[lrmnLRMN]_+|_[lrmnLRMN][0-9]+_|^[0-9][lrmnLRMN]_+|^[lrmnLRMN][0-9]_|_[0-9][lrmnLRMN]_")
+    rePattern = re.compile("_[lrmn]+_|_[LRMN]+_|^[lrmnLRMN]_+|_[lrmnLRMN][0-9]+_|^[0-9][lrmnLRMN]_+|^[lrmnLRMN][0-9]_|_[0-9][lrmnLRMN]_")
     reMatch = re.search(rePattern, string)
     if reMatch:
         instance = reMatch.group(0)
