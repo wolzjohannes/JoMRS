@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 10 / 29
+# Date:       2018 / 12 / 09
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -214,7 +214,21 @@ def addEnumAttribute(node, name, enum, value=0, keyable=True,
 
     return enumDic
 
-def add
+
+def addSeparatorAttr(node, name):
+    """
+    Function to add a separator attribute.
+    Args:
+            node(dagNode): The node to add the attribute.
+            name(str): Longname of the attribute.
+    """
+    if name:
+        addEnumAttribute(node=node, name=name, enum='#######',
+                         keyable=False, lock=True)
+        return
+    logger.log(level='error', message='no attributes name specified',
+               logger=moduleLogger)
+    return
 
 
 def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
@@ -399,7 +413,9 @@ def reArrangeUsdAttributesByName(node, attributeName=None,
             newIndex(int): new position of the attibute.
             stepUp(bool): newIndex = oldIndex - 1.
             stepDown(bool): newIndex = oldIndex + 1.
-
+    Return:
+            list with dicts: The rearranged userdefined
+            attributes.
     """
     usdAttr = getUsdAttributes(node=node, index=True)
     for x in range(len(usdAttr)):
@@ -495,4 +511,54 @@ def moveAttributeInChannelBox(node, attributeName=None,
                        logger=moduleLogger)
     reCreateAttr()
 
-# still to do is the move attribute to another object function
+
+@undo
+def transferAttributes(source, target, outputConnections=None,
+                       inputConnections=None):
+    """
+    Transfers the userdefined attributes from a source object
+    to a target object.
+    By default its not recreating connections.
+    Args:
+            source(dagNode): The node with the source attributes.
+            target(dagNode): The target node.
+            outputConnections(bool): Recreate output connections.
+            inputConnections(bool): Recreate input connections.
+    Return:
+            list with dicts: The userdefined Attribute of the
+            source object.
+    """
+    sourceUsdAttr = getUsdAttributes(node=source, index=True)
+    if sourceUsdAttr:
+        for attr_ in sourceUsdAttr:
+            if attr_['attrType'] == 'string':
+                target.addAttr(attr_['usdAttr'].split('.')[1],
+                               dt=attr_['attrType'], hidden=attr_['hidden'],
+                               keyable=attr_['keyable'], en=attr_['enums'])
+            else:
+                target.addAttr(attr_['usdAttr'].split('.')[1],
+                               at=attr_['attrType'], hidden=attr_['hidden'],
+                               keyable=attr_['keyable'], en=attr_['enums'])
+            target.attr(attr_['usdAttr'].split('.')[1]).set(attr_['value'],
+                                                            lock=attr_['lock'],
+                                                            keyable=attr_
+                                                            ['keyable'],
+                                                            channelBox=attr_
+                                                            ['channelBox'])
+            if inputConnections:
+                if attr_['input']:
+                    attr_['input'][0].connect(pmc.PyNode(str(attr_['usdAttr'])
+                                              .replace(str(source),
+                                              str(target))), force=True)
+            if outputConnections:
+                if attr_['output']:
+                    for out in attr_['output']:
+                        pmc.PyNode(str(attr_['usdAttr']).replace(str(source),
+                                   str(target))).connect(out, force=True)
+        logger.log(level='info',
+                   message='Attributes transfered from ' + str(source) +
+                   ' to ' + str(target), logger=moduleLogger)
+        return sourceUsdAttr
+    logger.log(level='error',
+               message='No user defined attributes found for ' +
+               str(source), logger=moduleLogger)

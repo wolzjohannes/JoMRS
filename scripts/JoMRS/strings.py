@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 10 / 11
+# Date:       2018 / 12 / 09
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -33,17 +33,18 @@ JoMRS string module. Module for string handling and naming conventions.
 import re
 import logging
 import logger
-reload(logger)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
 
-def normalizePrefix(string):
+def normalizePrefix(string, logger_=moduleLogger):
     """
     Normalize the string start. It cut offs the first letter and
     put a '_' inbetween.
     Args:
             string(str): The string you want to normalize the start.
+            logger_(instance): The logging instance of
+            a module.
     Return:
             The string with the normalized start.
     """
@@ -55,15 +56,17 @@ def normalizePrefix(string):
             return newString
         return string
     logger.log(level='warning', message='Prefix has a number',
-               logger=moduleLogger)
+               logger=logger_)
     return string
 
 
-def replaceInvalidPrefix(string):
+def replaceInvalidPrefix(string, logger_=moduleLogger):
     """
     Replace invalid side start characters of a string and replace it.
     Args:
             string(str): The string you want to prepare.
+            logger_(instance): The logging instance of
+            a module.
     Return:
             The string with the new replaced start character.
     """
@@ -72,10 +75,12 @@ def replaceInvalidPrefix(string):
     if re.match("^[MRL]_", string):
         return string
     if not re.match("^[MRL]_", string):
-        logger.log(
-            level='warning', message='Prefix should specifide a side',
-            logger=moduleLogger)
-    rePattern = re.compile("_[lrmn]+_|_[LRMN]+_|^[lrmnLRMN]_+|_[lrmnLRMN][0-9]+_|^[0-9][lrmnLRMN]_+|^[lrmnLRMN][0-9]_|_[0-9][lrmnLRMN]_")
+        logger.log(level='warning', message='Prefix of string "' +
+                   string + '" should specifie a side',
+                   logger=logger_)
+    rePattern = re.compile("_[lrmn]+_|_[LRMN]+_|^[lrmnLRMN]_+"
+                           "|_[lrmnLRMN][0-9]+_|^[0-9][lrmnLRMN]_+"
+                           "|^[lrmnLRMN][0-9]_|_[0-9][lrmnLRMN]_")
     reMatch = re.search(rePattern, string)
     if reMatch:
         instance = reMatch.group(0)
@@ -121,37 +126,42 @@ def replaceHashWithPadding(string, index):
     return re.sub("#+", digit, string)
 
 
-def normalizeSuffix(string):
+def normalizeSuffix(string, logger_=moduleLogger):
     """
     Replace numbers in the suffix with a ''.
     And if the suffix is lowercase it will turn it uppercase.
     Args:
             string(str): The string to work with
+            logger_(instance): The logging instance of
+            a module.
     Return:
             The new created string.
     """
-    if re.search("[A-Z]{1,}$", string):
+    if re.search("_[A-Z]{1,}$", string):
         return string
     numbers = re.search("[0-9]{1,}$", string)
     if numbers:
+        logger.log(
+            level='warning', message='Suffix of string "' + string +
+            '" should not have a number. Numbers removed from the suffix',
+            logger=logger_)
         instance = numbers.group(0)
         string = string[0:string.find(instance)]
-        logger.log(
-            level='warning', message='Suffix should not have a number',
-            logger=moduleLogger)
-    lowerCase = re.search("[a-z]{1,}$", string)
+    lowerCase = re.search("_[a-z]{1,}$", string)
     if lowerCase:
         instance_ = lowerCase.group(0)
         string = string[0:string.find(instance_)] + instance_.upper()
     return string
 
 
-def normalizeNumbers(string):
+def normalizeNumbers(string, logger_=moduleLogger):
     """
     Finds the numbers in the string and move them to the correct
     position in the string.
     Args:
             string(str): The string to work with.
+            logger_(instance): The logging instance of
+            a module.
     Return:
             The new created string.
     """
@@ -164,4 +174,63 @@ def normalizeNumbers(string):
             instance) + len(instance):].split('_')[-1]
         string = string.replace(instance, '_')
         string = string.replace('_' + stringEnd, instance + stringEnd)
+    else:
+        logger.log(level='warning',
+                   message='There are no numbers in the string "' +
+                   string + '"', logger=logger_)
+    return string
+
+
+def valid_suffix(string, logger_=moduleLogger):
+    """
+    Finds valid suffix in a string. If not it throw a warning message.
+    Args:
+            string(str): The string to check.
+            logger_(instance): The logging instance of
+            a module.
+    Return:
+            string: The passed string.
+    """
+    suffixPattern = re.compile("_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON")
+    if not re.search(suffixPattern, string):
+        logger.log(level='warning',
+                   message='string "' + string + '" has no valid suffix.' +
+                   ' Valid are [_CRV,_HANDLE,_JNT,_GEO,_GRP,_CON]',
+                   logger=logger_)
+    return string
+
+
+def valid_stringSeparator(string, logger_=moduleLogger):
+    """
+    Finds valid separator in a string. If not it throw a warning message.
+    Args:
+            string(str): The string to check.
+            logger_(instance): The logging instance of
+            a module.
+    Return:
+            string: The passed string.
+    """
+    if not re.search('_', string):
+        logger.log(level='warning',
+                   message='string "' + string +
+                   '" has no valid separator. Valid is "_"',
+                   logger=logger_)
+    return string
+
+
+def string_checkup(string, logger_=moduleLogger):
+    """
+    String checkups.
+    Args:
+            string(str): The string to check.
+            logger_(instance): The logging instance of
+            a module.
+    Return:
+            string: The passed string.
+    """
+    string = valid_stringSeparator(string, logger_)
+    string = valid_suffix(string, logger_)
+    string = replaceInvalidPrefix(string, logger_)
+    string = normalizeNumbers(string, logger_)
+    string = normalizeSuffix(string, logger_)
     return string
