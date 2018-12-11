@@ -27,8 +27,8 @@ JoMRS string module. Module for string handling and naming conventions.
 """
 
 ##########################################################
-## TO DO:
-## config file for valid strings. For projects modifiactions
+# To Do
+# A config file for strings. For projects modifications.
 ##########################################################
 
 import re

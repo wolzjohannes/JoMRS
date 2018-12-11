@@ -68,14 +68,12 @@ def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
     """
     Create a splineIK.
     Args:
-            name(str): The spline IK name. You should follow
-            the JoMRS naming convention. If not it will throw some
+            name(str): The spline IK name. You should follow the
+            JoMRS naming convention. If not it will throw some
             warnings.
             startJNT(dagNode): The start joint of the chain.
             endJNT(dagNode): The end joint of the chain.
             parent(dagNode): The parent for the IK_handle.
-            curveParent(dagNode): The parent for the splineIKCurve.
-            curve(dagNode): A specifiec curve for the spline IK.
             snap(bool): Enable/Disalbe snap option of the IK.
             sticky(bool): Enable/Disalbe stickieness option of the IK.
             weight(float): Set handle weight.
@@ -131,7 +129,11 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     """
     Create a IK. Default is a single chain IK.
     Args:
+<<<<<<< HEAD
             name(str): The spline IK name. You should follow
+=======
+            name(str): The IK name. You should follow
+>>>>>>> tweak_mayautils
             the JoMRS naming convention. If not it will throw some
             warnings.
             solver(str): The solver of the IK.
@@ -143,8 +145,13 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
             weight(float): Set handle weight.
             poWeight(float): Set the poleVector weight.
     Return:
+<<<<<<< HEAD
             list(dagnodes): the ik Handle, the effector,
             the spline ik curve shape.    """
+=======
+            list(dagnodes): the ik Handle and the effector.
+    """
+>>>>>>> tweak_mayautils
     data = {}
     name = strings.string_checkup(name, moduleLogger)
     data['n'] = name
