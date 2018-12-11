@@ -129,11 +129,8 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     """
     Create a IK. Default is a single chain IK.
     Args:
-<<<<<<< HEAD
             name(str): The spline IK name. You should follow
-=======
             name(str): The IK name. You should follow
->>>>>>> tweak_mayautils
             the JoMRS naming convention. If not it will throw some
             warnings.
             solver(str): The solver of the IK.
@@ -145,13 +142,9 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
             weight(float): Set handle weight.
             poWeight(float): Set the poleVector weight.
     Return:
-<<<<<<< HEAD
             list(dagnodes): the ik Handle, the effector,
-            the spline ik curve shape.    """
-=======
-            list(dagnodes): the ik Handle and the effector.
+            the spline ik curve shape.
     """
->>>>>>> tweak_mayautils
     data = {}
     name = strings.string_checkup(name, moduleLogger)
     data['n'] = name
