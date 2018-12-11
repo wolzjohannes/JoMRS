@@ -20,14 +20,15 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 09
+# Date:       2018 / 12 / 11
 
 """
 JoMRS string module. Module for string handling and naming conventions.
 """
 
 ##########################################################
-
+# To Do
+# A config file for strings. For projects modifications.
 ##########################################################
 
 import re

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 09
+# Date:       2018 / 12 / 11
 
 """
 JoMRS maya utils module. Utilities helps
@@ -66,14 +66,12 @@ def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
     """
     Create a splineIK.
     Args:
-            name(str): The spline IK name. You should follow
-            the JoMRS naming convention. If not it will throw some
+            name(str): The spline IK name. You should follow the
+            JoMRS naming convention. If not it will throw some
             warnings.
             startJNT(dagNode): The start joint of the chain.
             endJNT(dagNode): The end joint of the chain.
             parent(dagNode): The parent for the IK_handle.
-            curveParent(dagNode): The parent for the splineIKCurve.
-            curve(dagNode): A specifiec curve for the spline IK.
             snap(bool): Enable/Disalbe snap option of the IK.
             sticky(bool): Enable/Disalbe stickieness option of the IK.
             weight(float): Set handle weight.
@@ -121,3 +119,45 @@ def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
     logger.log(level='info', message='Spline IK "' + name + '" created',
                logger=moduleLogger)
     return result
+
+
+def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
+              parent=None, snap=True, sticky=False,
+              weight=1, poWeight=1):
+    """
+    Create a IK. Default is a single chain IK.
+    Args:
+            name(str): The IK name. You should follow
+            the JoMRS naming convention. If not it will throw some
+            warnings.
+            solver(str): The solver of the IK.
+            startJNT(dagNode): The start joint of the chain.
+            endJNT(dagNode): The end joint of the chain.
+            parent(dagNode): The parent for the IK_handle.
+            snap(bool): Enable/Disalbe snap option of the IK.
+            sticky(bool): Enable/Disalbe stickieness option of the IK.
+            weight(float): Set handle weight.
+            poWeight(float): Set the poleVector weight.
+    Return:
+            list(dagnodes): the ik Handle and the effector.
+    """
+    data = {}
+    name = strings.string_checkup(name, moduleLogger)
+    data['n'] = name
+    data['solver'] = solver
+    data['sj'] = startJNT
+    data['ee'] = endJNT
+    ikHandle = pmc.ikHandle(**data)
+    pmc.rename(ikHandle[1], str(endJNT) + '_EFF')
+    if parent:
+        parent.addChild(ikHandle[0])
+    ikHandle[0].visibility.set(0)
+    if snap is False:
+        ikHandle[0].snapEnable.set(0)
+    if sticky:
+        ikHandle[0].stickiness.set(1)
+    ikHandle[0].attr('weight').set(weight)
+    ikHandle[0].attr('poWeight').set(poWeight)
+    logger.log(level='info', message=solver + ' "' + name + '" created',
+               logger=moduleLogger)
+    return ikHandle
