@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 09
+# Date:       2018 / 12 / 11
 
 """
 JoMRS attributes module. Module for attributes handling.
