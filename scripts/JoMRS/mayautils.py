@@ -165,8 +165,3 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     logger.log(level='info', message=solver + ' "' + name + '" created',
                logger=moduleLogger)
     return ikHandle
-
-
-
-
-
