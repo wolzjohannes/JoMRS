@@ -1,2 +1,5 @@
 # Specify filepatterns you want git to ignore.
-.pyc
+attributes.pyc
+logger.pyc
+mayautils.pyc
+strings.pyc
