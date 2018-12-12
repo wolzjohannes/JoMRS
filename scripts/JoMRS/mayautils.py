@@ -165,3 +165,15 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     logger.log(level='info', message=solver + ' "' + name + '" created',
                logger=moduleLogger)
     return ikHandle
+
+
+def constraint(typ='parentConstraint', source=None, target=None,
+               maintainOffset=True, axes=['x','y','z']):
+    result = []
+    skipAxes = ['x', 'y', 'z']
+    if typ == 'parentConstraint':
+        result = pmc.parentConstraint(source, target, mo=maintainOffset, skipRotate=skipAxes, skipTranslate=skipAxes)
+        for ax in axes:
+            result[0].attr('translate'+ax)
+
+
