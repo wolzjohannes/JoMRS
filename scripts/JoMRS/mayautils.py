@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 11
+# Date:       2018 / 12 / 12
 
 """
 JoMRS maya utils module. Utilities helps
@@ -168,12 +168,16 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
 
 
 def constraint(typ='parentConstraint', source=None, target=None,
-               maintainOffset=True, axes=['x','y','z']):
+               maintainOffset=True, axes=['X', 'Y', 'Z']):
     result = []
     skipAxes = ['x', 'y', 'z']
     if typ == 'parentConstraint':
-        result = pmc.parentConstraint(source, target, mo=maintainOffset, skipRotate=skipAxes, skipTranslate=skipAxes)
+        result = pmc.parentConstraint(source, target, mo=maintainOffset,
+                                      skipRotate=skipAxes,
+                                      skipTranslate=skipAxes)
         for ax in axes:
-            result[0].attr('translate'+ax)
+            result[0].attr('constraintTranslate' +
+                           ax.upper()).connect(target.attr('translate' +
+                                                           ax.upper()))
 
 
