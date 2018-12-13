@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 11
+# Date:       2018 / 12 / 12
 
 """
 JoMRS maya utils module. Utilities helps
@@ -29,6 +29,8 @@ to create maya behaviours.
 
 ###############
 # GLOBALS
+## TO DO:
+## config file for valid strings. For projects modifiactions
 ###############
 import pymel.core as pmc
 import attributes
@@ -127,6 +129,7 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     """
     Create a IK. Default is a single chain IK.
     Args:
+            name(str): The spline IK name. You should follow
             name(str): The IK name. You should follow
             the JoMRS naming convention. If not it will throw some
             warnings.
@@ -139,7 +142,8 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
             weight(float): Set handle weight.
             poWeight(float): Set the poleVector weight.
     Return:
-            list(dagnodes): the ik Handle and the effector.
+            list(dagnodes): the ik Handle, the effector,
+            the spline ik curve shape.
     """
     data = {}
     name = strings.string_checkup(name, moduleLogger)
@@ -161,3 +165,42 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     logger.log(level='info', message=solver + ' "' + name + '" created',
                logger=moduleLogger)
     return ikHandle
+
+
+def constraint(typ='parent', source=None, target=None,
+               maintainOffset=True, axes=['X', 'Y', 'Z']):
+    result = []
+    skipAxes = ['x', 'y', 'z']
+    if typ == 'parent':
+        result = pmc.parentConstraint(source, target, mo=maintainOffset,
+                                      skipRotate=skipAxes,
+                                      skipTranslate=skipAxes)
+        for ax in axes:
+            result.attr('constraintTranslate' +
+                        ax.upper()).connect(target.attr('translate' +
+                                                        ax.upper()))
+            result.attr('constraintRotate' +
+                        ax.upper()).connect(target.attr('rotate' +
+                                                        ax.upper()))
+    if typ == 'point':
+        result = pmc.pointConstraint(source, target, mo=maintainOffset,
+                                     skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintTranslate' +
+                        ax.upper()).connect(target.attr('translate' +
+                                                        ax.upper()))
+    if typ == 'orient':
+        result = pmc.orientConstraint(source, target, mo=maintainOffset,
+                                      skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintRotate' +
+                        ax.upper()).connect(target.attr('rotate' +
+                                                        ax.upper()))
+    if typ == 'scale':
+        result = pmc.scaleConstraint(source, target, mo=maintainOffset,
+                                     skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintScale' +
+                        ax.upper()).connect(target.attr('scale' +
+                                                        ax.upper()))
+
