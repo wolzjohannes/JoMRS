@@ -169,6 +169,19 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
 
 def constraint(typ='parent', source=None, target=None,
                maintainOffset=True, axes=['X', 'Y', 'Z']):
+    """
+    Create contraints. By default it creates a parentConstraint
+    with maintain offset.
+    Args:
+            typ(str): The constraint type.
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+    Return:
+            list: The created constraint.
+    """
     result = []
     skipAxes = ['x', 'y', 'z']
     if typ == 'parent':
@@ -203,4 +216,19 @@ def constraint(typ='parent', source=None, target=None,
             result.attr('constraintScale' +
                         ax.upper()).connect(target.attr('scale' +
                                                         ax.upper()))
+    return result
+
+
+def constraint_UI_node_(constraint):
+    attributes = ['translate', 'rotate', 'scale']
+    axes = ['X', 'Y', 'Z']
+    constraint_UI = pmc.createNode('transform', n='{}{}'.format(
+                                   str(constraint), '_UI_GRP'))
+    constraint_UI.visibility.set(lock=True, channelBox=False, keyable=False)
+    for attr_ in attributes:
+        for axe in axes:
+            constraint_UI = constraint_UI.attr(attr_ +
+                                               axe).set(lock=True,
+                                                        channelBox=False,
+                                                        keyable=False)
 
