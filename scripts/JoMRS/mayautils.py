@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 12
+# Date:       2018 / 12 / 14
 
 """
 JoMRS maya utils module. Utilities helps
@@ -29,8 +29,8 @@ to create maya behaviours.
 
 ###############
 # GLOBALS
-## TO DO:
-## config file for valid strings. For projects modifiactions
+# TO DO:
+# config file for valid strings. For projects modifiactions
 ###############
 import pymel.core as pmc
 import attributes
@@ -219,14 +219,15 @@ def constraint(typ='parent', source=None, target=None,
     return result
 
 
-def constraint_UI_node_(constraint=None, target=None):
+def constraint_UI_node_(constraint=None, source=None):
     attributes = ['translate', 'rotate', 'scale']
     axes = ['X', 'Y', 'Z']
-    if target and constraint:
-        if not isinstance(target, list):
-            target = [target]
+    if source and constraint:
+        if not isinstance(source, list):
+            source = [source]
         constraint_UI = pmc.createNode('transform', n='{}{}'.format(
                                        str(constraint), '_UI_GRP'))
+        constraint.addChild(constraint_UI)
         constraint_UI.visibility.set(lock=True,
                                      channelBox=False,
                                      keyable=False)
@@ -235,9 +236,8 @@ def constraint_UI_node_(constraint=None, target=None):
                 constraint_UI.attr(attr_ + axe).set(lock=True,
                                                     channelBox=False,
                                                     keyable=False)
-        for x in range(len(target)):
-            print x
-            longName = '{}_{}'.format(str(target[x]), 'W' + str(x))
+        for x in range(len(source)):
+            longName = '{}_{}'.format(str(source[x]), 'W' + str(x))
             constraint_UI.addAttr(longName, at='float', min=0, max=1, hxv=True,
                                   hnv=True, k=True)
             constraint_UI.attr(longName).set(1)
@@ -248,13 +248,17 @@ def constraint_UI_node_(constraint=None, target=None):
             pmc.deleteAttr(udAttr)
     else:
         logger.log(level='error',
-                   message='target and constraint needed for'
+                   message='source and constraint needed for'
                    ' constraint_UI_node', logger=moduleLogger)
     return constraint_UI
 
 
 def create_constraint(typ='parent', source=None, target=None,
-                      maintainOffset=True, axes=['X', 'Y', 'Z']):
+                      maintainOffset=True, axes=['X', 'Y', 'Z'],
+                      UI_node=False):
     constraint_ = constraint(typ=typ, source=source, target=target,
                              maintainOffset=maintainOffset, axes=axes)
-    constraint_UI_node_(constraint=constraint_, target=target)
+    if UI_node:
+        con_UI_node = constraint_UI_node_(constraint=constraint_,
+                                          source=source)
+
