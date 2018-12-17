@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 14
+# Date:       2018 / 12 / 17
 
 """
 JoMRS maya utils module. Utilities helps
@@ -221,7 +221,7 @@ def constraint(typ='parent', source=None, target=None,
 
 def constraint_UI_node_(constraint=None, source=None):
     """
-    Create a contraint UI node to uncycle the contraint graph.
+    Create a contraint UI node to uncycle the constraint graph.
     Args:
             constraint(constraintNode): The constraint to work with.
             source(dagnode): The source node.
@@ -262,7 +262,8 @@ def constraint_UI_node_(constraint=None, source=None):
 
 
 def no_pivots_no_rotateOrder_(constraint):
-    """Disconnect the connections to the pivot plugs of a constraint.
+    """
+    Disconnect the connections to the pivot plugs of a constraint.
     Args:
             constraint(PyNode): The specified constraint.
     """
@@ -293,7 +294,7 @@ def no_constrain_cycle(constraint=None, source=None):
             constraint(constraintNode): The constraint to work with.
             source(dagnode): The source node.
     Return:
-            tuple: The constraint UI node
+            tuple: The constraint UI node.
     """
     parent = source[0].getParent()
     if parent:

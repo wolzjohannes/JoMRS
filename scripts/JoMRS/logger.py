@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 11
+# Date:       2018 / 12 / 17
 
 """
 JoMRS logger module. Module which contains
@@ -36,7 +36,7 @@ import inspect
 import datetime
 
 VERSION = ['1', '0', '0']
-DATE = ['2018', '12', '11']
+DATE = ['2018', '12', '17']
 
 logging.basicConfig(level=logging.INFO)
 
