@@ -220,6 +220,14 @@ def constraint(typ='parent', source=None, target=None,
 
 
 def constraint_UI_node_(constraint=None, source=None):
+    """
+    Create a contraint UI node to uncycle the contraint graph.
+    Args:
+            constraint(constraintNode): The constraint to work with.
+            source(dagnode): The source node.
+    Return:
+            tuple: The created UI node.
+    """
     attributes = ['translate', 'rotate', 'scale']
     axes = ['X', 'Y', 'Z']
     if source and constraint:
@@ -254,7 +262,7 @@ def constraint_UI_node_(constraint=None, source=None):
 
 
 def no_pivots_no_rotateOrder_(constraint):
-    """Disconnect the connections to the pivot plugs of the constraint.
+    """Disconnect the connections to the pivot plugs of a constraint.
     Args:
             constraint(PyNode): The specified constraint.
     """
@@ -277,6 +285,16 @@ def no_pivots_no_rotateOrder_(constraint):
 
 
 def no_constrain_cycle(constraint=None, source=None):
+    """
+    Disconnect the parentInverseMatrix connection from the constraint.
+    And if the source node has a parent it plugs in the wolrdInverse Matrix
+    plug of the parent.
+    Args:
+            constraint(constraintNode): The constraint to work with.
+            source(dagnode): The source node.
+    Return:
+            tuple: The constraint UI node
+    """
     parent = source[0].getParent()
     if parent:
         constraint.constraintParentInverseMatrix.disconnect()
@@ -289,6 +307,26 @@ def no_constrain_cycle(constraint=None, source=None):
 def create_constraint(typ='parent', source=None, target=None,
                       maintainOffset=True, axes=['X', 'Y', 'Z'],
                       no_cycle=False, no_pivots=False, no_parent_influ=False):
+    """
+    Create constraints with a lot more functionality.
+    By default it creates a parentConstraint.
+    Args:
+            typ(str): The constraint type.
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+            no_cycle(bool): It creates a constraint_UI_node under
+            the parent constraint. And disconnect inner cycle
+            connections of the contraint.
+            no_pivots(bool): Disconnect the pivot plugs.
+            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            plug. So that the parent transformation of the source node
+            influnce the source node.
+    Return:
+            list: The constraint node, constraint_UI_node
+    """
     result = []
     constraint_ = constraint(typ=typ, source=source, target=target,
                              maintainOffset=maintainOffset, axes=axes)
@@ -301,4 +339,3 @@ def create_constraint(typ='parent', source=None, target=None,
     if no_parent_influ:
         constraint_.constraintParentInverseMatrix.disconnect()
     return result
-
