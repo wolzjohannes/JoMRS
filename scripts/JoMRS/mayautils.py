@@ -253,12 +253,52 @@ def constraint_UI_node_(constraint=None, source=None):
     return constraint_UI
 
 
+def no_pivots_no_rotateOrder_(constraint):
+    """Disconnect the connections to the pivot plugs of the constraint.
+    Args:
+            constraint(PyNode): The specified constraint.
+    """
+
+    exceptions = []
+    try:
+        constraint.constraintRotatePivot.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    try:
+        constraint.constraintRotateTranslate.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    try:
+        constraint.constraintRotateOrder.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    if exceptions:
+        logger.log(level='warning', message=exceptions, logger=moduleLogger)
+
+
+def no_constrain_cycle(constraint=None, source=None):
+    parent = source[0].getParent()
+    if parent:
+        constraint.constraintParentInverseMatrix.disconnect()
+        parent.worldInverseMatrix.connect
+        (constraint.constraintParentInverseMatrix)
+    return constraint_UI_node_(constraint=constraint,
+                               source=source)
+
+
 def create_constraint(typ='parent', source=None, target=None,
                       maintainOffset=True, axes=['X', 'Y', 'Z'],
-                      UI_node=False):
+                      no_cycle=False, no_pivots=False, no_parent_influ=False):
+    result = []
     constraint_ = constraint(typ=typ, source=source, target=target,
                              maintainOffset=maintainOffset, axes=axes)
-    if UI_node:
-        con_UI_node = constraint_UI_node_(constraint=constraint_,
-                                          source=source)
+    result.append(constraint_)
+    if no_cycle:
+        con_UI_node = no_constrain_cycle(constraint=constraint_, source=source)
+        result.append(con_UI_node)
+    if no_pivots:
+        no_pivots_no_rotateOrder_(constraint=constraint_)
+    if no_parent_influ:
+        constraint_.constraintParentInverseMatrix.disconnect()
+    return result
 
