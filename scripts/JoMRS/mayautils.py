@@ -285,7 +285,7 @@ def no_pivots_no_rotateOrder_(constraint):
         logger.log(level='warning', message=exceptions, logger=moduleLogger)
 
 
-def no_constrain_cycle(constraint=None, source=None):
+def no_constraint_cycle(constraint=None, source=None):
     """
     Disconnect the parentInverseMatrix connection from the constraint.
     And if the source node has a parent it plugs in the wolrdInverse Matrix
@@ -333,7 +333,7 @@ def create_constraint(typ='parent', source=None, target=None,
                              maintainOffset=maintainOffset, axes=axes)
     result.append(constraint_)
     if no_cycle:
-        con_UI_node = no_constrain_cycle(constraint=constraint_, source=source)
+        con_UI_node = no_constraint_cycle(constraint=constraint_, source=source)
         result.append(con_UI_node)
     if no_pivots:
         no_pivots_no_rotateOrder_(constraint=constraint_)
