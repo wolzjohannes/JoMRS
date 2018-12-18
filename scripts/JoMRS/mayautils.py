@@ -341,3 +341,10 @@ def create_constraint(typ='parent', source=None, target=None,
     if no_parent_influ:
         constraint_.constraintParentInverseMatrix.disconnect()
     return result
+
+
+def aim_constraint(source=None, target=None, maintainOffset=True,
+                   axes=['X', 'Y', 'Z'], aimAxes=['X', 'Y', 'Z'],
+                   upAxes=['X', 'Y', 'Z'], worldUpType='object',
+                   killUpVecObj=False, parentUpVecObj=None):
+
