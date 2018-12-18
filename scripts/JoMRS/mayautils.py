@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 12
+# Date:       2018 / 12 / 17
 
 """
 JoMRS maya utils module. Utilities helps
@@ -29,8 +29,8 @@ to create maya behaviours.
 
 ###############
 # GLOBALS
-## TO DO:
-## config file for valid strings. For projects modifiactions
+# TO DO:
+# config file for valid strings. For projects modifiactions
 ###############
 import pymel.core as pmc
 import attributes
@@ -129,7 +129,6 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     """
     Create a IK. Default is a single chain IK.
     Args:
-            name(str): The spline IK name. You should follow
             name(str): The IK name. You should follow
             the JoMRS naming convention. If not it will throw some
             warnings.
@@ -142,8 +141,6 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
             weight(float): Set handle weight.
             poWeight(float): Set the poleVector weight.
     Return:
-            list(dagnodes): the ik Handle, the effector,
-            the spline ik curve shape.
     """
     data = {}
     name = strings.string_checkup(name, moduleLogger)
@@ -167,17 +164,176 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     return ikHandle
 
 
-def constraint(typ='parentConstraint', source=None, target=None,
+def constraint(typ='parent', source=None, target=None,
                maintainOffset=True, axes=['X', 'Y', 'Z']):
+    """
+    Create contraints. By default it creates a parentConstraint
+    with maintain offset.
+    Args:
+            typ(str): The constraint type.
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+    Return:
+            list: The created constraint.
+    """
     result = []
     skipAxes = ['x', 'y', 'z']
-    if typ == 'parentConstraint':
+    if typ == 'parent':
         result = pmc.parentConstraint(source, target, mo=maintainOffset,
                                       skipRotate=skipAxes,
                                       skipTranslate=skipAxes)
         for ax in axes:
-            result[0].attr('constraintTranslate' +
-                           ax.upper()).connect(target.attr('translate' +
-                                                           ax.upper()))
+            result.attr('constraintTranslate' +
+                        ax.upper()).connect(target.attr('translate' +
+                                                        ax.upper()))
+            result.attr('constraintRotate' +
+                        ax.upper()).connect(target.attr('rotate' +
+                                                        ax.upper()))
+    if typ == 'point':
+        result = pmc.pointConstraint(source, target, mo=maintainOffset,
+                                     skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintTranslate' +
+                        ax.upper()).connect(target.attr('translate' +
+                                                        ax.upper()))
+    if typ == 'orient':
+        result = pmc.orientConstraint(source, target, mo=maintainOffset,
+                                      skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintRotate' +
+                        ax.upper()).connect(target.attr('rotate' +
+                                                        ax.upper()))
+    if typ == 'scale':
+        result = pmc.scaleConstraint(source, target, mo=maintainOffset,
+                                     skip=skipAxes)
+        for ax in axes:
+            result.attr('constraintScale' +
+                        ax.upper()).connect(target.attr('scale' +
+                                                        ax.upper()))
+    return result
 
 
+def constraint_UI_node_(constraint=None, source=None):
+    """
+    Create a contraint UI node to uncycle the constraint graph.
+    Args:
+            constraint(constraintNode): The constraint to work with.
+            source(dagnode): The source node.
+    Return:
+            tuple: The created UI node.
+    """
+    attributes = ['translate', 'rotate', 'scale']
+    axes = ['X', 'Y', 'Z']
+    if source and constraint:
+        if not isinstance(source, list):
+            source = [source]
+        constraint_UI = pmc.createNode('transform', n='{}{}'.format(
+                                       str(constraint), '_UI_GRP'))
+        constraint.addChild(constraint_UI)
+        constraint_UI.visibility.set(lock=True,
+                                     channelBox=False,
+                                     keyable=False)
+        for attr_ in attributes:
+            for axe in axes:
+                constraint_UI.attr(attr_ + axe).set(lock=True,
+                                                    channelBox=False,
+                                                    keyable=False)
+        for x in range(len(source)):
+            longName = '{}_{}'.format(str(source[x]), 'W' + str(x))
+            constraint_UI.addAttr(longName, at='float', min=0, max=1, hxv=True,
+                                  hnv=True, k=True)
+            constraint_UI.attr(longName).set(1)
+            constraint_UI.attr(longName).connect(
+                constraint.target[x].targetWeight,
+                force=True)
+        for udAttr in constraint.listAttr(ud=True):
+            pmc.deleteAttr(udAttr)
+    else:
+        logger.log(level='error',
+                   message='source and constraint needed for'
+                   ' constraint_UI_node', logger=moduleLogger)
+    return constraint_UI
+
+
+def no_pivots_no_rotateOrder_(constraint):
+    """
+    Disconnect the connections to the pivot plugs of a constraint.
+    Args:
+            constraint(PyNode): The specified constraint.
+    """
+
+    exceptions = []
+    try:
+        constraint.constraintRotatePivot.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    try:
+        constraint.constraintRotateTranslate.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    try:
+        constraint.constraintRotateOrder.disconnect()
+    except Exception as e:
+        exceptions.append(e)
+    if exceptions:
+        logger.log(level='warning', message=exceptions, logger=moduleLogger)
+
+
+def no_constraint_cycle(constraint=None, source=None):
+    """
+    Disconnect the parentInverseMatrix connection from the constraint.
+    And if the source node has a parent it plugs in the wolrdInverse Matrix
+    plug of the parent.
+    Args:
+            constraint(constraintNode): The constraint to work with.
+            source(dagnode): The source node.
+    Return:
+            tuple: The constraint UI node.
+    """
+    parent = source[0].getParent()
+    if parent:
+        constraint.constraintParentInverseMatrix.disconnect()
+        parent.worldInverseMatrix.connect
+        (constraint.constraintParentInverseMatrix)
+    return constraint_UI_node_(constraint=constraint,
+                               source=source)
+
+
+def create_constraint(typ='parent', source=None, target=None,
+                      maintainOffset=True, axes=['X', 'Y', 'Z'],
+                      no_cycle=False, no_pivots=False, no_parent_influ=False):
+    """
+    Create constraints with a lot more functionality.
+    By default it creates a parentConstraint.
+    Args:
+            typ(str): The constraint type.
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+            no_cycle(bool): It creates a constraint_UI_node under
+            the parent constraint. And disconnect inner cycle
+            connections of the contraint.
+            no_pivots(bool): Disconnect the pivot plugs.
+            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            plug. So that the parent transformation of the source node
+            influnce the source node.
+    Return:
+            list: The constraint node, constraint_UI_node
+    """
+    result = []
+    constraint_ = constraint(typ=typ, source=source, target=target,
+                             maintainOffset=maintainOffset, axes=axes)
+    result.append(constraint_)
+    if no_cycle:
+        con_UI_node = no_constraint_cycle(constraint=constraint_, source=source)
+        result.append(con_UI_node)
+    if no_pivots:
+        no_pivots_no_rotateOrder_(constraint=constraint_)
+    if no_parent_influ:
+        constraint_.constraintParentInverseMatrix.disconnect()
+    return result
