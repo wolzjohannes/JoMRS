@@ -352,20 +352,19 @@ def aim_constraint(source=None, target=None, maintainOffset=True,
     if worldUpType == 'object':
         upVecLoc = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
         pmc.delete(pmc.parentConstraint(source, upVecLoc, mo=False))
-        for axe in upAxes:
-            if axe == 'X':
-                pmc.move(10, 0, 0, upVecLoc, ws=True)
-            elif axe == 'Y':
-                pmc.move(0, 10, 0, upVecLoc, ws=True)
-            elif axe == 'Z':
-                pmc.move(0, 0, 10, upVecLoc, ws=True)
-        con = pmc.aimConstraint(target, source, mo=maintainOffset, aim=aimAxes,
-                          skip=skipAxes, u=upAxes, worldUpType=worldUpType,
-                          worldUpObject=upVecLoc)
+        pmc.move(upAxes[0] * 5, upAxes[1] * 5, upAxes[2] * 5,
+                 upVecLoc, ws=True)
+        con = pmc.aimConstraint(target, source, mo=maintainOffset,
+                                aim=aimAxes,
+                                skip=skipAxes, u=upAxes,
+                                worldUpType=worldUpType,
+                                worldUpObject=upVecLoc)
         result.append(con)
         result.append(upVecLoc)
     for ax in axes:
-        result[0].attr('constraintRotate' + ax.upper()).connect(source.attr('rotate' + ax.upper()))
-    # if killUpVecObj:
-    #     pmc.delete(upVecLoc)
+        result[0].attr('constraintRotate' +
+                       ax.upper()).connect(source.attr('rotate' +
+                                           ax.upper()))
+    if killUpVecObj:
+        pmc.delete(upVecLoc)
 
