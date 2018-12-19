@@ -267,7 +267,6 @@ def no_pivots_no_rotateOrder_(constraint):
     Args:
             constraint(PyNode): The specified constraint.
     """
-
     exceptions = []
     try:
         constraint.constraintRotatePivot.disconnect()
