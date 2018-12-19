@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 17
+# Date:       2018 / 12 / 19
 
 """
 JoMRS maya utils module. Utilities helps
@@ -343,28 +343,52 @@ def create_constraint(typ='parent', source=None, target=None,
     return result
 
 
-def aim_constraint(source=None, target=None, maintainOffset=True,
-                   axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
-                   upAxes=[0, 1, 0], worldUpType='object',
-                   killUpVecObj=None, parentUpVecObj=None):
-    result = []
+def aim_constraint_(source=None, target=None, maintainOffset=True,
+                    axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
+                    upAxes=[0, 1, 0], worldUpType='object',
+                    killUpVecObj=None, parentUpVecObj=None,
+                    worldUpObject=None, worldUpVector=[0, 1, 0]):
+    """
+    Create a aimConstraint with a lot of functionalities.
+    By default it creates a object as upVector.
+    Args:
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+    """
     skipAxes = ['x', 'y', 'z']
     if worldUpType == 'object':
-        upVecLoc = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
-        pmc.delete(pmc.parentConstraint(source, upVecLoc, mo=False))
+        worldUpObject = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
+        pmc.delete(pmc.parentConstraint(source, worldUpObject, mo=False))
         pmc.move(upAxes[0] * 5, upAxes[1] * 5, upAxes[2] * 5,
-                 upVecLoc, ws=True)
+                 worldUpObject, ws=True)
         con = pmc.aimConstraint(target, source, mo=maintainOffset,
-                                aim=aimAxes,
-                                skip=skipAxes, u=upAxes,
+                                aim=aimAxes, skip=skipAxes, u=upAxes,
                                 worldUpType=worldUpType,
-                                worldUpObject=upVecLoc)
-        result.append(con)
-        result.append(upVecLoc)
+                                worldUpObject=worldUpObject)
+    elif worldUpType == 'objectrotation':
+        con = pmc.aimConstraint(target, source, mo=maintainOffset,
+                                aim=aimAxes, skip=skipAxes, u=upAxes,
+                                worldUpType=worldUpType,
+                                worldUpObject=worldUpObject)
+    elif worldUpType == 'vector':
+        con = pmc.aimConstraint(target, source, mo=maintainOffset,
+                                aim=aimAxes, skip=skipAxes, u=upAxes,
+                                worldUpType=worldUpType,
+                                worldUpVector=worldUpVector)
+    else:
+        con = pmc.aimConstraint(target, source, mo=maintainOffset,
+                                aim=aimAxes, skip=skipAxes, u=upAxes,
+                                worldUpType=worldUpType)
     for ax in axes:
-        result[0].attr('constraintRotate' +
-                       ax.upper()).connect(source.attr('rotate' +
-                                           ax.upper()))
+        con.attr('constraintRotate' +
+                 ax.upper()).connect(source.attr('rotate' +
+                                     ax.upper()))
     if killUpVecObj:
-        pmc.delete(upVecLoc)
-
+        pmc.delete(worldUpObject)
+        return con
+    if parentUpVecObj:
+        pmc.parent(worldUpObject, parentUpVecObj)
+    return con, worldUpObject
