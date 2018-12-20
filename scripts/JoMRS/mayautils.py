@@ -295,11 +295,13 @@ def no_constraint_cycle(constraint=None, source=None):
     Return:
             tuple: The constraint UI node.
     """
+    if not isinstance(source[0], list):
+        source = [source]
     parent = source[0].getParent()
     if parent:
         constraint.constraintParentInverseMatrix.disconnect()
-        parent.worldInverseMatrix.connect
-        (constraint.constraintParentInverseMatrix)
+        parent.worldInverseMatrix.connect(constraint.
+                                          constraintParentInverseMatrix)
     return constraint_UI_node_(constraint=constraint,
                                source=source)
 
@@ -342,13 +344,13 @@ def create_constraint(typ='parent', source=None, target=None,
     return result
 
 
-def aim_constraint_(source=None, target=None, maintainOffset=True,
-                    axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
-                    upAxes=[0, 1, 0], worldUpType='object',
-                    killUpVecObj=None, parentUpVecObj=None,
-                    worldUpObject=None, worldUpVector=[0, 1, 0]):
+def aimConstraint_(source=None, target=None, maintainOffset=True,
+                   axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
+                   upAxes=[0, 1, 0], worldUpType='object',
+                   killUpVecObj=None, parentUpVecObj=None,
+                   worldUpObject=None, worldUpVector=[0, 1, 0]):
     """
-    Create a aimConstraint with a lot of functionalities.
+    Create a aimConstraint.
     By default it creates a object as upVector.
     Args:
             source(dagnode): The source node.
@@ -356,6 +358,20 @@ def aim_constraint_(source=None, target=None, maintainOffset=True,
             maintainOffset(bool): If the constraint should keep
             the offset of the target.
             axes(list): The axes to contraint as strings.
+            aimAxes(list): The axes to aim for.
+            ['x','y','z'] = [1,1,1]
+            upAxes(list): The axes to the up vector.
+            ['x','y','z'] = [1,1,1]
+            worldUpType(string): The type for the up vector.
+            Valid: none, scene, vector, object, objectrotation.
+            killUpVecObj(bool): Kills the up vector transform.
+            parentUpVecObj(dagnode): The parent for the up vector.
+            worldUpObject(dagnode): The up vector transform node.
+            worldUpVector(list): The axes for the world up vector.
+            ['x','y','z'] = [1,1,1]
+
+    Return:
+            list: The aim constraint, the upVector locator node.
     """
     skipAxes = ['x', 'y', 'z']
     if worldUpType == 'object':
@@ -387,7 +403,64 @@ def aim_constraint_(source=None, target=None, maintainOffset=True,
                                      ax.upper()))
     if killUpVecObj:
         pmc.delete(worldUpObject)
-        return con
+        return [con]
     if parentUpVecObj:
         pmc.parent(worldUpObject, parentUpVecObj)
-    return con, worldUpObject
+    return [con, worldUpObject]
+
+
+def create_aimConstraint(source=None, target=None, maintainOffset=True,
+                         axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
+                         upAxes=[0, 1, 0], worldUpType='object',
+                         killUpVecObj=None, parentUpVecObj=None,
+                         worldUpObject=None, worldUpVector=[0, 1, 0],
+                         no_cycle=False, no_pivots=False,
+                         no_parent_influ=False):
+    """
+    Create a aimConstraint with advanced options
+    By default it creates a object as upVector.
+    Args:
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffset(bool): If the constraint should keep
+            the offset of the target.
+            axes(list): The axes to contraint as strings.
+            aimAxes(list): The axes to aim for.
+            ['x','y','z'] = [1,1,1]
+            upAxes(list): The axes to the up vector.
+            ['x','y','z'] = [1,1,1]
+            worldUpType(string): The type for the up vector.
+            Valid: none, scene, vector, object, objectrotation.
+            killUpVecObj(bool): Kills the up vector transform.
+            parentUpVecObj(dagnode): The parent for the up vector.
+            worldUpObject(dagnode): The up vector transform node.
+            worldUpVector(list): The axes for the world up vector.
+            ['x','y','z'] = [1,1,1]
+            no_cycle(bool): It creates a constraint_UI_node under
+            the constraint. And disconnect inner cycle connections
+            of the contraint.
+            no_pivots(bool): Disconnect the pivot plugs.
+            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            plug. So that the parent transformation of the source node
+            influnce the source node.
+
+    Return:
+            list: The aim constraint, the upVector locator node,
+            the constraint_UI_node.
+    """
+    result = aimConstraint_(source=source, target=target,
+                            maintainOffset=maintainOffset,
+                            axes=axes, aimAxes=aimAxes,
+                            upAxes=upAxes, worldUpType=worldUpType,
+                            killUpVecObj=killUpVecObj,
+                            parentUpVecObj=parentUpVecObj,
+                            worldUpObject=worldUpObject,
+                            worldUpVector=worldUpVector)
+    if no_cycle:
+        con_UI_node = no_constraint_cycle(constraint=result[0], source=source)
+        result.append(con_UI_node)
+    if no_pivots:
+        no_pivots_no_rotateOrder_(constraint=result[0])
+    if no_parent_influ:
+        result[0].constraintParentInverseMatrix.disconnect()
+    return result
