@@ -33,6 +33,7 @@ to create maya behaviours.
 # config file for valid strings. For projects modifiactions
 ###############
 import pymel.core as pmc
+import pymel.core.datatypes as dt
 import attributes
 import strings
 import logging
@@ -464,3 +465,68 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
     if no_parent_influ:
         result[0].constraintParentInverseMatrix.disconnect()
     return result
+
+
+def decompose_matrix_constraint(source, target, translation=True,
+                                rotation=True, scale=True):
+    """
+    Create decompose matrix constraint.
+    Args:
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            translation(bool): Envelope to connect the translation.
+            rotation(bool): Envelope to connect the rotation.
+            scale(bool): Envelope to connect the scale.
+    Return:
+            tuple: Created decompose matrix node.
+    """
+    decomp = pmc.createNode('decomposeMatrix', n=str(source) +
+                            '_0_DEMAND')
+    target.worldMatrix[0].connect(decomp.inputMatrix)
+    if translation:
+        decomp.outputTranslate.connect(source.translate, force=True)
+    if rotation:
+        decomp.outputRotate.connect(source.rotate, force=True)
+    if scale:
+        decomp.outputScale.connect(source.scale, force=True)
+    return decomp
+
+
+def calculate_matrix_offset_(target, source):
+    """
+    Calculate the matrix offset of the source to the target.
+    Args:
+            target(dagnode): The target node.
+            source(dagnode): The source node.
+    Retruns:
+            The offset matrix values from target to source.
+    """
+    tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
+    sm = dt.Matrix(source.getMatrix(ws=True))
+    return sm.__mul__(tm)
+
+
+def matrixConstraint_UI_GRP_(source):
+    """
+    Creates the the UI node for the matrix constraint
+    and parent it under a specified node.
+    Args:
+            name(str): The name for the node.
+            parent(dagnode): The parent for the UI GRP.
+    Return:
+            The UI_GRP node.
+    """
+    attributes = ['translateX', 'translateY', 'translateZ', 'rotateX',
+                  'rotateY', 'rotateZ', 'scaleX', 'scaleY',
+                  'scaleZ', 'visibility']
+    UI_GRP = pmc.createNode('transform', n=str(source) +
+                            '_matrixConstraint_UI_GRP')
+    if not UI_GRP.hasAttr('offset_matrix'):
+        pmc.addAttr(UI_GRP, longName='offset_matrix', at='matrix')
+    for attr_ in attributes:
+        UI_GRP.attr(attr_).set(lock=True, keyable=False, channelBox=False)
+    source.addChild(UI_GRP)
+    return UI_GRP
+
+
+
