@@ -36,7 +36,7 @@ import inspect
 import datetime
 
 VERSION = ['1', '0', '0']
-DATE = ['2018', '12', '17']
+DATE = ['2018', '12', '20']
 
 logging.basicConfig(level=logging.INFO)
 
