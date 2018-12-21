@@ -26,11 +26,17 @@
 JoMRS maya utils module. Utilities helps
 to create maya behaviours.
 """
-
-###############
 # GLOBALS
+###############
 # TO DO:
-# config file for valid strings. For projects modifiactions
+# config file for valid strings. For projects modifications
+# joint orient function
+# motion path node function
+# wire deformer function
+# skinning function
+# joint parent function(disconnect inverse scale)
+# joint creation function (BND, IK, FK, DRV)
+# shapeDeformed node check up
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -548,6 +554,8 @@ def multMatrix_setup_(source, target, maintainOffset=None):
         source.parentInverseMatrix[0].connect(mulMaND.matrixIn[2])
     if maintainOffset:
         UI_GRP = matrixConstraint_UI_GRP_(source=source)
+        UI_GRP.offset_matrix.set(
+            calculate_matrix_offset_(target, source))
         UI_GRP.offset_matrix.connect(mulMaND.matrixIn[0])
     return mulMaND
 
@@ -582,4 +590,3 @@ def create_matrixConstraint(source, target, translation=True,
         for axe in axis:
             decompMatND.attr('outputScale' +
                              axe).connect(source.attr('scale' + axe))
-            
