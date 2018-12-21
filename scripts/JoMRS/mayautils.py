@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 20
+# Date:       2018 / 12 / 21
 
 """
 JoMRS maya utils module. Utilities helps
@@ -498,7 +498,7 @@ def calculate_matrix_offset_(target, source):
     Args:
             target(dagnode): The target node.
             source(dagnode): The source node.
-    Retruns:
+    Return:
             The offset matrix values from target to source.
     """
     tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
@@ -511,10 +511,10 @@ def matrixConstraint_UI_GRP_(source):
     Creates the the UI node for the matrix constraint
     and parent it under a specified node.
     Args:
-            name(str): The name for the node.
+            source(dagnode): The source node.
             parent(dagnode): The parent for the UI GRP.
     Return:
-            The UI_GRP node.
+            tuple: The UI_GRP node.
     """
     attributes = ['translateX', 'translateY', 'translateZ', 'rotateX',
                   'rotateY', 'rotateZ', 'scaleX', 'scaleY',
@@ -529,3 +529,57 @@ def matrixConstraint_UI_GRP_(source):
     return UI_GRP
 
 
+def multMatrix_setup_(source, target, maintainOffset=None):
+    """
+    Creates the multMatrix setup for further use.
+    Args:
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            maintainOffste(bool): Enable/Disable the maintainOffset option.
+    Return:
+            tuple: The created multMatrix node.
+    """
+    parent = source.getParent()
+    mulMaND = pmc.createNode('multMatrix', n=str(source) + '_0_MULMAND')
+    target.worldMatrix[0].connect(mulMaND.matrixIn[1])
+    if parent:
+        parent.worldInverseMatrix[0].connect(mulMaND.matrixIn[2])
+    else:
+        source.parentInverseMatrix[0].connect(mulMaND.matrixIn[2])
+    if maintainOffset:
+        UI_GRP = matrixConstraint_UI_GRP_(source=source)
+        UI_GRP.offset_matrix.connect(mulMaND.matrixIn[0])
+    return mulMaND
+
+
+def create_matrixConstraint(source, target, translation=True,
+                            rotation=True, scale=True, maintainOffset=None):
+    """
+    Creates the matrix constraint.
+    Args:
+            source(dagnode): The source node.
+            target(dagnode): The target node.
+            translation(bool): Connect/Disconnect the translation channel.
+            rotation(bool): Connect/Disconnect the rotation channel.
+            scale(bool): Connect/Disconnect the scale channel.
+            maintainOffste(bool): Enable/Disable the maintainOffset option.
+    """
+    axis = ['X', 'Y', 'Z']
+    decompMatND = pmc.createNode('decomposeMatrix', n=str(source) +
+                                 '_0_DEMAND')
+    mulMaND = multMatrix_setup_(source=source, target=target,
+                                maintainOffset=maintainOffset)
+    mulMaND.matrixSum.connect(decompMatND.inputMatrix)
+    if translation:
+        for axe in axis:
+            decompMatND.attr('outputTranslate' +
+                             axe).connect(source.attr('translate' + axe))
+    if rotation:
+        for axe in axis:
+            decompMatND.attr('outputRotate' +
+                             axe).connect(source.attr('rotate' + axe))
+    if scale:
+        for axe in axis:
+            decompMatND.attr('outputScale' +
+                             axe).connect(source.attr('scale' + axe))
+            
