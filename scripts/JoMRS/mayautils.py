@@ -590,3 +590,39 @@ def create_matrixConstraint(source, target, translation=True,
         for axe in axis:
             decompMatND.attr('outputScale' +
                              axe).connect(source.attr('scale' + axe))
+
+
+def ancestors(node):
+    """
+    Return a list of ancestors, starting with the direct
+    parent and ending with the top-level(root) parent.
+    """
+    result = []
+    parent = node.getParent()
+    while parent is not None:
+        result.append(parent)
+        parent = parent.getParent()
+    print result
+    return result
+
+
+def descendants(rootNode, typ='transform'):
+    result = []
+    descendants = rootNode.getChildren(ad=True, type=typ)
+    for descendant in descendants:
+        result.insert(0, descendant)
+    result.insert(0, rootNode)
+    return result
+
+
+def custom_orientJoint(rootJNT=None, aim=[1, 0, 0], upVec=[0, 1, 0]):
+    axes = ['X', 'Y', 'Z']
+    if rootJNT.nodeType() == 'joint':
+        hierarchy = descendants(rootNode=rootJNT, typ='joint')
+        for x in hierarchy:
+            pmc.parent(x, w=True)
+        for y in range(len(hierarchy)):
+            hierarchy[y].rotate.set(0, 0, 0)
+            for ax in axes:
+                hierarchy[y].attr('jointOrient' + ax).set(0)
+
