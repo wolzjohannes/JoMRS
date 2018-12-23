@@ -606,23 +606,49 @@ def ancestors(node):
     return result
 
 
-def descendants(rootNode, typ='transform'):
+def descendants(rootNode, reverse=None, typ='transform'):
     result = []
     descendants = rootNode.getChildren(ad=True, type=typ)
-    for descendant in descendants:
-        result.insert(0, descendant)
-    result.insert(0, rootNode)
+    if not reverse:
+        for descendant in descendants:
+            result.insert(0, descendant)
+        result.insert(0, rootNode)
+    else:
+        result = descendants
+        result.append(rootNode)
     return result
 
 
-def custom_orientJoint(rootJNT=None, aim=[1, 0, 0], upVec=[0, 1, 0]):
+def custom_orientJoint(source, target, aimAxes, upAxes,
+                       killUpVecObj=True):
     axes = ['X', 'Y', 'Z']
-    if rootJNT.nodeType() == 'joint':
-        hierarchy = descendants(rootNode=rootJNT, typ='joint')
-        for x in hierarchy:
-            pmc.parent(x, w=True)
-        for y in range(len(hierarchy)):
-            hierarchy[y].rotate.set(0, 0, 0)
-            for ax in axes:
-                hierarchy[y].attr('jointOrient' + ax).set(0)
+    for ax in axes:
+        source.attr('rotate' + ax).set(0)
+        source.attr('jointOrient' + ax).set(0)
+    pmc.delete(create_aimConstraint(source=source, target=target,
+                                    maintainOffset=False,
+                                    aimAxes=aimAxes, upAxes=upAxes,
+                                    worldUpType='object',
+                                    killUpVecObj=killUpVecObj))
+    for ax_ in axes:
+        source.attr('jointOrient' + ax_).set(source.attr('rotate' + ax_).get())
+        source.attr('rotate' + ax_).set(0)
 
+
+# def custom_orientJointHierarchy(rootJNT=None, aim=[1, 0, 0], upVec=[0, 1, 0]):
+#     axes = ['X', 'Y', 'Z']
+#     if rootJNT.nodeType() == 'joint':
+#         hierarchy = descendants(rootNode=rootJNT, reverse=True,
+#                                 typ='joint')
+#         for jnt in hierarchy:
+#             pmc.parent(jnt, w=True)
+#         for jnt_ in range(len(hierarchy)):
+#             hierarchy[jnt_].rotate.set(0, 0, 0)
+#             for ax in axes:
+#                 hierarchy[jnt_].attr('jointOrient' + ax).set(0)
+#         for jnt__ in hierarchy:
+#             if len(hierarchy) > 1:
+#                 custom_orientJoint(hierarchy[0], hierarchy[1],
+#                                    aimAxes=aim, upAxes=upVec)
+#                 hierarchy[1].addChild(hierarchy[0])
+#                 hierarchy.remove(hierarchy[0])
