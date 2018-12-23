@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 21
+# Date:       2018 / 12 / 23
 
 """
 JoMRS maya utils module. Utilities helps
@@ -30,6 +30,7 @@ to create maya behaviours.
 ###############
 # TO DO:
 # config file for valid strings. For projects modifications
+# check if all srings follow the JoMRS string handling
 # joint orient function
 # motion path node function
 # wire deformer function
@@ -67,6 +68,26 @@ def create_bufferGRP(node):
     if parent:
         parent.addChild(bufferGRP)
     return bufferGRP
+
+
+def spaceLocator_onPosition(node, bufferGRP=True):
+    """
+    Create a spaceLocator on the position of a node.
+    Args:
+            node(dagnode): The match transform node.
+            bufferGRP(bool): Create a buffer group for the locator.
+    Return:
+            list: The buffer group, the locator node.
+    """
+    result = []
+    name = strings.string_checkup(str(node) + '_0_LOC', moduleLogger)
+    loc = pmc.spaceLocator(n=name)
+    pmc.delete(pmc.parentConstraint(node, loc, mo=False))
+    result.append(loc)
+    if bufferGRP:
+        bufferGRP = create_bufferGRP(loc)
+        result.insert(0, bufferGRP)
+    return result
 
 
 def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
@@ -381,11 +402,17 @@ def aimConstraint_(source=None, target=None, maintainOffset=True,
             list: The aim constraint, the upVector locator node.
     """
     skipAxes = ['x', 'y', 'z']
+    temp = []
     if worldUpType == 'object':
-        worldUpObject = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
-        pmc.delete(pmc.parentConstraint(source, worldUpObject, mo=False))
-        pmc.move(upAxes[0] * 5, upAxes[1] * 5, upAxes[2] * 5,
-                 worldUpObject, ws=True)
+        if not worldUpObject:
+            worldUpObject = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
+            worldUpObjectBuffer = pmc.group(worldUpObject,
+                                            n=str(worldUpObject) +
+                                            '_buffer_GRP')
+            temp.append(worldUpObjectBuffer)
+            pmc.delete(pmc.parentConstraint(source, worldUpObjectBuffer,
+                                            mo=False))
+            worldUpObject.translate.set(v * 5 for v in upAxes)
         con = pmc.aimConstraint(target, source, mo=maintainOffset,
                                 aim=aimAxes, skip=skipAxes, u=upAxes,
                                 worldUpType=worldUpType,
@@ -408,12 +435,13 @@ def aimConstraint_(source=None, target=None, maintainOffset=True,
         con.attr('constraintRotate' +
                  ax.upper()).connect(source.attr('rotate' +
                                      ax.upper()))
+    temp.append(worldUpObject)
     if killUpVecObj:
-        pmc.delete(worldUpObject)
+        pmc.delete(temp)
         return [con]
     if parentUpVecObj:
-        pmc.parent(worldUpObject, parentUpVecObj)
-    return [con, worldUpObject]
+        pmc.parent(temp[0], parentUpVecObj)
+    return [con, temp[:]]
 
 
 def create_aimConstraint(source=None, target=None, maintainOffset=True,
@@ -596,17 +624,30 @@ def ancestors(node):
     """
     Return a list of ancestors, starting with the direct
     parent and ending with the top-level(root) parent.
+    Args:
+            node(dagnode): The last transform of a hierarchy.
+    Return:
+            list: The ancestors tranforms.
     """
     result = []
     parent = node.getParent()
     while parent is not None:
         result.append(parent)
         parent = parent.getParent()
-    print result
     return result
 
 
 def descendants(rootNode, reverse=None, typ='transform'):
+    """
+    Gets the descendants of a hierarchy.
+    By default it starts with the rootNode and goes down.
+    Args:
+            rootNode(dagnode): The root of the hierarchy.
+            reverse(bool): Reverse the order of the output.
+            typ(str): The typ to search for.
+    Return:
+            list: The descendants node.
+    """
     result = []
     descendants = rootNode.getChildren(ad=True, type=typ)
     if not reverse:
@@ -619,29 +660,37 @@ def descendants(rootNode, reverse=None, typ='transform'):
     return result
 
 
-def custom_orientJoint(source, target, aimAxes, upAxes,
-                       killUpVecObj=True):
-    axes = ['X', 'Y', 'Z']
-    for ax in axes:
-        source.attr('rotate' + ax).set(0)
-        source.attr('jointOrient' + ax).set(0)
+def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
+                       upAxes=[0, 1, 0]):
+    upObject = spaceLocator_onPosition(source, bufferGRP=True)
+    upObject[1].translate.set(v * 5 for v in upAxes)
+    source.rotate.set(0, 0, 0)
+    source.jointOrient.set(0, 0, 0)
     pmc.delete(create_aimConstraint(source=source, target=target,
                                     maintainOffset=False,
                                     aimAxes=aimAxes, upAxes=upAxes,
                                     worldUpType='object',
-                                    killUpVecObj=killUpVecObj))
-    for ax_ in axes:
-        source.attr('jointOrient' + ax_).set(source.attr('rotate' + ax_).get())
-        source.attr('rotate' + ax_).set(0)
+                                    worldUpObject=upObject[1],
+                                    killUpVecObj=False)[0])
+    pmc.delete(upObject)
+    source.jointOrient.set(source.rotate.get())
+    source.rotate.set(0, 0, 0)
 
-
-# def custom_orientJointHierarchy(rootJNT=None, aim=[1, 0, 0], upVec=[0, 1, 0]):
+# def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
+#                                 upAxes=[0, 1, 0]):
 #     axes = ['X', 'Y', 'Z']
 #     if rootJNT.nodeType() == 'joint':
 #         hierarchy = descendants(rootNode=rootJNT, reverse=True,
 #                                 typ='joint')
+#         temp = hierarchy[:]
 #         for jnt in hierarchy:
 #             pmc.parent(jnt, w=True)
+#         for jnt_ in temp:
+#             if len(temp) > 1:
+#                 custom_orientJoint(temp[1], temp[0],
+#                                    aimAxes=aimAxes, upAxes=upAxes)
+#                 temp[1].addChild(temp[0])
+#                 temp.remove(temp[0])
 #         for jnt_ in range(len(hierarchy)):
 #             hierarchy[jnt_].rotate.set(0, 0, 0)
 #             for ax in axes:
