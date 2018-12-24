@@ -646,7 +646,7 @@ def descendants(rootNode, reverse=None, typ='transform'):
             reverse(bool): Reverse the order of the output.
             typ(str): The typ to search for.
     Return:
-            list: The descendants node.
+            list: The descendant nodes.
     """
     result = []
     descendants = rootNode.getChildren(ad=True, type=typ)
@@ -662,19 +662,35 @@ def descendants(rootNode, reverse=None, typ='transform'):
 
 def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
                        upAxes=[0, 1, 0]):
-    upObject = spaceLocator_onPosition(source, bufferGRP=True)
-    upObject[1].translate.set(v * 5 for v in upAxes)
-    source.rotate.set(0, 0, 0)
-    source.jointOrient.set(0, 0, 0)
-    pmc.delete(create_aimConstraint(source=source, target=target,
-                                    maintainOffset=False,
-                                    aimAxes=aimAxes, upAxes=upAxes,
-                                    worldUpType='object',
-                                    worldUpObject=upObject[1],
-                                    killUpVecObj=False)[0])
-    pmc.delete(upObject)
-    source.jointOrient.set(source.rotate.get())
-    source.rotate.set(0, 0, 0)
+    """
+    Orient a joint based. By efault it orients the x axes
+    with the y axes as up vector.
+    Args:
+            source(dagnode): The joint to orient.
+            target(dagnode): The transform as orient target.
+            aimAxes(list): The aim axes. [1, 1, 1] = [x, y, z]
+            upAxes(list): The aim axes. [1, 1, 1] = [x, y, z]
+    Return:
+            tuple: The orientated joint.
+    """
+    if source.nodeType() == 'joint':
+        upObject = spaceLocator_onPosition(source, bufferGRP=True)
+        upObject[1].translate.set(v * 5 for v in upAxes)
+        source.rotate.set(0, 0, 0)
+        source.jointOrient.set(0, 0, 0)
+        pmc.delete(create_aimConstraint(source=source, target=target,
+                                        maintainOffset=False,
+                                        aimAxes=aimAxes, upAxes=upAxes,
+                                        worldUpType='object',
+                                        worldUpObject=upObject[1],
+                                        killUpVecObj=False)[0])
+        pmc.delete(upObject)
+        source.jointOrient.set(source.rotate.get())
+        source.rotate.set(0, 0, 0)
+        return source
+    else:
+        logger.log(level='error', message='The source node must be a joint',
+                   logger=moduleLogger)
 
 # def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
 #                                 upAxes=[0, 1, 0]):
