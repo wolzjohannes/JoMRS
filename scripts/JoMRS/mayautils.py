@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 25
+# Date:       2018 / 12 / 26
 
 """
 JoMRS maya utils module. Utilities helps
@@ -31,13 +31,14 @@ to create maya behaviours.
 # TO DO:
 # config file for valid strings. For projects modifications
 # check if all srings follow the JoMRS string handling
-# joint orient function
 # motion path node function
 # wire deformer function
 # skinning function
 # joint parent function(disconnect inverse scale)
 # joint creation function (BND, IK, FK, DRV)
 # shapeDeformed node check up
+# convert tranform hierarchy in jnt hierarchy
+# create jnt function.
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -213,69 +214,61 @@ def constraint(typ='parent', source=None, target=None,
     result = []
     skipAxes = ['x', 'y', 'z']
     if typ == 'parent':
-        result = pmc.parentConstraint(source, target, mo=maintainOffset,
+        result = pmc.parentConstraint(target, source, mo=maintainOffset,
                                       skipRotate=skipAxes,
                                       skipTranslate=skipAxes)
         for ax in axes:
             result.attr('constraintTranslate' +
-                        ax.upper()).connect(target.attr('translate' +
+                        ax.upper()).connect(source.attr('translate' +
                                                         ax.upper()))
             result.attr('constraintRotate' +
-                        ax.upper()).connect(target.attr('rotate' +
+                        ax.upper()).connect(source.attr('rotate' +
                                                         ax.upper()))
     if typ == 'point':
-        result = pmc.pointConstraint(source, target, mo=maintainOffset,
+        result = pmc.pointConstraint(target, source, mo=maintainOffset,
                                      skip=skipAxes)
         for ax in axes:
             result.attr('constraintTranslate' +
-                        ax.upper()).connect(target.attr('translate' +
+                        ax.upper()).connect(source.attr('translate' +
                                                         ax.upper()))
     if typ == 'orient':
-        result = pmc.orientConstraint(source, target, mo=maintainOffset,
+        result = pmc.orientConstraint(target, source, mo=maintainOffset,
                                       skip=skipAxes)
         for ax in axes:
             result.attr('constraintRotate' +
-                        ax.upper()).connect(target.attr('rotate' +
+                        ax.upper()).connect(source.attr('rotate' +
                                                         ax.upper()))
     if typ == 'scale':
-        result = pmc.scaleConstraint(source, target, mo=maintainOffset,
+        result = pmc.scaleConstraint(target, source, mo=maintainOffset,
                                      skip=skipAxes)
         for ax in axes:
             result.attr('constraintScale' +
-                        ax.upper()).connect(target.attr('scale' +
+                        ax.upper()).connect(source.attr('scale' +
                                                         ax.upper()))
     return result
 
 
-def constraint_UI_node_(constraint=None, source=None):
+def constraint_UI_node_(constraint=None, target=None):
     """
     Create a contraint UI node to uncycle the constraint graph.
     Args:
             constraint(constraintNode): The constraint to work with.
-            source(dagnode): The source node.
+            target(dagnode): The target node.
     Return:
             tuple: The created UI node.
     """
-    attributes = ['translate', 'rotate', 'scale']
-    axes = ['X', 'Y', 'Z']
-    if source and constraint:
-        if not isinstance(source, list):
-            source = [source]
+    if target and constraint:
+        if not isinstance(target, list):
+            target = [target]
         constraint_UI = pmc.createNode('transform', n='{}{}'.format(
                                        str(constraint), '_UI_GRP'))
         constraint.addChild(constraint_UI)
-        constraint_UI.visibility.set(lock=True,
-                                     channelBox=False,
-                                     keyable=False)
-        for attr_ in attributes:
-            for axe in axes:
-                constraint_UI.attr(attr_ + axe).set(lock=True,
-                                                    channelBox=False,
-                                                    keyable=False)
-        for x in range(len(source)):
-            longName = '{}_{}'.format(str(source[x]), 'W' + str(x))
-            constraint_UI.addAttr(longName, at='float', min=0, max=1, hxv=True,
-                                  hnv=True, k=True)
+        attributes.lockAndHideAttributes(node=constraint_UI)
+        for x in range(len(target)):
+            longName = '{}_{}'.format(str(target[x]), 'W' + str(x))
+            attributes.addAttr(node=constraint_UI, name=longName,
+                               attrType='float', minValue=0,
+                               maxValue=1, keyable=True)
             constraint_UI.attr(longName).set(1)
             constraint_UI.attr(longName).connect(
                 constraint.target[x].targetWeight,
@@ -312,7 +305,7 @@ def no_pivots_no_rotateOrder_(constraint):
         logger.log(level='warning', message=exceptions, logger=moduleLogger)
 
 
-def no_constraint_cycle(constraint=None, source=None):
+def no_constraint_cycle(constraint=None, source=None, target=None):
     """
     Disconnect the parentInverseMatrix connection from the constraint.
     And if the source node has a parent it plugs in the wolrdInverse Matrix
@@ -330,8 +323,7 @@ def no_constraint_cycle(constraint=None, source=None):
         constraint.constraintParentInverseMatrix.disconnect()
         parent.worldInverseMatrix.connect(constraint.
                                           constraintParentInverseMatrix)
-    return constraint_UI_node_(constraint=constraint,
-                               source=source)
+    return constraint_UI_node_(constraint=constraint, target=target)
 
 
 def create_constraint(typ='parent', source=None, target=None,
@@ -363,7 +355,8 @@ def create_constraint(typ='parent', source=None, target=None,
     result.append(constraint_)
     if no_cycle:
         con_UI_node = no_constraint_cycle(constraint=constraint_,
-                                          source=source)
+                                          source=source,
+                                          target=target)
         result.append(con_UI_node)
     if no_pivots:
         no_pivots_no_rotateOrder_(constraint=constraint_)
@@ -492,7 +485,8 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
                             worldUpObject=worldUpObject,
                             worldUpVector=worldUpVector)
     if no_cycle:
-        con_UI_node = no_constraint_cycle(constraint=result[0], source=source)
+        con_UI_node = no_constraint_cycle(constraint=result[0], target=target,
+                                          source=source)
         result.append(con_UI_node)
     if no_pivots:
         no_pivots_no_rotateOrder_(constraint=result[0])
@@ -550,15 +544,10 @@ def matrixConstraint_UI_GRP_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    attributes = ['translateX', 'translateY', 'translateZ', 'rotateX',
-                  'rotateY', 'rotateZ', 'scaleX', 'scaleY',
-                  'scaleZ', 'visibility']
     UI_GRP = pmc.createNode('transform', n=str(source) +
                             '_matrixConstraint_UI_GRP')
-    if not UI_GRP.hasAttr('offset_matrix'):
-        pmc.addAttr(UI_GRP, longName='offset_matrix', at='matrix')
-    for attr_ in attributes:
-        UI_GRP.attr(attr_).set(lock=True, keyable=False, channelBox=False)
+    attributes.addAttr(node=UI_GRP, name='offset_matrix', attrType='matrix')
+    attributes.lockAndHideAttributes(node=UI_GRP)
     source.addChild(UI_GRP)
     return UI_GRP
 
