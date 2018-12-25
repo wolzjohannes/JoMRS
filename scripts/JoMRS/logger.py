@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 17
+# Date:       2018 / 12 / 25
 
 """
 JoMRS logger module. Module which contains
