@@ -663,7 +663,8 @@ def descendants(rootNode, reverse=None, typ='transform'):
 def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
                        upAxes=[0, 1, 0]):
     """
-    Orient a joint based. By efault it orients the x axes
+    Orient a joint based on aimConstraint technic.
+    By default it orients the x axes
     with the y axes as up vector.
     Args:
             source(dagnode): The joint to orient.
@@ -692,28 +693,36 @@ def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
         logger.log(level='error', message='The source node must be a joint',
                    logger=moduleLogger)
 
-# def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
-#                                 upAxes=[0, 1, 0]):
-#     axes = ['X', 'Y', 'Z']
-#     if rootJNT.nodeType() == 'joint':
-#         hierarchy = descendants(rootNode=rootJNT, reverse=True,
-#                                 typ='joint')
-#         temp = hierarchy[:]
-#         for jnt in hierarchy:
-#             pmc.parent(jnt, w=True)
-#         for jnt_ in temp:
-#             if len(temp) > 1:
-#                 custom_orientJoint(temp[1], temp[0],
-#                                    aimAxes=aimAxes, upAxes=upAxes)
-#                 temp[1].addChild(temp[0])
-#                 temp.remove(temp[0])
-#         for jnt_ in range(len(hierarchy)):
-#             hierarchy[jnt_].rotate.set(0, 0, 0)
-#             for ax in axes:
-#                 hierarchy[jnt_].attr('jointOrient' + ax).set(0)
-#         for jnt__ in hierarchy:
-#             if len(hierarchy) > 1:
-#                 custom_orientJoint(hierarchy[0], hierarchy[1],
-#                                    aimAxes=aim, upAxes=upVec)
-#                 hierarchy[1].addChild(hierarchy[0])
-#                 hierarchy.remove(hierarchy[0])
+
+def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
+                                upAxes=[0, 1, 0]):
+    """
+    Orient a joint hierarchy based on a aimConstraint technic.
+    By default it orients the x axes
+    with the y axes as up vector.
+    Args:
+            rootJNT(dagnode): The rootNode of the hierarchy.
+            aimAxes(list): The aim axes. [1, 1, 1] = [x, y, z]
+            upAxes(list): The aim axes. [1, 1, 1] = [x, y, z]
+    Return:
+            list: The hierarchy.
+    """
+    hierarchy = descendants(rootNode=rootJNT, reverse=True,
+                            typ='joint')
+    if len(hierarchy) > 1:
+        temp = hierarchy[:]
+        for jnt in hierarchy:
+            pmc.parent(jnt, w=True)
+        for jnt_ in hierarchy:
+            if len(temp) > 1:
+                custom_orientJoint(temp[1], temp[0],
+                                   aimAxes=aimAxes, upAxes=upAxes)
+                temp[1].addChild(temp[0])
+                temp.remove(temp[0])
+        hierarchy[0].rotate.set(0, 0, 0)
+        hierarchy[0].jointOrient.set(0, 0, 0)
+        return hierarchy
+    else:
+        logger.log(level='error',
+                   message='It must be a hierarchy for a proper orient',
+                   logger=moduleLogger)
