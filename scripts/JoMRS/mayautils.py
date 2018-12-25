@@ -726,3 +726,50 @@ def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
         logger.log(level='error',
                    message='It must be a hierarchy for a proper orient',
                    logger=moduleLogger)
+
+
+def default_orientJoint(node, aimAxes='xyz', upAxes='yup'):
+    """
+    Orient a joint in a hierarchy.
+    By default it orients the x axes
+    with the y axes as up vector.
+    Args:
+            node(dagnode): A node in the hierarchy.
+            aimAxes(str): Valid is xyz, yzx, zxy,
+            zyx, yxz, xzy, none.
+            upAxes(str): Valid is xup, xdown, yup, ydown,
+            zup, zdown, none.
+    """
+    if node.nodeType() == 'joint':
+        try:
+            node.orientJoint(val=aimAxes, secondaryAxisOrient=upAxes)
+        except:
+            logger.log(level='error',
+                       message='Joint not in hierarchy. Or'
+                       ' rotate channels has values.',
+                       logger=moduleLogger)
+    else:
+        logger.log(level='error', message='Node has to be a joint',
+                   logger=moduleLogger)
+
+
+def default_orientJointHierarchy(rootNode, aimAxes='xyz', upAxes='yup'):
+    """
+    Orient a joint hierarchy.
+    By default it orients the x axes
+    with the y axes as up vector.
+    Args:
+            rootJNT(dagnode): The rootNode of the hierarchy.
+            aimAxes(str): Valid is xyz, yzx, zxy,
+            zyx, yxz, xzy, none.
+            upAxes(str): Valid is xup, xdown, yup, ydown,
+            zup, zdown, none.
+    Return:
+            list: The hierarchy.
+    """
+    hierarchy = descendants(rootNode=rootNode, reverse=True,
+                            typ='joint')
+    for jnt in hierarchy[1:]:
+        default_orientJoint(node=jnt, aimAxes=aimAxes, upAxes=upAxes)
+    hierarchy[0].jointOrient.set(0, 0, 0)
+
