@@ -36,7 +36,6 @@ to create maya behaviours.
 # skinning function
 # joint parent function(disconnect inverse scale)
 # shapeDeformed node check up
-# convert tranform hierarchy in jnt hierarchy
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -775,7 +774,7 @@ def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
             orientMatchRotation(bool): Enable the match of the joint
             orientation with the rotation of the node.
     Return:
-            tuple: The created joint node
+            tuple: The created joint node.
     """
     name = strings.string_checkup(name, moduleLogger)
     data = [{'typ': 'BND', 'radius': 1, 'overrideColor': 17},
@@ -795,4 +794,39 @@ def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
         JNT.jointOrient.set(JNT.rotate.get())
         JNT.rotate.set(0, 0, 0)
     return JNT
+
+
+def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
+                        typ='BND', bufferGRP=True):
+    """
+    Convert a hierarchy of transform nodes into a joint skeleton.
+    By default it is a BND joint hierarchy with a buffer group.
+    Args:
+            rootNode(dagnode): The rootNode of the transform
+            hierarchy.
+            prefix(str): The prefix of the joints.
+            suffix(str): The suffix of the joints.
+            typ(str): The joint types.
+            bufferGRP(bool): Creates a buffer group for the
+            hierarchy.
+    Return:
+            list: The new created joint hierarchy.
+    """
+    result = []
+    hierarchy = descendants(rootNode=rootNode)
+    if hierarchy:
+        for tra in range(len(hierarchy)):
+            name = '{}_{}_{}'.format(prefix, str(tra), suffix)
+            name = strings.string_checkup(name, moduleLogger)
+            JNT = create_joint(name=name, node=hierarchy[tra], typ=typ)
+            result.append(JNT)
+    temp = result[:]
+    for node in hierarchy:
+        if len(temp) > 1:
+            temp[-2].addChild(temp[-1])
+            temp.remove(temp[-1])
+    if bufferGRP:
+        bufferGRP = create_bufferGRP(node=result[0])
+        result.insert(0, bufferGRP)
+    return result
 
