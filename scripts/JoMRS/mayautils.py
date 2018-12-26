@@ -35,10 +35,8 @@ to create maya behaviours.
 # wire deformer function
 # skinning function
 # joint parent function(disconnect inverse scale)
-# joint creation function (BND, IK, FK, DRV)
 # shapeDeformed node check up
 # convert tranform hierarchy in jnt hierarchy
-# create jnt function.
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -761,4 +759,40 @@ def default_orientJointHierarchy(rootNode, aimAxes='xyz', upAxes='yup'):
     for jnt in hierarchy[1:]:
         default_orientJoint(node=jnt, aimAxes=aimAxes, upAxes=upAxes)
     hierarchy[0].jointOrient.set(0, 0, 0)
+
+
+def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
+                 orientMatchRotation=True):
+    """
+    Create a joint node with a specific typ.
+    By Default it creates a 'BND' joint and match the jointOrient with
+    the roatation of a node.
+    Args:
+            name(str): The name of the node. Try to use the JoMRS
+            naming convention. If not it will throw a warning.
+            typ(str): Typ of the joint. Valid is: [BND, DRV, FK, IK]
+            node(dagnode): The node for transformation match.
+            orientMatchRotation(bool): Enable the match of the joint
+            orientation with the rotation of the node.
+    Return:
+            tuple: The created joint node
+    """
+    name = strings.string_checkup(name, moduleLogger)
+    data = [{'typ': 'BND', 'radius': 1, 'overrideColor': 17},
+            {'typ': 'DRV', 'radius': 2.5, 'overrideColor': 18},
+            {'typ': 'FK', 'radius': 1.5, 'overrideColor': 4},
+            {'typ': 'IK', 'radius': 2, 'overrideColor': 6}]
+    pmc.select(clear=True)
+    JNT = pmc.joint(n=name)
+    for util in data:
+        if util['typ'] == typ:
+            JNT.overrideEnabled.set(1)
+            JNT.radius.set(util['radius'])
+            JNT.overrideColor.set(util['overrideColor'])
+    if node:
+        pmc.delete(pmc.parentConstraint(node, JNT, mo=False))
+    if orientMatchRotation:
+        JNT.jointOrient.set(JNT.rotate.get())
+        JNT.rotate.set(0, 0, 0)
+    return JNT
 
