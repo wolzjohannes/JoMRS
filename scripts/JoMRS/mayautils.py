@@ -830,3 +830,52 @@ def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
         result.insert(0, bufferGRP)
     return result
 
+
+def create_motionPath(name='M_test_0_MPND', curveShape=None, target=None,
+                      position=1, worldUpType='objectUp', upVecObj=None,
+                      aimAxes='x', upAxes='y', follow=True,
+                      worldUpVector=[0, 0, 1]):
+    axes = ['X', 'Y', 'Z']
+    name = strings.string_checkup(name, moduleLogger)
+    MPND = pmc.createNode('motionPath', n=name)
+    curveShape.worldSpace[0].connect(MPND.geometryPath)
+    if target:
+        for axe in axes:
+            MPND.attr('rotate' + axe).connect(target.attr('rotate' + axe))
+            MPND.attr(axe.lower() +
+                      'Coordinate').connect(target.attr('translate' + axe))
+    if follow:
+        if aimAxes == 'x':
+            value = 0
+        elif aimAxes == 'y':
+            value = 1
+        elif aimAxes == 'z':
+            value = 2
+        if upAxes == 'x':
+            value_ = 0
+        elif upAxes == 'y':
+            value_ = 1
+        elif upAxes == 'z':
+            value_ = 2
+        if worldUpType == 'sceneUp':
+            value__ = 0
+        elif worldUpType == 'objectUp':
+            value__ = 1
+            upVecObj.worldMatrix.connect(MPND.worldUpMatrix)
+        elif worldUpType == 'objectRotationUp':
+            value__ = 2
+            MPND.worldUpVectorX.set(worldUpVector[0])
+            MPND.worldUpVectorY.set(worldUpVector[1])
+            MPND.worldUpVectorZ.set(worldUpVector[2])
+            upVecObj.worldMatrix.connect(MPND.worldUpMatrix)
+        elif worldUpType == 'vector':
+            value__ = 3
+        elif worldUpType == 'normal':
+            value__ = 4
+        MPND.setFollow(on=True)
+        MPND.frontAxis.set(value)
+        MPND.upAxis.set(value_)
+        MPND.worldUpType.set(value__)
+    else:
+        MPND.setFollow(on=False)
+
