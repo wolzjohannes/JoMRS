@@ -195,11 +195,12 @@ def valid_suffix(string, logger_=moduleLogger):
     Return:
             string: The passed string.
     """
-    suffixPattern = re.compile("_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON")
+    valid = "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND"
+    suffixPattern = re.compile(valid)
     if not re.search(suffixPattern, string):
         logger.log(level='warning',
                    message='string "' + string + '" has no valid suffix.' +
-                   ' Valid are [_CRV,_HANDLE,_JNT,_GEO,_GRP,_CON]',
+                   ' Valid are ' + valid,
                    logger=logger_)
     return string
 
