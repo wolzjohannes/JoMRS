@@ -42,7 +42,6 @@ import attributes
 import strings
 import logging
 import logger
-reload(strings)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
