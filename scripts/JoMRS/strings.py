@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 11
+# Date:       2018 / 12 / 30
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -76,8 +76,15 @@ def replaceInvalidPrefix(string, logger_=moduleLogger):
     if re.match("^[MRL]_", string):
         return string
     if not re.match("^[MRL]_", string):
-        logger.log(level='warning', message='Prefix of string "' +
+        logger.log(level='warning', message='The string prefix "' +
                    string + '" should specifie a side',
+                   logger=logger_)
+    numbersMatch = re.match("^[0-9]", string)
+    if numbersMatch:
+        number = numbersMatch.group(0)
+        string = string.replace(number, '')
+        logger.log(level='warning', message='Prefix contains numbers'
+                   '. Numbers deleted',
                    logger=logger_)
     rePattern = re.compile("_[lrmn]+_|_[LRMN]+_|^[lrmnLRMN]_+"
                            "|_[lrmnLRMN][0-9]+_|^[0-9][lrmnLRMN]_+"
@@ -192,11 +199,12 @@ def valid_suffix(string, logger_=moduleLogger):
     Return:
             string: The passed string.
     """
-    suffixPattern = re.compile("_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON")
+    valid = "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND"
+    suffixPattern = re.compile(valid)
     if not re.search(suffixPattern, string):
         logger.log(level='warning',
                    message='string "' + string + '" has no valid suffix.' +
-                   ' Valid are [_CRV,_HANDLE,_JNT,_GEO,_GRP,_CON]',
+                   ' Valid are ' + valid,
                    logger=logger_)
     return string
 
@@ -230,8 +238,23 @@ def string_checkup(string, logger_=moduleLogger):
             string: The passed string.
     """
     string = valid_stringSeparator(string, logger_)
-    string = valid_suffix(string, logger_)
     string = replaceInvalidPrefix(string, logger_)
+    string = valid_suffix(string, logger_)
     string = normalizeNumbers(string, logger_)
     string = normalizeSuffix(string, logger_)
     return string
+
+
+def search(pattern, string):
+    """
+    Search for a pattern in a string
+    Args:
+            pattern(str): The search pattern.
+            string(str): The string to search for.
+    Return:
+            list: The result of the search.
+    """
+    result = []
+    if re.search(pattern, string):
+        result.append(string)
+    return result
