@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 26
+# Date:       2018 / 12 / 30
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -239,3 +239,18 @@ def string_checkup(string, logger_=moduleLogger):
     string = normalizeNumbers(string, logger_)
     string = normalizeSuffix(string, logger_)
     return string
+
+
+def search(pattern, string):
+    """
+    Search for a pattern in a string
+    Args:
+            pattern(str): The search pattern.
+            string(str): The string to search for.
+    Return:
+            list: The result of the search.
+    """
+    result = []
+    if re.search(pattern, string):
+        result.append(string)
+    return result

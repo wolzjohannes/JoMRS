@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 28
+# Date:       2018 / 12 / 30
 
 """
 JoMRS maya utils module. Utilities helps
@@ -31,10 +31,6 @@ to create maya behaviours.
 # TO DO:
 # config file for valid strings. For projects modifications
 # check if all srings follow the JoMRS string handling
-# wire deformer function
-# skinning function
-# joint parent function(disconnect inverse scale)
-# shapeDeformed node check up
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -796,10 +792,11 @@ def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
 
 
 def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
-                        typ='BND', bufferGRP=True):
+                        typ='BND', bufferGRP=True, inverseScale=True):
     """
     Convert a hierarchy of transform nodes into a joint skeleton.
     By default it is a BND joint hierarchy with a buffer group.
+    The hierarchy has disconnected inverse scale plugs.
     Args:
             rootNode(dagnode): The rootNode of the transform
             hierarchy.
@@ -808,6 +805,8 @@ def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
             typ(str): The joint types.
             bufferGRP(bool): Creates a buffer group for the
             hierarchy.
+            inverseScale(bool): Disconnect the inverse scale
+            plugs of the joints.
     Return:
             list: The new created joint hierarchy.
     """
@@ -827,6 +826,12 @@ def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
     if bufferGRP:
         bufferGRP = create_bufferGRP(node=result[0])
         result.insert(0, bufferGRP)
+    if inverseScale:
+        for node in result:
+            try:
+                node.inverseScale.disconnect()
+            except:
+                continue
     return result
 
 
@@ -894,7 +899,7 @@ def create_motionPath(name='M_test_0_MPND', curveShape=None, target=None,
                 upVecObj.worldMatrix.connect(MPND.worldUpMatrix, force=True)
             else:
                 logger.log(level='error',
-                           message='You need a upvector tranform',
+                           message='You need a upvector transform',
                            logger=moduleLogger)
         if value__ == 2 or value__ == 3:
             MPND.worldUpVectorX.set(worldUpVector[0])
@@ -908,3 +913,46 @@ def create_motionPath(name='M_test_0_MPND', curveShape=None, target=None,
         MPND.follow.set(0)
     return MPND
 
+
+def create_hierarchy(nodes=None, inverseScale=None):
+    """
+    Create a hierarchy of nodes.
+    Args:
+            nodes(list): List of nodes.
+            inverseScale(bool): Disconnect the inverse scale
+            plugs of the joints.
+    Return:
+            list: The list of nodes in the hierarchy.
+    """
+    temp = nodes[:]
+    for number in range(len(temp)):
+        if len(temp) > 1:
+            temp[-2].addChild(temp[-1])
+            temp.remove(temp[-1])
+    if inverseScale:
+        for node in nodes:
+            if node.nodeType() == 'joint':
+                node.inverseScale.disconnect()
+            else:
+                logger.log(level='error',
+                           message='Inverse scale option only'
+                           ' available for joints',
+                           logger=moduleLogger)
+    return nodes
+
+
+def reduce_shapeNodes(node=None):
+    """
+    Reduce a transform to his true shape node.
+    Args:
+            node(dagnode): The transform with the shape ndoe.
+    Return:
+            list: The true shape node of the transform.
+    """
+    searchPattern = 'ShapeOrig|ShapeDeformed'
+    shapes = node.getShapes()
+    for shape in shapes:
+        shape.intermediateObject.set(0)
+        result = strings.search(searchPattern, str(shape))
+        pmc.delete(result)
+    return node.getShapes()
