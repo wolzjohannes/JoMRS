@@ -29,9 +29,6 @@ JoMRS string module. Module for string handling and naming conventions.
 ##########################################################
 # To Do
 # A config file for strings. For projects modifications.
-# Write function for check if a number is at the beginning of a string.
-# No numbers in the numbers function hit warning although it has numbers.
-# for example 0Test_JNT.
 ##########################################################
 
 import re
