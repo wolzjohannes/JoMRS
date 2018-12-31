@@ -93,4 +93,3 @@ class controls(object):
             self.control.getShape().overrideEnabled.set(1)
             self.control.getShape().overrideColor.set(colorIndex)
         return self.control
-        
