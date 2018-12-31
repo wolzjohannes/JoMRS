@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 30
+# Date:       2018 / 12 / 31
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -81,7 +81,7 @@ def replaceInvalidPrefix(string, logger_=moduleLogger):
                    logger=logger_)
     numbersMatch = re.match("^[0-9]", string)
     if numbersMatch:
-        number = numbersMatch.group(0)
+        number = "^" + numbersMatch.group(0)
         string = string.replace(number, '')
         logger.log(level='warning', message='Prefix contains numbers'
                    '. Numbers deleted',
