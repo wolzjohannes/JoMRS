@@ -165,7 +165,7 @@ class SphereControl(ControlCurves):
     """
     Create sphere control curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, 1),
                                       (0, 0.5, 0.866025),
                                       (0, 0.866025, 0.5),
@@ -210,7 +210,7 @@ class SquareControl(ControlCurves):
     """
     Create square control curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((1, 0, -1),
                                       (-1, 0, -1),
                                       (-1, 0, 1),
@@ -224,7 +224,7 @@ class FatCrossControl(ControlCurves):
     """
     Create fat cross control curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((2, 0, 1,),
                                       (2, 0, -1),
                                       (1, 0, -1),
@@ -246,7 +246,7 @@ class SingleArrowControl(ControlCurves):
     """
     Create single arrow curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.32),
                                       (-0.99, 0, 0),
                                       (-0.33, 0, 0),
@@ -263,7 +263,7 @@ class DoubleArrowNormalControl(ControlCurves):
     """
     Create double arrow normal curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -2.31),
                                       (-0.99, 0, -0.99),
                                       (-0.33, 0, -0.99),
@@ -283,7 +283,7 @@ class FourArrowNormalControl(ControlCurves):
     """
     Create four arrow normal curve.
     """
-    def get_curves(self, name):
+    def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.1025),
                                       (-0.33, 0, -0.6075),
                                       (-0.165, 0, -0.6075),
@@ -312,4 +312,48 @@ class FourArrowNormalControl(ControlCurves):
                          k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                             11, 12, 13, 14, 15, 16, 17, 18, 19,
                             20, 21, 22, 23, 24),
+                         n=name)
+
+
+class ArrowsOnBallControl(ControlCurves):
+    """
+    Create arrows on ball control curve.
+    """
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 0.35, -1.001567),
+                                      (-0.336638, 0.677886, -0.751175),
+                                      (-0.0959835, 0.677886, -0.751175),
+                                      (-0.0959835, 0.850458, -0.500783),
+                                      (-0.0959835, 0.954001, -0.0987656),
+                                      (-0.500783, 0.850458, -0.0987656),
+                                      (-0.751175, 0.677886, -0.0987656),
+                                      (-0.751175, 0.677886, -0.336638),
+                                      (-1.001567, 0.35, 0),
+                                      (-0.751175, 0.677886, 0.336638),
+                                      (-0.751175, 0.677886, 0.0987656),
+                                      (-0.500783, 0.850458, 0.0987656),
+                                      (-0.0959835, 0.954001, 0.0987656),
+                                      (-0.0959835, 0.850458, 0.500783),
+                                      (-0.0959835, 0.677886, 0.751175),
+                                      (-0.336638, 0.677886, 0.751175),
+                                      (0, 0.35, 1.001567),
+                                      (0.336638, 0.677886, 0.751175),
+                                      (0.0959835, 0.677886, 0.751175),
+                                      (0.0959835, 0.850458, 0.500783),
+                                      (0.0959835, 0.954001, 0.0987656),
+                                      (0.500783, 0.850458, 0.0987656),
+                                      (0.751175, 0.677886, 0.0987656),
+                                      (0.751175, 0.677886, 0.336638),
+                                      (1.001567, 0.35, 0),
+                                      (0.751175, 0.677886, -0.336638),
+                                      (0.751175, 0.677886, -0.0987656),
+                                      (0.500783, 0.850458, -0.0987656),
+                                      (0.0959835, 0.954001, -0.0987656),
+                                      (0.0959835, 0.850458, -0.500783),
+                                      (0.0959835, 0.677886, -0.751175),
+                                      (0.336638, 0.677886, -0.751175),
+                                      (0, 0.35, -1.001567)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
+                            14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
+                            27, 28, 29, 30, 31, 32),
                          n=name)
