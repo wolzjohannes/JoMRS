@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 02
+# Date:       2019 / 01 / 03
 
 """
 JoMRS nurbsCurve modification module.
@@ -38,13 +38,15 @@ import logger
 moduleLogger = logging.getLogger(__name__ + '.py')
 
 
-class controls(object):
+class ControlCurves(object):
+    """
+    Create control curve class.
+    """
 
-    def box(self, name, match=None, scale=None, colorIndex=17,
-            bufferGRP=True, child=None):
+    def create_curve(self, name, match=None, scale=None, colorIndex=17,
+                     bufferGRP=True, child=None):
         """
-        Create box control curve. By default with a colorIndex
-        of 17(BRIGHTYELLOW).
+        Create curve method.
         Args:
             name(str): The control name. You should follow the
             JoMRS naming convention. If not it will throw some
@@ -66,25 +68,7 @@ class controls(object):
         """
         result = []
         name = strings.string_checkup(name, moduleLogger)
-        self.control = pmc.curve(degree=1, p=((0.5, 0.5, 0.5),
-                                              (0.5, 0.5, -0.5),
-                                              (-0.5, 0.5, -0.5),
-                                              (-0.5, -0.5, -0.5),
-                                              (0.5, -0.5, -0.5),
-                                              (0.5, 0.5, -0.5),
-                                              (-0.5, 0.5, -0.5),
-                                              (-0.5, 0.5, 0.5),
-                                              (0.5, 0.5, 0.5),
-                                              (0.5, -0.5, 0.5),
-                                              (0.5, -0.5, -0.5),
-                                              (-0.5, -0.5, -0.5),
-                                              (-0.5, -0.5, 0.5),
-                                              (0.5, -0.5, 0.5),
-                                              (-0.5, -0.5, 0.5),
-                                              (-0.5, 0.5, 0.5)),
-                                 k=(0, 1, 2, 3, 4, 5, 6, 7, 8,
-                                    9, 10, 11, 12, 13, 14, 15),
-                                 n=name)
+        self.control = self.get_curve(name)
         if scale:
             pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
         if match:
@@ -100,244 +84,232 @@ class controls(object):
         result.append(self.control)
         return result
 
-    def pyramide(self, name, match=None, scale=None, colorIndex=17,
-                 bufferGRP=True, child=None):
-        """
-        Create pyramide control curve. By default with a colorIndex
-        of 17(BRIGHTYELLOW).
-        Args:
-            name(str): The control name. You should follow the
-            JoMRS naming convention. If not it will throw some
-            warnings.
-            match(dagnode): The node for transform match.
-            scale(list): The scale values.
-            colorIndex(integer): The color of the control.
-            Valid is:
-             0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
-             6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
-             11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
-             16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
-             21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
-             25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
-            child(dagnode): The child of the control.
-        Return:
-                list: The buffer group, the control curve node.
-        """
-        result = []
-        name = strings.string_checkup(name, moduleLogger)
-        self.control = pmc.curve(degree=1, p=((0, 2, 0),
-                                              (1, 0, -1),
-                                              (-1, 0, -1),
-                                              (0, 2, 0),
-                                              (-1, 0, 1),
-                                              (1, 0, 1),
-                                              (0, 2, 0),
-                                              (1, 0, -1),
-                                              (1, 0, 1),
-                                              (-1, 0, 1),
-                                              (-1, 0, -1)),
-                                 k=(0, 1, 2, 3, 4, 5, 6, 7,
-                                    8, 9, 10),
-                                 n=name)
-        if scale:
-            pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
-        if match:
-            pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
-        if colorIndex:
-            self.control.getShape().overrideEnabled.set(1)
-            self.control.getShape().overrideColor.set(colorIndex)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
-            result.append(buffer_)
-        if child:
-            self.control.addChild(child)
-        result.append(self.control)
-        return result
+    def get_curve(self):
+        raise NotImplemented
 
-    def quader(self, name, match=None, scale=None, colorIndex=17,
-               bufferGRP=True, child=None):
-        """
-        Create quader control curve. By default with a colorIndex
-        of 17(BRIGHTYELLOW).
-        Args:
-            name(str): The control name. You should follow the
-            JoMRS naming convention. If not it will throw some
-            warnings.
-            match(dagnode): The node for transform match.
-            scale(list): The scale values.
-            colorIndex(integer): The color of the control.
-            Valid is:
-             0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
-             6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
-             11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
-             16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
-             21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
-             25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
-            child(dagnode): The child of the control.
-        Return:
-                list: The buffer group, the control curve node.
-        """
-        result = []
-        name = strings.string_checkup(name, moduleLogger)
-        self.control = pmc.curve(degree=1, p=((0.5, 3.5, 0.5),
-                                              (0.5, 3.5, -0.5),
-                                              (-0.5, 3.5, -0.5),
-                                              (-0.5, -3.5, -0.5),
-                                              (0.5, -3.5, -0.5),
-                                              (0.5, 3.5, -0.5),
-                                              (-0.5, 3.5, -0.5),
-                                              (-0.5, 3.5, 0.5),
-                                              (0.5, 3.5, 0.5),
-                                              (0.5, -3.5, 0.5),
-                                              (0.5, -3.5, -0.5),
-                                              (-0.5, -3.5, -0.5),
-                                              (-0.5, -3.5, 0.5),
-                                              (0.5, -3.5, 0.5),
-                                              (-0.5, -3.5, 0.5),
-                                              (-0.5, 3.5, 0.5)),
-                                 k=(0, 1, 2, 3, 4, 5, 6, 7, 8,
-                                    9, 10, 11, 12, 13, 14, 15),
-                                 n=name)
-        if scale:
-            pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
-        if match:
-            pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
-        if colorIndex:
-            self.control.getShape().overrideEnabled.set(1)
-            self.control.getShape().overrideColor.set(colorIndex)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
-            result.append(buffer_)
-        if child:
-            self.control.addChild(child)
-        result.append(self.control)
-        return result
 
-    def sphere(self, name, match=None, scale=None, colorIndex=17,
-               bufferGRP=True, child=None):
-        """
-        Create sphere control curve. By default with a colorIndex
-        of 17(BRIGHTYELLOW).
-        Args:
-            name(str): The control name. You should follow the
-            JoMRS naming convention. If not it will throw some
-            warnings.
-            match(dagnode): The node for transform match.
-            scale(list): The scale values.
-            colorIndex(integer): The color of the control.
-            Valid is:
-             0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
-             6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
-             11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
-             16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
-             21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
-             25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
-            child(dagnode): The child of the control.
-        Return:
-                list: The buffer group, the control curve node.
-        """
-        result = []
-        name = strings.string_checkup(name, moduleLogger)
-        self.control = pmc.curve(degree=1, p=((0, 0, 1),
-                                              (0, 0.5, 0.866025),
-                                              (0, 0.866025, 0.5),
-                                              (0, 1, 0),
-                                              (0, 0.866025, -0.5),
-                                              (0, 0.5, -0.866025),
-                                              (0, 0, -1),
-                                              (0, -0.5, -0.866025),
-                                              (0, -0.866025, -0.5),
-                                              (0, -1, 0),
-                                              (0, -0.866025, 0.5),
-                                              (0, -0.5, 0.866025),
-                                              (0, 0, 1),
-                                              (0.707107, 0, 0.707107),
-                                              (1, 0, 0),
-                                              (0.707107, 0, -0.707107),
-                                              (0, 0, -1),
-                                              (-0.707107, 0, -0.707107),
-                                              (-1, 0, 0),
-                                              (-0.866025, 0.5, 0),
-                                              (-0.5, 0.866025, 0),
-                                              (0, 1, 0),
-                                              (0.5, 0.866025, 0),
-                                              (0.866025, 0.5, 0),
-                                              (1, 0, 0),
-                                              (0.866025, -0.5, 0),
-                                              (0.5, -0.866025, 0),
-                                              (0, -1, 0),
-                                              (-0.5, -0.866025, 0),
-                                              (-0.866025, -0.5, 0),
-                                              (-1, 0, 0),
-                                              (-0.707107, 0, 0.707107),
-                                              (0, 0, 1)),
-                                 k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-                                    12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
-                                    22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
-                                    32),
-                                 n=name)
-        if scale:
-            pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
-        if match:
-            pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
-        if colorIndex:
-            self.control.getShape().overrideEnabled.set(1)
-            self.control.getShape().overrideColor.set(colorIndex)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
-            result.append(buffer_)
-        if child:
-            self.control.addChild(child)
-        result.append(self.control)
-        return result
+class BoxControl(ControlCurves):
+    """
+    Create box control curve.
+    """
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0.5, 0.5, 0.5),
+                                      (0.5, 0.5, -0.5),
+                                      (-0.5, 0.5, -0.5),
+                                      (-0.5, -0.5, -0.5),
+                                      (0.5, -0.5, -0.5),
+                                      (0.5, 0.5, -0.5),
+                                      (-0.5, 0.5, -0.5),
+                                      (-0.5, 0.5, 0.5),
+                                      (0.5, 0.5, 0.5),
+                                      (0.5, -0.5, 0.5),
+                                      (0.5, -0.5, -0.5),
+                                      (-0.5, -0.5, -0.5),
+                                      (-0.5, -0.5, 0.5),
+                                      (0.5, -0.5, 0.5),
+                                      (-0.5, -0.5, 0.5),
+                                      (-0.5, 0.5, 0.5)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8,
+                            9, 10, 11, 12, 13, 14, 15),
+                         n=name)
 
-    def square(self, name, match=None, scale=None, colorIndex=17,
-               bufferGRP=True, child=None):
-        """
-        Create square control curve. By default with a colorIndex
-        of 17(BRIGHTYELLOW).
-        Args:
-            name(str): The control name. You should follow the
-            JoMRS naming convention. If not it will throw some
-            warnings.
-            match(dagnode): The node for transform match.
-            scale(list): The scale values.
-            colorIndex(integer): The color of the control.
-            Valid is:
-             0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
-             6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
-             11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
-             16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
-             21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
-             25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
-            child(dagnode): The child of the control.
-        Return:
-                list: The buffer group, the control curve node.
-        """
-        result = []
-        name = strings.string_checkup(name, moduleLogger)
-        self.control = pmc.curve(degree=1, p=((1, 0, -1),
-                                              (-1, 0, -1),
-                                              (-1, 0, 1),
-                                              (1, 0, 1),
-                                              (1, 0, -1)),
-                                 k=(0, 1, 2, 3, 4),
-                                 n=name)
-        if scale:
-            pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
-        if match:
-            pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
-        if colorIndex:
-            self.control.getShape().overrideEnabled.set(1)
-            self.control.getShape().overrideColor.set(colorIndex)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
-            result.append(buffer_)
-        if child:
-            self.control.addChild(child)
-        result.append(self.control)
-        return result
+
+class PyramideControl(ControlCurves):
+    """
+    Create pyramide control curve.
+    """
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 2, 0),
+                                      (1, 0, -1),
+                                      (-1, 0, -1),
+                                      (0, 2, 0),
+                                      (-1, 0, 1),
+                                      (1, 0, 1),
+                                      (0, 2, 0),
+                                      (1, 0, -1),
+                                      (1, 0, 1),
+                                      (-1, 0, 1),
+                                      (-1, 0, -1)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7,
+                            8, 9, 10),
+                         n=name)
+
+
+class QuaderControl(ControlCurves):
+    """
+    Create quader control curve.
+    """
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0.5, 3.5, 0.5),
+                                      (0.5, 3.5, -0.5),
+                                      (-0.5, 3.5, -0.5),
+                                      (-0.5, -3.5, -0.5),
+                                      (0.5, -3.5, -0.5),
+                                      (0.5, 3.5, -0.5),
+                                      (-0.5, 3.5, -0.5),
+                                      (-0.5, 3.5, 0.5),
+                                      (0.5, 3.5, 0.5),
+                                      (0.5, -3.5, 0.5),
+                                      (0.5, -3.5, -0.5),
+                                      (-0.5, -3.5, -0.5),
+                                      (-0.5, -3.5, 0.5),
+                                      (0.5, -3.5, 0.5),
+                                      (-0.5, -3.5, 0.5),
+                                      (-0.5, 3.5, 0.5)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8,
+                            9, 10, 11, 12, 13, 14, 15),
+                         n=name)
+
+
+class SphereControl(ControlCurves):
+    """
+    Create sphere control curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((0, 0, 1),
+                                      (0, 0.5, 0.866025),
+                                      (0, 0.866025, 0.5),
+                                      (0, 1, 0),
+                                      (0, 0.866025, -0.5),
+                                      (0, 0.5, -0.866025),
+                                      (0, 0, -1),
+                                      (0, -0.5, -0.866025),
+                                      (0, -0.866025, -0.5),
+                                      (0, -1, 0),
+                                      (0, -0.866025, 0.5),
+                                      (0, -0.5, 0.866025),
+                                      (0, 0, 1),
+                                      (0.707107, 0, 0.707107),
+                                      (1, 0, 0),
+                                      (0.707107, 0, -0.707107),
+                                      (0, 0, -1),
+                                      (-0.707107, 0, -0.707107),
+                                      (-1, 0, 0),
+                                      (-0.866025, 0.5, 0),
+                                      (-0.5, 0.866025, 0),
+                                      (0, 1, 0),
+                                      (0.5, 0.866025, 0),
+                                      (0.866025, 0.5, 0),
+                                      (1, 0, 0),
+                                      (0.866025, -0.5, 0),
+                                      (0.5, -0.866025, 0),
+                                      (0, -1, 0),
+                                      (-0.5, -0.866025, 0),
+                                      (-0.866025, -0.5, 0),
+                                      (-1, 0, 0),
+                                      (-0.707107, 0, 0.707107),
+                                      (0, 0, 1)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                            12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                            22, 23, 24, 25, 26, 27, 28, 29, 30, 31,
+                            32),
+                         n=name)
+
+
+class SquareControl(ControlCurves):
+    """
+    Create square control curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((1, 0, -1),
+                                      (-1, 0, -1),
+                                      (-1, 0, 1),
+                                      (1, 0, 1),
+                                      (1, 0, -1)),
+                         k=(0, 1, 2, 3, 4),
+                         n=name)
+
+
+class FatCrossControl(ControlCurves):
+    """
+    Create fat cross control curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((2, 0, 1,),
+                                      (2, 0, -1),
+                                      (1, 0, -1),
+                                      (1, 0, -2),
+                                      (-1, 0, -2),
+                                      (-1, 0, -1),
+                                      (-2, 0, -1),
+                                      (-2, 0, 1),
+                                      (-1, 0, 1),
+                                      (-1, 0, 2),
+                                      (1, 0, 2),
+                                      (1, 0, 1),
+                                      (2, 0, 1)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+                         n=name)
+
+
+class SingleArrowControl(ControlCurves):
+    """
+    Create single arrow curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((0, 0, -1.32),
+                                      (-0.99, 0, 0),
+                                      (-0.33, 0, 0),
+                                      (-0.33, 0, 0.99),
+                                      (0.33, 0, 0.99),
+                                      (0.33, 0, 0),
+                                      (0.99, 0, 0),
+                                      (0, 0, -1.32)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7),
+                         n=name)
+
+
+class DoubleArrowNormalControl(ControlCurves):
+    """
+    Create double arrow normal curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((0, 0, -2.31),
+                                      (-0.99, 0, -0.99),
+                                      (-0.33, 0, -0.99),
+                                      (-0.33, 0, 0.99),
+                                      (-0.99, 0, 0.99),
+                                      (0, 0, 2.31),
+                                      (0.99, 0, 0.99),
+                                      (0.33, 0, 0.99),
+                                      (0.33, 0, -0.99),
+                                      (0.99, 0, -0.99),
+                                      (0, 0, -2.31)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+                         n=name)
+
+
+class FourArrowNormalControl(ControlCurves):
+    """
+    Create four arrow normal curve.
+    """
+    def get_curves(self, name):
+        return pmc.curve(degree=1, p=((0, 0, -1.1025),
+                                      (-0.33, 0, -0.6075),
+                                      (-0.165, 0, -0.6075),
+                                      (-0.165, 0, -0.165),
+                                      (-0.6075, 0, -0.165),
+                                      (-0.6075, 0, -0.33),
+                                      (-1.1025, 0, 0),
+                                      (-0.6075, 0, 0.33),
+                                      (-0.6075, 0, 0.165),
+                                      (-0.165, 0, 0.165),
+                                      (-0.165, 0, 0.6075),
+                                      (-0.33, 0, 0.6075),
+                                      (0, 0, 1.1025),
+                                      (0.33, 0, 0.6075),
+                                      (0.165, 0, 0.6075),
+                                      (0.165, 0, 0.165),
+                                      (0.6075, 0, 0.165),
+                                      (0.6075, 0, 0.33),
+                                      (1.1025, 0, 0),
+                                      (0.6075, 0, -0.33),
+                                      (0.6075, 0, -0.165),
+                                      (0.165, 0, -0.165),
+                                      (0.165, 0, -0.6075),
+                                      (0.33, 0, -0.6075),
+                                      (0, 0, -1.1025)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                            11, 12, 13, 14, 15, 16, 17, 18, 19,
+                            20, 21, 22, 23, 24),
+                         n=name)
