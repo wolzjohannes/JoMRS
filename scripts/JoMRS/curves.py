@@ -69,13 +69,16 @@ class ControlCurves(object):
         result = []
         name = strings.string_checkup(name, moduleLogger)
         self.control = self.get_curve(name)
+        shapes = self.control.getShapes()
         if scale:
-            pmc.scale(self.control.cv[0:], scale[0], scale[1], scale[2])
+            for shape in shapes:
+                pmc.scale(shape.cv[0:], scale[0], scale[1], scale[2])
         if match:
             pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
         if colorIndex:
-            self.control.getShape().overrideEnabled.set(1)
-            self.control.getShape().overrideColor.set(colorIndex)
+            for shape in shapes:
+                shape.overrideEnabled.set(1)
+                shape.overrideColor.set(colorIndex)
         if bufferGRP:
             buffer_ = utils.create_bufferGRP(node=self.control)
             result.append(buffer_)
@@ -377,6 +380,9 @@ class CircleControl(ControlCurves):
 
 
 class DoubleCircleControl(ControlCurves):
+    """
+    Create a double circle control.
+    """
     def get_curve(self, name):
         circle0 = pmc.circle(c=(0, 0, 0),
                              nr=(0, 1, 0),
@@ -398,5 +404,9 @@ class DoubleCircleControl(ControlCurves):
                              s=8,
                              ch=0,
                              n=name)[0]
-        circle1.getShape().controlPoints[5].yValue.set(3)
+        for cv in range(8):
+            circle1.getShape().controlPoints[cv].yValue.set(0.5)
+        pmc.parent(circle1.getShape(), circle0, r=True, shape=True)
+        pmc.delete(circle1)
         return circle0
+
