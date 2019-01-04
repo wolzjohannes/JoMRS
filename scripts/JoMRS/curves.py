@@ -357,3 +357,46 @@ class ArrowsOnBallControl(ControlCurves):
                             14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
                             27, 28, 29, 30, 31, 32),
                          n=name)
+
+
+class CircleControl(ControlCurves):
+    """
+    Create circle control.
+    """
+    def get_curve(self, name):
+        return pmc.circle(c=(0, 0, 0),
+                          nr=(0, 1, 0),
+                          sw=360,
+                          r=1,
+                          d=3,
+                          ut=0,
+                          tol=0.01,
+                          s=8,
+                          ch=0,
+                          n=name)[0]
+
+
+class DoubleCircleControl(ControlCurves):
+    def get_curve(self, name):
+        circle0 = pmc.circle(c=(0, 0, 0),
+                             nr=(0, 1, 0),
+                             sw=360,
+                             r=1,
+                             d=3,
+                             ut=0,
+                             tol=0.01,
+                             s=8,
+                             ch=0,
+                             n=name)[0]
+        circle1 = pmc.circle(c=(0, 0, 0),
+                             nr=(0, 1, 0),
+                             sw=360,
+                             r=1,
+                             d=3,
+                             ut=0,
+                             tol=0.01,
+                             s=8,
+                             ch=0,
+                             n=name)[0]
+        circle1.getShape().controlPoints[5].yValue.set(3)
+        return circle0
