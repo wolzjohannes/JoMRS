@@ -43,8 +43,8 @@ class ControlCurves(object):
     Create control curve class.
     """
 
-    def create_curve(self, name, match=None, scale=None, colorIndex=17,
-                     bufferGRP=True, child=None):
+    def create_curve(self, name='M_control_0_CON', match=None, scale=None,
+                     colorIndex=17, bufferGRP=True, child=None):
         """
         Create curve method.
         Args:
@@ -70,15 +70,17 @@ class ControlCurves(object):
         name = strings.string_checkup(name, moduleLogger)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
+        for shape in shapes:
+            pmc.rename(shape, name + 'Shape')
         if scale:
-            for shape in shapes:
-                pmc.scale(shape.cv[0:], scale[0], scale[1], scale[2])
+            for shape_ in shapes:
+                pmc.scale(shape_.cv[0:], scale[0], scale[1], scale[2])
         if match:
             pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
         if colorIndex:
-            for shape in shapes:
-                shape.overrideEnabled.set(1)
-                shape.overrideColor.set(colorIndex)
+            for shape__ in shapes:
+                shape__.overrideEnabled.set(1)
+                shape__.overrideColor.set(colorIndex)
         if bufferGRP:
             buffer_ = utils.create_bufferGRP(node=self.control)
             result.append(buffer_)
@@ -410,3 +412,87 @@ class DoubleCircleControl(ControlCurves):
         pmc.delete(circle1)
         return circle0
 
+
+class HexagonControl(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((-0.5, 1, 0.866025),
+                                      (0.5, 1, 0.866025),
+                                      (0.5, -1, 0.866025),
+                                      (1, -1, 0),
+                                      (1, 1, 0),
+                                      (0.5, 1, -0.866025),
+                                      (0.5, -1, -0.866025),
+                                      (-0.5, -1, -0.866026),
+                                      (-0.5, 1, -0.866026),
+                                      (-1, 1, -1.5885e-007),
+                                      (-1, -1, -1.5885e-007),
+                                      (-0.5, -1, 0.866025),
+                                      (-0.5, 1, 0.866025),
+                                      (-1, 1, -1.5885e-007),
+                                      (-0.5, 1, -0.866026),
+                                      (0.5, 1, -0.866025),
+                                      (1, 1, 0),
+                                      (0.5, 1, 0.866025),
+                                      (0.5, -1, 0.866025),
+                                      (-0.5, -1, 0.866025),
+                                      (-1, -1, -1.5885e-007),
+                                      (-0.5, -1, -0.866026),
+                                      (0.5, -1, -0.866025),
+                                      (1, -1, 0)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
+                            12, 13, 14, 15, 16, 17, 18, 19, 20, 21,
+                            22, 23),
+                         n=name)
+
+
+class SingleThinArrow(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 0, 1),
+                                      (0, 0, -1),
+                                      (-1, 0, 0),
+                                      (0, 0, -1),
+                                      (1, 0, 0)),
+                         k=(0, 1, 2, 3, 4),
+                         n=name)
+
+
+class SingleNormalArrow(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 0, -1.32),
+                                      (-0.99, 0, 0),
+                                      (-0.33, 0, 0),
+                                      (-0.33, 0, 0.99),
+                                      (0.33, 0, 0.99),
+                                      (0.33, 0, 0),
+                                      (0.99, 0, 0),
+                                      (0, 0, -1.32)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7),
+                         n=name)
+
+
+class SingleFatArrow(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 0, -0.99),
+                                      (-0.66, 0, 0),
+                                      (-0.33, 0, 0),
+                                      (-0.33, 0, 0.66),
+                                      (0.33, 0, 0.66),
+                                      (0.33, 0, 0),
+                                      (0.66, 0, 0),
+                                      (0, 0, -0.99)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7),
+                         n=name)
+
+
+class DoubleThinArrow(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((1, 0, 1),
+                                      (0, 0, 2),
+                                      (-1, 0, 1),
+                                      (0, 0, 2),
+                                      (0, 0, -2),
+                                      (-1, 0, -1),
+                                      (0, 0, -2),
+                                      (1, 0, -1)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7),
+                         n=name)
