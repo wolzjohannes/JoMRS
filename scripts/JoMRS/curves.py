@@ -785,6 +785,42 @@ class FatCrossControl(ControlCurves):
                          n=name)
 
 
+class SpearControl(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 2, 0),
+                                      (0, 0, 2),
+                                      (0, 0, -2),
+                                      (0, 2, 0),
+                                      (-2, 0, 0),
+                                      (2, 0, 0),
+                                      (0, 2, 0)),
+                         k=(0, 1, 2, 3, 4, 5, 6),
+                         n=name)
+
+
+class SpearControl1(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(degree=1, p=((0, 2, 0),
+                                      (0, 0, 2),
+                                      (0, -2, 0),
+                                      (0, 0, -2),
+                                      (0, 2, 0),
+                                      (0, -2, 0),
+                                      (0, 0, 0),
+                                      (0, 0, 2),
+                                      (0, 0, -2),
+                                      (2, 0, 0),
+                                      (0, 0, 2),
+                                      (-2, 0, 0),
+                                      (0, 0, -2),
+                                      (0, 0, 2),
+                                      (0, 0, 0),
+                                      (-2, 0, 0),
+                                      (2, 0, 0)),
+                         k=(0, 1, 2, 3, 4, 5, 6, 7,
+                            8, 9, 10, 11, 12, 13,
+                            14, 15, 16),
+                         n=name)
 
 
 
