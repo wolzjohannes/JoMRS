@@ -906,6 +906,35 @@ class FootPrintControl(ControlCurves):
                          n=name)
 
 
+class CurvedCircleControl(ControlCurves):
+    def get_curve(self, name):
+        values = [{'cv': 0, 'value': [0.466, 0, -0.784]},
+                  {'cv': 1, 'value': [0, 0.47, -1.108]},
+                  {'cv': 2, 'value': [-0.466, 0, -0.784]},
+                  {'cv': 3, 'value': [-1.108, 0.344, 0]},
+                  {'cv': 4, 'value': [-0.466, 0, 0.784]},
+                  {'cv': 5, 'value': [0, 0.47, 1.108]},
+                  {'cv': 6, 'value': [0.466, 0, 0.784]},
+                  {'cv': 7, 'value': [1.108, 0.344, 0]}]
+        circle = pmc.circle(c=(0, 0, 0),
+                            nr=(0, 1, 0),
+                            sw=360,
+                            r=1,
+                            d=3,
+                            ut=0,
+                            tol=0.01,
+                            s=8,
+                            ch=0,
+                            n=name)[0]
+        for v in values:
+            circle.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            circle.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            circle.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        return circle
+
+
+
+
 
 
 
