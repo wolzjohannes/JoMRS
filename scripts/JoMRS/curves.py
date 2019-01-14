@@ -275,6 +275,9 @@ class DoubleCircleControl(ControlCurves):
 
 
 class HexagonControl(ControlCurves):
+    """
+    Create a Hexagon Control.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-0.5, 1, 0.866025),
                                       (0.5, 1, 0.866025),
@@ -368,6 +371,9 @@ class ArrowsOnBallControl(ControlCurves):
 
 
 class SingleArrowThinControl(ControlCurves):
+    """
+    Create a Single Arrow Thin Control.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, 1),
                                       (0, 0, -1),
@@ -379,6 +385,9 @@ class SingleArrowThinControl(ControlCurves):
 
 
 class SingleArrowNormalControl(ControlCurves):
+    """
+    Create a Single Arrow Normal Control.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.32),
                                       (-0.99, 0, 0),
@@ -393,6 +402,9 @@ class SingleArrowNormalControl(ControlCurves):
 
 
 class SingleArrowFatControl(ControlCurves):
+    """
+    Create a Single Arrow Fat Control.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -0.99),
                                       (-0.66, 0, 0),
@@ -407,6 +419,9 @@ class SingleArrowFatControl(ControlCurves):
 
 
 class DoubleArrowThinControl(ControlCurves):
+    """
+    Create a Double Arrow Thin Control. 
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((1, 0, 1),
                                       (0, 0, 2),
@@ -908,14 +923,14 @@ class FootPrintControl(ControlCurves):
 
 class CurvedCircleControl(ControlCurves):
     def get_curve(self, name):
-        values = [{'cv': 0, 'value': [0.466, 0, -0.784]},
-                  {'cv': 1, 'value': [0, 0.47, -1.108]},
-                  {'cv': 2, 'value': [-0.466, 0, -0.784]},
-                  {'cv': 3, 'value': [-1.108, 0.344, 0]},
-                  {'cv': 4, 'value': [-0.466, 0, 0.784]},
-                  {'cv': 5, 'value': [0, 0.47, 1.108]},
-                  {'cv': 6, 'value': [0.466, 0, 0.784]},
-                  {'cv': 7, 'value': [1.108, 0.344, 0]}]
+        values = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
+                  {'cv': 1, 'value': [0, 0.235, -1.108]},
+                  {'cv': 2, 'value': [-0.466, -0.235, -0.784]},
+                  {'cv': 3, 'value': [-1.108, 0.109, 0]},
+                  {'cv': 4, 'value': [-0.466, -0.235, 0.784]},
+                  {'cv': 5, 'value': [0, 0.235, 1.108]},
+                  {'cv': 6, 'value': [0.466, -0.235, 0.784]},
+                  {'cv': 7, 'value': [1.108, 0.109, 0]}]
         circle = pmc.circle(c=(0, 0, 0),
                             nr=(0, 1, 0),
                             sw=360,
@@ -933,6 +948,55 @@ class CurvedCircleControl(ControlCurves):
         return circle
 
 
+class DoubleCurvedCircleControl(ControlCurves):
+    def get_curve(self, name):
+        values0 = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
+                   {'cv': 1, 'value': [0, 0.235, -1.108]},
+                   {'cv': 2, 'value': [-0.466, -0.235, -0.784]},
+                   {'cv': 3, 'value': [-1.108, 0.109, 0]},
+                   {'cv': 4, 'value': [-0.466, -0.235, 0.784]},
+                   {'cv': 5, 'value': [0, 0.235, 1.108]},
+                   {'cv': 6, 'value': [0.466, -0.235, 0.784]},
+                   {'cv': 7, 'value': [1.108, 0.109, 0]}]
+        values1 = [{'cv': 0, 'value': [0.466, -0.176, -0.784]},
+                   {'cv': 1, 'value': [0, 0.294, -1.108]},
+                   {'cv': 2, 'value': [-0.466, -0.176, -0.784]},
+                   {'cv': 3, 'value': [-1.108, 0.168, 0]},
+                   {'cv': 4, 'value': [-0.466, -0.176, 0.784]},
+                   {'cv': 5, 'value': [0, 0.294, 1.108]},
+                   {'cv': 6, 'value': [0.466, -0.176, 0.784]},
+                   {'cv': 7, 'value': [1.108, 0.168, 0]}]
+        circle0 = pmc.circle(c=(0, 0, 0),
+                             nr=(0, 1, 0),
+                             sw=360,
+                             r=1,
+                             d=3,
+                             ut=0,
+                             tol=0.01,
+                             s=8,
+                             ch=0,
+                             n=name)[0]
+        circle1 = pmc.circle(c=(0, 0, 0),
+                             nr=(0, 1, 0),
+                             sw=360,
+                             r=1,
+                             d=3,
+                             ut=0,
+                             tol=0.01,
+                             s=8,
+                             ch=0,
+                             n=name)[0]
+        for v in values0:
+            circle0.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            circle0.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            circle0.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        for v in values1:
+            circle1.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            circle1.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            circle1.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        pmc.parent(circle1.getShape(), circle0, r=True, shape=True)
+        pmc.delete(circle1)
+        return circle0
 
 
 
