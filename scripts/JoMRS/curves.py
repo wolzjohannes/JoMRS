@@ -420,7 +420,7 @@ class SingleArrowFatControl(ControlCurves):
 
 class DoubleArrowThinControl(ControlCurves):
     """
-    Create a Double Arrow Thin Control. 
+    Create a Double Arrow Thin Control.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((1, 0, 1),
@@ -998,6 +998,37 @@ class DoubleCurvedCircleControl(ControlCurves):
         pmc.delete(circle1)
         return circle0
 
+
+class LocatorControl(ControlCurves):
+    def get_curve(self, name):
+        line0 = pmc.curve(d=1, p=((5, 0, 0), (-5, 0, 0)), k=(0, 1), n=name)
+        line1 = pmc.curve(d=1, p=((0, 5, 0), (0, -5, 0)), k=(0, 1), n=name)
+        line2 = pmc.curve(d=1, p=((0, 0, 5), (0, 0, -5)), k=(0, 1), n=name)
+        pmc.parent(line1.getShape(), line0, r=True, shape=True)
+        pmc.parent(line2.getShape(), line0, r=True, shape=True)
+        pmc.delete(line1, line2)
+        return line0
+
+
+class JointControl(ControlCurves):
+    def get_curve(self, name):
+        locator = LocatorControl().get_curve(name)
+        sphere = SphereControl().get_curve(name)
+        for shape in sphere.getShapes():
+            pmc.scale(shape.cv[0:], 3, 3, 3)
+            pmc.parent(shape, locator, r=True, shape=True)
+            pmc.delete(sphere)
+        return locator
+
+
+class XAxeControl(ControlCurves):
+    def get_curve(self, name):
+        return pmc.curve(d=1, p=((5, 0, 0),(0, 0, 0)), k=(0, 1), n=name)
+
+
+class TestControl():
+    def create_curve(self, name, scale=None):
+        pyramide = PyramideControl().create_curve(name=name, scale=scale)
 
 
 
