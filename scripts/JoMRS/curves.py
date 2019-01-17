@@ -1021,14 +1021,21 @@ class JointControl(ControlCurves):
         return locator
 
 
-class XAxeControl(ControlCurves):
-    def get_curve(self, name):
-        return pmc.curve(d=1, p=((5, 0, 0),(0, 0, 0)), k=(0, 1), n=name)
-
-
-class TestControl():
-    def create_curve(self, name, scale=None):
-        pyramide = PyramideControl().create_curve(name=name, scale=scale)
+class RotateAxesControl():
+    def create_curve(self, name='M_control_0_CON', scale=None):
+        arrowValue0 = [{'cv':0, 'value':[0 ,0 ,0]},
+                       {'cv':1, 'value':[3.804 ,0 ,0]},
+                       {'cv':2, 'value':[2.282 ,-0.761 ,0]},
+                       {'cv':3, 'value':[3.804 ,0 ,0]},
+                       {'cv':4, 'value':[2.282 ,0.761 ,0]}]
+        # pyramide = PyramideControl().create_curve(name=name, scale=scale)
+        arrow0 = SingleArrowThinControl().create_curve(name=name, scale=scale)
+        arrow1 = SingleArrowThinControl().create_curve(name=name, scale=scale)
+        arrow2 = SingleArrowThinControl().create_curve(name=name, scale=scale)
+        for v in arrowValue0:
+            arrow0.getShape().cv[v['cv']].xValue.set(v['value'][0])
+            arrow0.getShape().cv[v['cv']].yValue.set(v['value'][1])
+            arrow0.getShape().cv[v['cv']].zValue.set(v['value'][2])
 
 
 
