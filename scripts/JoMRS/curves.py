@@ -1023,20 +1023,47 @@ class JointControl(ControlCurves):
 
 class RotateAxesControl():
     def create_curve(self, name='M_control_0_CON', scale=None):
-        arrowValue0 = [{'cv':0, 'value':[0 ,0 ,0]},
-                       {'cv':1, 'value':[3.804 ,0 ,0]},
-                       {'cv':2, 'value':[2.282 ,-0.761 ,0]},
-                       {'cv':3, 'value':[3.804 ,0 ,0]},
-                       {'cv':4, 'value':[2.282 ,0.761 ,0]}]
-        # pyramide = PyramideControl().create_curve(name=name, scale=scale)
-        arrow0 = SingleArrowThinControl().create_curve(name=name, scale=scale)
-        arrow1 = SingleArrowThinControl().create_curve(name=name, scale=scale)
-        arrow2 = SingleArrowThinControl().create_curve(name=name, scale=scale)
+        arrowValue0 = [{'cv': 0, 'value': [0, 0, 0]},
+                       {'cv': 1, 'value': [3.804, 0, 0]},
+                       {'cv': 2, 'value': [2.282, -0.761, 0]},
+                       {'cv': 3, 'value': [3.804, 0, 0]},
+                       {'cv': 4, 'value': [2.282, 0.761, 0]}]
+        arrowValue1 = [{'cv': 0, 'value': [0, 0, 0]},
+                       {'cv': 1, 'value': [0, 0, 3.793]},
+                       {'cv': 2, 'value': [0, -0.761, 2.271]},
+                       {'cv': 3, 'value': [0, 0, 3.793]},
+                       {'cv': 4, 'value': [0, 0.761, 2.271]}]
+        arrowValue2 = [{'cv': 0, 'value': [0, 0, 0]},
+                       {'cv': 1, 'value': [0, 3.797, 0]},
+                       {'cv': 2, 'value': [0.761, 2.275, 0]},
+                       {'cv': 3, 'value': [0, 3.797, 0]},
+                       {'cv': 4, 'value': [-0.761, 2.275, 0]}]
+        arrow0 = SingleArrowThinControl().create_curve(name=name,
+                                                       scale=scale,
+                                                       colorIndex=13)[1]
+        arrow1 = SingleArrowThinControl().create_curve(name=name,
+                                                       bufferGRP=False,
+                                                       scale=scale,
+                                                       colorIndex=6)[0]
+        arrow2 = SingleArrowThinControl().create_curve(name=name,
+                                                       bufferGRP=False,
+                                                       scale=scale,
+                                                       colorIndex=14)[0]
         for v in arrowValue0:
-            arrow0.getShape().cv[v['cv']].xValue.set(v['value'][0])
-            arrow0.getShape().cv[v['cv']].yValue.set(v['value'][1])
-            arrow0.getShape().cv[v['cv']].zValue.set(v['value'][2])
-
+            arrow0.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            arrow0.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            arrow0.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        for v in arrowValue1:
+            arrow1.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            arrow1.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            arrow1.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        for v in arrowValue2:
+            arrow2.getShape().controlPoints[v['cv']].xValue.set(v['value'][0])
+            arrow2.getShape().controlPoints[v['cv']].yValue.set(v['value'][1])
+            arrow2.getShape().controlPoints[v['cv']].zValue.set(v['value'][2])
+        pmc.parent(arrow1.getShape(), arrow0, r=True, shape=True)
+        pmc.parent(arrow2.getShape(), arrow0, r=True, shape=True)
+        pmc.delete(arrow1, arrow2)
 
 
 
