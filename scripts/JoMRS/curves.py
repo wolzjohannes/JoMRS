@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 18
+# Date:       2019 / 01 / 20
 
 """
 JoMRS nurbsCurve modification module.
@@ -1064,6 +1064,28 @@ class RotateAxesControl():
         pmc.parent(arrow1.getShape(), arrow0, r=True, shape=True)
         pmc.parent(arrow2.getShape(), arrow0, r=True, shape=True)
         pmc.delete(arrow1, arrow2)
+
+
+class DiamondControl():
+    def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17):
+        spear0 = SpearControl1().create_curve(name=name,
+                                              scale=scale,
+                                              colorIndex=colorIndex)[1]
+        spear1 = SpearControl1().create_curve(name=name,
+                                              scale=scale,
+                                              colorIndex=colorIndex,
+                                              bufferGRP=False)[0]
+        spear2 = SpearControl1().create_curve(name=name,
+                                              scale=scale,
+                                              colorIndex=colorIndex,
+                                              bufferGRP=False)[0]
+        pmc.rotate(spear1.cv[:], 0, 45, 0)
+        pmc.rotate(spear2.cv[:], 0, -45, 0)
+        spear0.addChild(spear1.getShape(), r=True, shape=True)
+        spear0.addChild(spear2.getShape(), r=True, shape=True)
+        pmc.delete(spear1, spear2)
+
+
 
 
 
