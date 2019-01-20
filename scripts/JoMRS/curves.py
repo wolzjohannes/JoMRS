@@ -1022,7 +1022,7 @@ class JointControl(ControlCurves):
 
 
 class RotateAxesControl():
-    def create_curve(self, name='M_control_0_CON', scale=None):
+    def create_curve(self, name='M_control_0_CON', scale=None, bufferGRP=True):
         arrowValue0 = [{'cv': 0, 'value': [0, 0, 0]},
                        {'cv': 1, 'value': [3.804, 0, 0]},
                        {'cv': 2, 'value': [2.282, -0.761, 0]},
@@ -1039,8 +1039,9 @@ class RotateAxesControl():
                        {'cv': 3, 'value': [0, 3.797, 0]},
                        {'cv': 4, 'value': [-0.761, 2.275, 0]}]
         arrow0 = SingleArrowThinControl().create_curve(name=name,
+                                                       bufferGRP=bufferGRP,
                                                        scale=scale,
-                                                       colorIndex=13)[1]
+                                                       colorIndex=13,)[-1]
         arrow1 = SingleArrowThinControl().create_curve(name=name,
                                                        bufferGRP=False,
                                                        scale=scale,
@@ -1064,10 +1065,12 @@ class RotateAxesControl():
         pmc.parent(arrow1.getShape(), arrow0, r=True, shape=True)
         pmc.parent(arrow2.getShape(), arrow0, r=True, shape=True)
         pmc.delete(arrow1, arrow2)
+        return arrow0
 
 
 class DiamondControl():
-    def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17):
+    def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17,
+                     localRotateAxes=True):
         spear0 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               colorIndex=colorIndex)[1]
@@ -1084,6 +1087,13 @@ class DiamondControl():
         spear0.addChild(spear1.getShape(), r=True, shape=True)
         spear0.addChild(spear2.getShape(), r=True, shape=True)
         pmc.delete(spear1, spear2)
+        if localRotateAxes:
+            instance = RotateAxesControl()
+            axesName = name.replace('_CON', '_LRA_CON')
+            rotatAxesCon = instance.create_curve(name=axesName, scale=scale,
+                                                 bufferGRP=False)
+            spear0.addChild(rotatAxesCon)
+        return spear0
 
 
 
