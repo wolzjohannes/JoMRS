@@ -1070,10 +1070,11 @@ class RotateAxesControl():
 
 class DiamondControl():
     def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17,
-                     localRotateAxes=True):
+                     localRotateAxes=True, bufferGRP=True):
         spear0 = SpearControl1().create_curve(name=name,
+                                              bufferGRP=bufferGRP,
                                               scale=scale,
-                                              colorIndex=colorIndex)[1]
+                                              colorIndex=colorIndex)[-1]
         spear1 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               colorIndex=colorIndex,
