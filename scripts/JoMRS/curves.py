@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 20
+# Date:       2019 / 01 / 21
 
 """
 JoMRS nurbsCurve modification module.
@@ -44,7 +44,9 @@ class ControlCurves(object):
     """
 
     def create_curve(self, name='M_control_0_CON', match=None, scale=None,
-                     colorIndex=17, bufferGRP=True, child=None):
+                     colorIndex=17, bufferGRP=True, child=None,
+                     translateChannel=True, rotateChannel=True,
+                     scaleChannel=True, visibilityChannel=True):
         """
         Create curve method.
         Args:
@@ -63,6 +65,10 @@ class ControlCurves(object):
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
             bufferGRP(bool): Create bufferGRP for the control.
             child(dagnode): The child of the control.
+            translateChannel(bool): Lock/Hide the translate channels.
+            rotateChannel(bool): Lock/Hide the rotate channels.
+            scaleChannel(bool): Lock/Hide the scale channels.
+            visibilityChannel(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the control curve node.
         """
@@ -70,6 +76,8 @@ class ControlCurves(object):
         name = strings.string_checkup(name, moduleLogger)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
+        attributes = ['translate', 'rotate', 'scale']
+        axes = ['X', 'Y', 'Z']
         for shape in shapes:
             pmc.rename(shape, name + 'Shape')
         if scale:
@@ -86,6 +94,26 @@ class ControlCurves(object):
             result.append(buffer_)
         if child:
             self.control.addChild(child)
+        if translateChannel is False:
+            for axe in axes:
+                self.control.attr(attributes[0] + axe).set(lock=True,
+                                                           keyable=False,
+                                                           channelBox=False)
+        if rotateChannel is False:
+            for axe in axes:
+                self.control.attr(attributes[1] + axe).set(lock=True,
+                                                           keyable=False,
+                                                           channelBox=False)
+        if scaleChannel is False:
+            for axe in axes:
+                self.control.attr(attributes[2] + axe).set(lock=True,
+                                                           keyable=False,
+                                                           channelBox=False)
+        if visibilityChannel is False:
+            for axe in axes:
+                self.control.visibility.set(lock=True,
+                                            keyable=False,
+                                            channelBox=False)
         result.append(self.control)
         return result
 
@@ -1022,7 +1050,9 @@ class JointControl(ControlCurves):
 
 
 class RotateAxesControl():
-    def create_curve(self, name='M_control_0_CON', scale=None, bufferGRP=True):
+    def create_curve(self, name='M_control_0_CON', scale=None, bufferGRP=True,
+                     translateChannel=True, rotateChannel=True,
+                     scaleChannel=True, visibilityChannel=True):
         arrowValue0 = [{'cv': 0, 'value': [0, 0, 0]},
                        {'cv': 1, 'value': [3.804, 0, 0]},
                        {'cv': 2, 'value': [2.282, -0.761, 0]},
@@ -1041,7 +1071,12 @@ class RotateAxesControl():
         arrow0 = SingleArrowThinControl().create_curve(name=name,
                                                        bufferGRP=bufferGRP,
                                                        scale=scale,
-                                                       colorIndex=13,)[-1]
+                                                       colorIndex=13,
+                                                       translateChannel=translateChannel,
+                                                       rotateChannel=rotateChannel,
+                                                       scaleChannel=scaleChannel,
+                                                       visibilityChannel=visibilityChannel,
+                                                       )[-1]
         arrow1 = SingleArrowThinControl().create_curve(name=name,
                                                        bufferGRP=False,
                                                        scale=scale,
@@ -1070,19 +1105,26 @@ class RotateAxesControl():
 
 class DiamondControl():
     def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17,
-                     localRotateAxes=True, bufferGRP=True):
+                     localRotateAxes=True, bufferGRP=True,
+                     translateChannel=True, rotateChannel=True,
+                     scaleChannel=True, visibilityChannel=True):
         spear0 = SpearControl1().create_curve(name=name,
                                               bufferGRP=bufferGRP,
                                               scale=scale,
-                                              colorIndex=colorIndex)[-1]
+                                              colorIndex=colorIndex,
+                                              translateChannel=translateChannel,
+                                              rotateChannel=rotateChannel,
+                                              scaleChannel=scaleChannel,
+                                              visibilityChannel=visibilityChannel,
+                                              )[-1]
         spear1 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               colorIndex=colorIndex,
-                                              bufferGRP=False)[0]
+                                              bufferGRP=False,)[0]
         spear2 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               colorIndex=colorIndex,
-                                              bufferGRP=False)[0]
+                                              bufferGRP=False,)[0]
         pmc.rotate(spear1.cv[:], 0, 45, 0)
         pmc.rotate(spear2.cv[:], 0, -45, 0)
         spear0.addChild(spear1.getShape(), r=True, shape=True)
@@ -1092,7 +1134,9 @@ class DiamondControl():
             instance = RotateAxesControl()
             axesName = name.replace('_CON', '_LRA_CON')
             rotatAxesCon = instance.create_curve(name=axesName, scale=scale,
-                                                 bufferGRP=False)
+                                                 bufferGRP=False,
+                                                 translateChannel=False,
+                                                 scaleChannel=False)
             spear0.addChild(rotatAxesCon)
         return spear0
 
