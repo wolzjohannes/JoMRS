@@ -20,13 +20,17 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 21
+# Date:       2019 / 01 / 22
 
 """
 JoMRS nurbsCurve modification module.
 """
 ##########################################################
 # GLOBALS
+# To Do: 
+# single curve control with connections with 0 - 10 knots
+# docstrings for RotateAxeControl and DiamondControl
+# cubic curve function with connections with 0 - 10 knots
 ##########################################################
 
 import pymel.core as pmc
