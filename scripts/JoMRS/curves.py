@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 22
+# Date:       2019 / 01 / 23
 
 """
 JoMRS nurbsCurve modification module.
@@ -1145,6 +1145,29 @@ class DiamondControl():
         return spear0
 
 
+class linear_curve():
+    def create_curve(self, name='M_linear_0_CRV', position=None,
+                     knots=None, driverNodes=None):
+        print driverNodes
+        data = {}
+        data['degree'] = 1
+        data['n'] = name
+        if driverNodes is None:
+            data['p'] = (position)
+            data['k'] = knots
+        else:
+            data['p'] = []
+            data['k'] = []
+            for x in range(len(driverNodes)):
+                data['p'].append((0, 0, 0))
+                data['k'].append(x)
+            data['p'] = tuple(data['p'])
+            data['p'] = tuple(data['p'])
+        result = pmc.curve(**data)
+        for y in range(len(driverNodes)):
+            decomp = pmc.createNode('decomposeMatrix', n=name + '_DEMAND')
+            driverNodes[y].worldMatrix[0].connect(decomp.inputMatrix)
+            decomp.outputTranslate.connect(result.controlPoints[y])
 
 
 
