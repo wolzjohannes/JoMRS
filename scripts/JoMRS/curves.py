@@ -38,6 +38,7 @@ import mayautils as utils
 import strings
 import logging
 import logger
+import attributes
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
@@ -80,8 +81,6 @@ class ControlCurves(object):
         name = strings.string_checkup(name, moduleLogger)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
-        attributes = ['translate', 'rotate', 'scale']
-        axes = ['X', 'Y', 'Z']
         for shape in shapes:
             pmc.rename(shape, name + 'Shape')
         if scale:
@@ -99,25 +98,17 @@ class ControlCurves(object):
         if child:
             self.control.addChild(child)
         if translateChannel is False:
-            for axe in axes:
-                self.control.attr(attributes[0] + axe).set(lock=True,
-                                                           keyable=False,
-                                                           channelBox=False)
+            attributes.lockAndHideAttributes(self.control,
+                                             attributes=['tx', 'ty', 'tz'])
         if rotateChannel is False:
-            for axe in axes:
-                self.control.attr(attributes[1] + axe).set(lock=True,
-                                                           keyable=False,
-                                                           channelBox=False)
+            attributes.lockAndHideAttributes(self.control,
+                                             attributes=['rx', 'ry', 'rz'])
         if scaleChannel is False:
-            for axe in axes:
-                self.control.attr(attributes[2] + axe).set(lock=True,
-                                                           keyable=False,
-                                                           channelBox=False)
+            attributes.lockAndHideAttributes(self.control,
+                                             attributes=['sx', 'sy', 'sz'])
         if visibilityChannel is False:
-            for axe in axes:
-                self.control.visibility.set(lock=True,
-                                            keyable=False,
-                                            channelBox=False)
+            attributes.lockAndHideAttributes(self.control,
+                                             attributes=['visibility'])
         result.append(self.control)
         return result
 
@@ -1147,8 +1138,7 @@ class DiamondControl():
 
 class linear_curve():
     def create_curve(self, name='M_linear_0_CRV', position=None,
-                     knots=None, driverNodes=None):
-        print driverNodes
+                     knots=None, driverNodes=None, reference=True):
         data = {}
         data['degree'] = 1
         data['n'] = name
@@ -1164,10 +1154,15 @@ class linear_curve():
             data['p'] = tuple(data['p'])
             data['p'] = tuple(data['p'])
         result = pmc.curve(**data)
+        attributes.lockAndHideAttributes(result)
         for y in range(len(driverNodes)):
             decomp = pmc.createNode('decomposeMatrix', n=name + '_DEMAND')
             driverNodes[y].worldMatrix[0].connect(decomp.inputMatrix)
             decomp.outputTranslate.connect(result.controlPoints[y])
+        if reference:
+            result.overrideEnabled.set(1)
+            result.overrideDisplayType.set(1)
+        return result
 
 
 
