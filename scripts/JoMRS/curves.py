@@ -20,15 +20,14 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 23
+# Date:       2019 / 01 / 24
 
 """
 JoMRS nurbsCurve modification module.
 """
 ##########################################################
 # GLOBALS
-# To Do: 
-# single curve control with connections with 0 - 10 knots
+# To Do:
 # docstrings for RotateAxeControl and DiamondControl
 # cubic curve function with connections with 0 - 10 knots
 ##########################################################
@@ -804,6 +803,9 @@ class CrossControl(ControlCurves):
 
 
 class FatCrossControl(ControlCurves):
+    """
+    Create Fat Cross Curve Control Class.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((2, 0, 1),
                                       (2, 0, -1),
@@ -824,6 +826,9 @@ class FatCrossControl(ControlCurves):
 
 
 class SpearControl(ControlCurves):
+    """
+    Create Spear Curve Control Class.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 2, 0),
                                       (0, 0, 2),
@@ -837,6 +842,9 @@ class SpearControl(ControlCurves):
 
 
 class SpearControl1(ControlCurves):
+    """
+    Create Spear Variante Curve Control Class.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 2, 0),
                                       (0, 0, 2),
@@ -862,6 +870,9 @@ class SpearControl1(ControlCurves):
 
 
 class TransformControl(ControlCurves):
+    """
+    Create Transform Curve Control Class.
+    """
     def get_curve(self, name):
         circle = pmc.circle(c=(0, 0, 0),
                             nr=(0, 1, 0),
@@ -922,6 +933,9 @@ class TransformControl(ControlCurves):
 
 
 class FootPrintControl(ControlCurves):
+    """
+    Create Foot Print Control Class.
+    """
     def get_curve(self, name):
         return pmc.curve(d=1, p=((-0.081122, 0, -1.11758),
                                  (0.390719, 0, -0.921584),
@@ -945,6 +959,9 @@ class FootPrintControl(ControlCurves):
 
 
 class CurvedCircleControl(ControlCurves):
+    """
+    Create Curved Circle Control Class.
+    """
     def get_curve(self, name):
         values = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
                   {'cv': 1, 'value': [0, 0.235, -1.108]},
@@ -972,6 +989,9 @@ class CurvedCircleControl(ControlCurves):
 
 
 class DoubleCurvedCircleControl(ControlCurves):
+    """
+    Create Double Curve Circle Control Class.
+    """
     def get_curve(self, name):
         values0 = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
                    {'cv': 1, 'value': [0, 0.235, -1.108]},
@@ -1023,6 +1043,9 @@ class DoubleCurvedCircleControl(ControlCurves):
 
 
 class LocatorControl(ControlCurves):
+    """
+    Create Locator Control Class.
+    """
     def get_curve(self, name):
         line0 = pmc.curve(d=1, p=((5, 0, 0), (-5, 0, 0)), k=(0, 1), n=name)
         line1 = pmc.curve(d=1, p=((0, 5, 0), (0, -5, 0)), k=(0, 1), n=name)
@@ -1034,6 +1057,9 @@ class LocatorControl(ControlCurves):
 
 
 class JointControl(ControlCurves):
+    """
+    Create Joint Control Class.
+    """
     def get_curve(self, name):
         locator = LocatorControl().get_curve(name)
         sphere = SphereControl().get_curve(name)
@@ -1045,9 +1071,29 @@ class JointControl(ControlCurves):
 
 
 class RotateAxesControl():
-    def create_curve(self, name='M_control_0_CON', scale=None, bufferGRP=True,
+    """
+    The LRA Control class.
+    """
+    def create_curve(self, name='M_control_0_CON', match=None,
+                     scale=None, bufferGRP=True,
                      translateChannel=True, rotateChannel=True,
                      scaleChannel=True, visibilityChannel=True):
+        """
+        Creates LRA Control Curve. By Default with a buffer group.
+        Args:
+            name(str): The control name. You should follow the
+            JoMRS naming convention. If not it will throw some
+            warnings.
+            match(dagnode): The node for transform match.
+            scale(list): The scale values.
+            bufferGRP(bool): Create bufferGRP for the control.
+            translateChannel(bool): Lock/Hide the translate channels.
+            rotateChannel(bool): Lock/Hide the rotate channels.
+            scaleChannel(bool): Lock/Hide the scale channels.
+            visibilityChannel(bool): Lock/Hide the visibility channels.
+        Return:
+                list: The buffer group, the control curve node.
+        """
         arrowValue0 = [{'cv': 0, 'value': [0, 0, 0]},
                        {'cv': 1, 'value': [3.804, 0, 0]},
                        {'cv': 2, 'value': [2.282, -0.761, 0]},
@@ -1064,6 +1110,7 @@ class RotateAxesControl():
                        {'cv': 3, 'value': [0, 3.797, 0]},
                        {'cv': 4, 'value': [-0.761, 2.275, 0]}]
         arrow0 = SingleArrowThinControl().create_curve(name=name,
+                                                       match=match,
                                                        bufferGRP=bufferGRP,
                                                        scale=scale,
                                                        colorIndex=13,
@@ -1073,10 +1120,12 @@ class RotateAxesControl():
                                                        visibilityChannel=visibilityChannel,
                                                        )[-1]
         arrow1 = SingleArrowThinControl().create_curve(name=name,
+                                                       match=match,
                                                        bufferGRP=False,
                                                        scale=scale,
                                                        colorIndex=6)[0]
         arrow2 = SingleArrowThinControl().create_curve(name=name,
+                                                       match=match,
                                                        bufferGRP=False,
                                                        scale=scale,
                                                        colorIndex=14)[0]
@@ -1099,13 +1148,44 @@ class RotateAxesControl():
 
 
 class DiamondControl():
-    def create_curve(self, name='M_control_0_CON', scale=None, colorIndex=17,
-                     localRotateAxes=True, bufferGRP=True,
-                     translateChannel=True, rotateChannel=True,
-                     scaleChannel=True, visibilityChannel=True):
+    """
+    The diamond control class.
+    """
+    def create_curve(self, name='M_control_0_CON', scale=None,
+                     match=None, colorIndex=17, localRotateAxes=True,
+                     bufferGRP=True, translateChannel=True,
+                     rotateChannel=True, scaleChannel=True,
+                     visibilityChannel=True):
+        """
+        Creates Diamond Control Curve. By Default with a buffer group.
+        Args:
+            name(str): The control name. You should follow the
+            JoMRS naming convention. If not it will throw some
+            warnings.
+            scale(list): The scale values.
+            match(dagnode): The node for transform match.
+            colorIndex(integer): The color of the control.
+            localRotateAxes(bool): Enable a LRA curve control.
+            Valid is:
+             0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
+             6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
+             11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
+             16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
+             21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
+             25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
+            bufferGRP(bool): Create bufferGRP for the control.
+            translateChannel(bool): Lock/Hide the translate channels.
+            rotateChannel(bool): Lock/Hide the rotate channels.
+            scaleChannel(bool): Lock/Hide the scale channels.
+            visibilityChannel(bool): Lock/Hide the visibility channels.
+        Return:
+                list: The buffer group, the control curve node.
+        """
+
         spear0 = SpearControl1().create_curve(name=name,
                                               bufferGRP=bufferGRP,
                                               scale=scale,
+                                              match=match,
                                               colorIndex=colorIndex,
                                               translateChannel=translateChannel,
                                               rotateChannel=rotateChannel,
@@ -1114,10 +1194,12 @@ class DiamondControl():
                                               )[-1]
         spear1 = SpearControl1().create_curve(name=name,
                                               scale=scale,
+                                              match=match,
                                               colorIndex=colorIndex,
                                               bufferGRP=False,)[0]
         spear2 = SpearControl1().create_curve(name=name,
                                               scale=scale,
+                                              match=match,
                                               colorIndex=colorIndex,
                                               bufferGRP=False,)[0]
         pmc.rotate(spear1.cv[:], 0, 45, 0)
@@ -1163,8 +1245,6 @@ class linear_curve():
             result.overrideEnabled.set(1)
             result.overrideDisplayType.set(1)
         return result
-
-
 
 
 
