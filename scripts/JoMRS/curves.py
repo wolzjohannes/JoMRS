@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 01 / 24
+# Date:       2019 / 01 / 25
 
 """
 JoMRS nurbsCurve modification module.
@@ -44,7 +44,7 @@ moduleLogger = logging.getLogger(__name__ + '.py')
 
 class ControlCurves(object):
     """
-    Create control curve class.
+    Create Control Curve class.
     """
 
     def create_curve(self, name='M_control_0_CON', match=None, scale=None,
@@ -117,7 +117,7 @@ class ControlCurves(object):
 
 class BoxControl(ControlCurves):
     """
-    Create box control curve.
+    Create Box Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0.5, 0.5, 0.5),
@@ -143,7 +143,7 @@ class BoxControl(ControlCurves):
 
 class PyramideControl(ControlCurves):
     """
-    Create pyramide control curve.
+    Create Pyramide Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 2, 0),
@@ -164,7 +164,7 @@ class PyramideControl(ControlCurves):
 
 class QuaderControl(ControlCurves):
     """
-    Create quader control curve.
+    Create Quader Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0.5, 3.5, 0.5),
@@ -190,7 +190,7 @@ class QuaderControl(ControlCurves):
 
 class SphereControl(ControlCurves):
     """
-    Create sphere control curve.
+    Create Sphere Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, 1),
@@ -235,7 +235,7 @@ class SphereControl(ControlCurves):
 
 class SquareControl(ControlCurves):
     """
-    Create square control curve.
+    Create Square Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((1, 0, -1),
@@ -249,7 +249,7 @@ class SquareControl(ControlCurves):
 
 class CircleControl(ControlCurves):
     """
-    Create circle control.
+    Create Circle Control Curve.
     """
     def get_curve(self, name):
         return pmc.circle(c=(0, 0, 0),
@@ -266,7 +266,7 @@ class CircleControl(ControlCurves):
 
 class DoubleCircleControl(ControlCurves):
     """
-    Create a double circle control.
+    Create a Double Circle Control Curve.
     """
     def get_curve(self, name):
         circle0 = pmc.circle(c=(0, 0, 0),
@@ -298,7 +298,7 @@ class DoubleCircleControl(ControlCurves):
 
 class HexagonControl(ControlCurves):
     """
-    Create a Hexagon Control.
+    Create a Hexagon Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-0.5, 1, 0.866025),
@@ -333,7 +333,7 @@ class HexagonControl(ControlCurves):
 
 class SingleArrowControl(ControlCurves):
     """
-    Create single arrow curve.
+    Create Single Arrow Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.32),
@@ -350,7 +350,7 @@ class SingleArrowControl(ControlCurves):
 
 class ArrowsOnBallControl(ControlCurves):
     """
-    Create arrows on ball control curve.
+    Create Arrows On Ball Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0.35, -1.001567),
@@ -394,7 +394,7 @@ class ArrowsOnBallControl(ControlCurves):
 
 class SingleArrowThinControl(ControlCurves):
     """
-    Create a Single Arrow Thin Control.
+    Create a Single Arrow Thin Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, 1),
@@ -408,7 +408,7 @@ class SingleArrowThinControl(ControlCurves):
 
 class SingleArrowNormalControl(ControlCurves):
     """
-    Create a Single Arrow Normal Control.
+    Create a Single Arrow Normal Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.32),
@@ -425,7 +425,7 @@ class SingleArrowNormalControl(ControlCurves):
 
 class SingleArrowFatControl(ControlCurves):
     """
-    Create a Single Arrow Fat Control.
+    Create a Single Arrow Fat Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -0.99),
@@ -442,7 +442,7 @@ class SingleArrowFatControl(ControlCurves):
 
 class DoubleArrowThinControl(ControlCurves):
     """
-    Create a Double Arrow Thin Control.
+    Create a Double Arrow Thin Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((1, 0, 1),
@@ -459,7 +459,7 @@ class DoubleArrowThinControl(ControlCurves):
 
 class DoubleArrowNormalControl(ControlCurves):
     """
-    Create double arrow normal curve.
+    Create Double Arrow Normal Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -2.31),
@@ -478,6 +478,9 @@ class DoubleArrowNormalControl(ControlCurves):
 
 
 class DoubleArrowFatControl(ControlCurves):
+    """
+    Create Double Arrow Fat Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.35),
                                       (-0.66, 0, -0.36),
@@ -495,6 +498,9 @@ class DoubleArrowFatControl(ControlCurves):
 
 
 class FourArrowThinControl(ControlCurves):
+    """
+    Create Four Arrow Thin Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((1.25, 0, -0.5),
                                       (1.75, 0, 0),
@@ -522,6 +528,9 @@ class FourArrowThinControl(ControlCurves):
 
 
 class FourArrowNormalControl(ControlCurves):
+    """
+    Create Four Arrow Normal Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.98),
                                       (-0.495, 0, -1.32),
@@ -555,6 +564,9 @@ class FourArrowNormalControl(ControlCurves):
 
 
 class FourArrowFatControl(ControlCurves):
+    """
+    Create Four Arrow Fat Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 0, -1.98),
                                       (-0.495, 0, -1.32),
@@ -588,6 +600,9 @@ class FourArrowFatControl(ControlCurves):
 
 
 class Rot180ArrowThinControl(ControlCurves):
+    """
+    Create Rotation 180 Arrow Thin Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-0.446514, 0, -1.351664),
                                       (0.0107043, 0, -1.001418),
@@ -612,6 +627,9 @@ class Rot180ArrowThinControl(ControlCurves):
 
 
 class Rot180ArrowNormalControl(ControlCurves):
+    """
+    Create Rotation 180 Arrow Normal Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-0.251045, 0, -1.015808),
                                       (-0.761834, 0, -0.979696),
@@ -649,6 +667,9 @@ class Rot180ArrowNormalControl(ControlCurves):
 
 
 class Rot180ArrowFatControl(ControlCurves):
+    """
+    Create Rotation 180 Arrow Fat Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-0.124602, 0, -1.096506),
                                       (-0.975917, 0, -1.036319),
@@ -677,6 +698,9 @@ class Rot180ArrowFatControl(ControlCurves):
 
 
 class ConeControl(ControlCurves):
+    """
+    Create Cone Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0.5, -1, 0.866025),
                                       (-0.5, -1, 0.866025),
@@ -701,6 +725,9 @@ class ConeControl(ControlCurves):
 
 
 class EightArrowControl(ControlCurves):
+    """
+    Create Eight Arrow Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((-1.8975, 0, 0),
                                       (-1.4025, 0, 0.37125),
@@ -760,6 +787,9 @@ class EightArrowControl(ControlCurves):
 
 
 class SpiralControl(ControlCurves):
+    """
+    Create Spiral Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=3, p=((0.474561, 0, -1.241626),
                                       (0.171579, 0, -1.214307),
@@ -783,6 +813,9 @@ class SpiralControl(ControlCurves):
 
 
 class CrossControl(ControlCurves):
+    """
+    Create Cross Control Curve.
+    """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0.4, 0, -0.4),
                                       (0.4, 0, -2),
@@ -804,7 +837,7 @@ class CrossControl(ControlCurves):
 
 class FatCrossControl(ControlCurves):
     """
-    Create Fat Cross Curve Control Class.
+    Create Fat Cross Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((2, 0, 1),
@@ -827,7 +860,7 @@ class FatCrossControl(ControlCurves):
 
 class SpearControl(ControlCurves):
     """
-    Create Spear Curve Control Class.
+    Create Spear Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 2, 0),
@@ -843,7 +876,7 @@ class SpearControl(ControlCurves):
 
 class SpearControl1(ControlCurves):
     """
-    Create Spear Variante Curve Control Class.
+    Create Spear Variante Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(degree=1, p=((0, 2, 0),
@@ -871,7 +904,7 @@ class SpearControl1(ControlCurves):
 
 class TransformControl(ControlCurves):
     """
-    Create Transform Curve Control Class.
+    Create Transform Control Curve.
     """
     def get_curve(self, name):
         circle = pmc.circle(c=(0, 0, 0),
@@ -934,7 +967,7 @@ class TransformControl(ControlCurves):
 
 class FootPrintControl(ControlCurves):
     """
-    Create Foot Print Control Class.
+    Create Foot Print Control Curve.
     """
     def get_curve(self, name):
         return pmc.curve(d=1, p=((-0.081122, 0, -1.11758),
@@ -960,7 +993,7 @@ class FootPrintControl(ControlCurves):
 
 class CurvedCircleControl(ControlCurves):
     """
-    Create Curved Circle Control Class.
+    Create Curved Circle Control Curve.
     """
     def get_curve(self, name):
         values = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
@@ -990,7 +1023,7 @@ class CurvedCircleControl(ControlCurves):
 
 class DoubleCurvedCircleControl(ControlCurves):
     """
-    Create Double Curve Circle Control Class.
+    Create Double Curved Circle Control Curve.
     """
     def get_curve(self, name):
         values0 = [{'cv': 0, 'value': [0.466, -0.235, -0.784]},
@@ -1044,7 +1077,7 @@ class DoubleCurvedCircleControl(ControlCurves):
 
 class LocatorControl(ControlCurves):
     """
-    Create Locator Control Class.
+    Create Locator Control Curve.
     """
     def get_curve(self, name):
         line0 = pmc.curve(d=1, p=((5, 0, 0), (-5, 0, 0)), k=(0, 1), n=name)
@@ -1058,7 +1091,7 @@ class LocatorControl(ControlCurves):
 
 class JointControl(ControlCurves):
     """
-    Create Joint Control Class.
+    Create Joint Control Curve.
     """
     def get_curve(self, name):
         locator = LocatorControl().get_curve(name)
@@ -1072,7 +1105,7 @@ class JointControl(ControlCurves):
 
 class RotateAxesControl():
     """
-    The LRA Control class.
+    The LRA Control Curve Class.
     """
     def create_curve(self, name='M_control_0_CON', match=None,
                      scale=None, bufferGRP=True,
@@ -1092,7 +1125,7 @@ class RotateAxesControl():
             scaleChannel(bool): Lock/Hide the scale channels.
             visibilityChannel(bool): Lock/Hide the visibility channels.
         Return:
-                list: The buffer group, the control curve node.
+                list: The buffer group, the Control Curve node.
         """
         arrowValue0 = [{'cv': 0, 'value': [0, 0, 0]},
                        {'cv': 1, 'value': [3.804, 0, 0]},
@@ -1149,7 +1182,7 @@ class RotateAxesControl():
 
 class DiamondControl():
     """
-    The diamond control class.
+    The diamond Control Curve class.
     """
     def create_curve(self, name='M_control_0_CON', scale=None,
                      match=None, colorIndex=17, localRotateAxes=True,
@@ -1179,7 +1212,7 @@ class DiamondControl():
             scaleChannel(bool): Lock/Hide the scale channels.
             visibilityChannel(bool): Lock/Hide the visibility channels.
         Return:
-                list: The buffer group, the control curve node.
+                list: The buffer group, the Control Curve node.
         """
 
         spear0 = SpearControl1().create_curve(name=name,
@@ -1218,9 +1251,19 @@ class DiamondControl():
         return spear0
 
 
-class linear_curve():
-    def create_curve(self, name='M_linear_0_CRV', position=None,
-                     knots=None, driverNodes=None, reference=True):
+def linear_curve(name='M_linear_0_CRV', position=None,
+                 knots=None, driverNodes=None, reference=True):
+        """
+        Create a linear curve. If driverNodes specified
+        it will create cvs in the range of the number
+        of the nodes. And direct connect the nodes with the cvs.
+        Args:
+                name(str): The curves name. You should follow the
+                JoMRS naming convention. If not it will throw some
+                warnings.
+                position(tuple): 
+        """
+        name = strings.string_checkup(name)
         data = {}
         data['degree'] = 1
         data['n'] = name
