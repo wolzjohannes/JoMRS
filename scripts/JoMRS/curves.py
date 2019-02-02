@@ -1261,7 +1261,15 @@ def linear_curve(name='M_linear_0_CRV', position=None,
                 name(str): The curves name. You should follow the
                 JoMRS naming convention. If not it will throw some
                 warnings.
-                position(tuple): 
+                position(tuple): The worldspace position for each cv.
+                knots(tuple): The amount of the knots(cvs).
+                driverNodes(list): Driver nodes for the curve cvs.
+                The amount of the dirveNodes in the list
+                specifie the amount of the curve cvs.
+                reference(bool): Enable the reference model
+                display type.
+        Return:
+                list: The new created curve.
         """
         name = strings.string_checkup(name)
         data = {}
@@ -1277,7 +1285,7 @@ def linear_curve(name='M_linear_0_CRV', position=None,
                 data['p'].append((0, 0, 0))
                 data['k'].append(x)
             data['p'] = tuple(data['p'])
-            data['p'] = tuple(data['p'])
+            data['k'] = tuple(data['k'])
         result = pmc.curve(**data)
         attributes.lockAndHideAttributes(result)
         for y in range(len(driverNodes)):
@@ -1290,9 +1298,28 @@ def linear_curve(name='M_linear_0_CRV', position=None,
         return result
 
 
-
-
-
+def cubic_curve(name='M_cubic_0_CRV', position=None,
+                driverNodes=None, reference=True):
+    name = strings.string_checkup(name)
+    data = {}
+    data['n'] = name
+    if driverNodes is None:
+        data['p'] = (position)
+    else:
+        data['p'] = []
+        for x in range(len(driverNodes)):
+            data['p'].append((0, 0, 0))
+        data['p'] = tuple(data['p'])
+    result = pmc.curve(**data)
+    attributes.lockAndHideAttributes(result)
+    for y in range(len(driverNodes)):
+        decomp = pmc.createNode('decomposeMatrix', n=name + '_DEMAND')
+        driverNodes[y].worldMatrix[0].connect(decomp.inputMatrix)
+        decomp.outputTranslate.connect(result.controlPoints[y])
+    if reference:
+        result.overrideEnabled.set(1)
+        result.overrideDisplayType.set(1)
+    return result
 
 
 
