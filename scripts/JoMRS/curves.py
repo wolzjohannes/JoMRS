@@ -27,6 +27,8 @@ JoMRS nurbsCurve modification module.
 """
 ##########################################################
 # GLOBALS
+# To Do:
+# Mirror curve function. And specifie the color of the mirrored curve
 ##########################################################
 
 import pymel.core as pmc
