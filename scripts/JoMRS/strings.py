@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 31
+# Date:       2019 / 02 / 04
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -256,5 +256,13 @@ def search(pattern, string):
     """
     result = []
     if re.search(pattern, string):
+        result.append(string)
+    return result
+
+
+def search_and_replace(string, search, replace):
+    result = []
+    if re.search(search, string):
+        string = string.replace(search, replace)
         result.append(string)
     return result

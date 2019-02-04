@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 02 / 4
+# Date:       2019 / 02 / 04
 
 """
 JoMRS nurbsCurve modification module.
@@ -37,6 +37,7 @@ import strings
 import logging
 import logger
 import attributes
+reload(strings)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
@@ -1336,3 +1337,17 @@ def cubic_curve(name='M_cubic_0_CRV', position=None,
         result.overrideEnabled.set(1)
         result.overrideDisplayType.set(1)
     return result
+
+
+def mirror_curve(curve=None, search='L_', replace='R_', bufferGRP=True,
+                 colorIndex=6):
+    if curve:
+        name = str(curve)
+        print name
+        # name = strings.search_and_replace(name, search, replace)
+        name = strings.string_checkup(name)
+        duplCurve = pmc.duplicate(curve, name)
+        mirrorGRP = pmc.createNode('transform')
+        mirrorGRP.addChild(duplCurve)
+        mirrorGRP.scaleX.set(-1)
+
