@@ -261,6 +261,15 @@ def search(pattern, string):
 
 
 def search_and_replace(string, search, replace):
+    """
+    Search and replace a pattern in string.
+    Args:
+            string(str): String to search for.
+            search(str): Search string.
+            replace(str): Replace string.
+    Return:
+            list: The new created string.
+    """
     result = []
     if re.search(search, string):
         string = string.replace(search, replace)
