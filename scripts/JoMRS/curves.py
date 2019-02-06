@@ -37,8 +37,6 @@ import strings
 import logging
 import logger
 import attributes
-reload(strings)
-reload(utils)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
