@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 1 / 24
+# Date:       2018 / 02 / 5
 
 """
 JoMRS maya utils module. Utilities helps
@@ -58,6 +58,7 @@ def create_bufferGRP(node):
     name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
     bufferGRP = pmc.createNode('transform', n=name)
     pmc.delete(pmc.parentConstraint(node, bufferGRP, mo=False))
+    pmc.delete(pmc.scaleConstraint(node, bufferGRP, mo=False))
     bufferGRP.addChild(node)
     if parent:
         parent.addChild(bufferGRP)

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 02 / 04
+# Date:       2019 / 02 / 06
 
 """
 JoMRS nurbsCurve modification module.
@@ -38,6 +38,7 @@ import logging
 import logger
 import attributes
 reload(strings)
+reload(utils)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
@@ -1341,13 +1342,44 @@ def cubic_curve(name='M_cubic_0_CRV', position=None,
 
 def mirror_curve(curve=None, search='L_', replace='R_', bufferGRP=True,
                  colorIndex=6):
-    if curve:
-        name = str(curve)
-        print name
-        # name = strings.search_and_replace(name, search, replace)
-        name = strings.string_checkup(name)
-        duplCurve = pmc.duplicate(curve, name)
-        mirrorGRP = pmc.createNode('transform')
+    """
+    Mirror a curve from + X to - X. By default it search about 'L_' in
+    the name and replace it with 'R_'. It also creates a bufferGRP for
+    the duplicated curve. The mirrored curve will be BRIGHTBLUE.
+    Args:
+            curve(dagnode): The mirror curve.
+            search(str): The string to search for.
+            replace(str): The string to replace with.
+            bufferGRP(bool): Enable a buffer group for the
+            duplicated curve.
+            colorIndex(int): The color for the duplicated
+            curve.
+    Return:
+            list: The created curve and the buffer group.
+    """
+    result = []
+    if curve.getShape().nodeType() == 'nurbsCurve':
+        duplCurve = pmc.duplicate(curve, rr=True)[0]
+        children = utils.descendants(duplCurve)
+        for node in children:
+            name = strings.search_and_replace(string=str(node),
+                                              search=search,
+                                              replace=replace)[0]
+            name = strings.string_checkup(name)
+            pmc.rename(node, name)
+        mirrorGRP = pmc.createNode('transform', n='M_temp_mirror_0_GRP')
         mirrorGRP.addChild(duplCurve)
         mirrorGRP.scaleX.set(-1)
+        pmc.parent(duplCurve, w=True)
+        pmc.delete(mirrorGRP)
+        if bufferGRP:
+            buffer_ = utils.create_bufferGRP(node=duplCurve)
+            result.append(buffer_)
+        for shape in duplCurve.getShapes():
+            shape.overrideColor.set(colorIndex)
+        result.append(duplCurve)
+    else:
+        logger.log(level='error', message='mirror only for nurbsCurves',
+                   logger=moduleLogger)
+    return result
 

@@ -272,6 +272,6 @@ def search_and_replace(string, search, replace):
     """
     result = []
     if re.search(search, string):
-        string = string.replace(search, replace)
-        result.append(string)
+        string_ = string.replace(search, replace)
+        result.append(string_)
     return result
