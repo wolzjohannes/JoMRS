@@ -50,5 +50,8 @@ class MainGuide(object):
 
         def addAttributesToMainGuide(self, node):
 
-            for attr_ in attributesList:
-                
+            for attr_ in self.attributesList:
+                if attr_['attrType'] == 'enum':
+                    logger.log(level='error',
+                               message='Enum attribute not allowed',
+                               logger=moduleLogger)
