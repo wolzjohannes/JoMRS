@@ -52,11 +52,3 @@ class MainGuide(object):
 
             for attr_ in attributesList:
                 
-
-
-
-
-
-
-
-
