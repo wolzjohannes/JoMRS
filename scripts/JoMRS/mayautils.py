@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 30
+# Date:       2018 / 02 / 5
 
 """
 JoMRS maya utils module. Utilities helps
@@ -31,6 +31,7 @@ to create maya behaviours.
 # TO DO:
 # config file for valid strings. For projects modifications
 # check if all srings follow the JoMRS string handling
+# match position function.
 ###############
 import pymel.core as pmc
 import pymel.core.datatypes as dt
@@ -57,6 +58,7 @@ def create_bufferGRP(node):
     name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
     bufferGRP = pmc.createNode('transform', n=name)
     pmc.delete(pmc.parentConstraint(node, bufferGRP, mo=False))
+    pmc.delete(pmc.scaleConstraint(node, bufferGRP, mo=False))
     bufferGRP.addChild(node)
     if parent:
         parent.addChild(bufferGRP)
