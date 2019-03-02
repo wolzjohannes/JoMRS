@@ -55,3 +55,15 @@ class MainGuide(object):
                     logger.log(level='error',
                                message='Enum attribute not allowed',
                                logger=moduleLogger)
+                elif attr_['attrType'] == 'float3':
+                    logger.log(level='error',
+                               message='ArrayAttribute not allowed',
+                               logger=moduleLogger)
+                else:
+                    attributes.addAttr(node=node, attrType=attr_['attrType'],
+                                       value=attr_['value'],
+                                       defaultValue=attr_['defaultValue'],
+                                       minValue=attr_['minValue'],
+                                       maxValue=attr_['maxValue'],
+                                       keyable=attr_['keyable'],
+                                       hidden=True, channelBox=False)
