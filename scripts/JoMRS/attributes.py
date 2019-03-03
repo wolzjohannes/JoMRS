@@ -244,7 +244,7 @@ def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
             list: The locked attributes.
     """
     defaultAttr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz",
-                   "sx", "sy", "sz", "visibility"]
+                   "sx", "sy", "sz"]
     result = []
     if attributes:
         if not isinstance(attributes, list):
