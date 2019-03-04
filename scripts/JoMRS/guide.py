@@ -51,15 +51,45 @@ class OperatorsRootNode(object):
 
     def __init__(self):
         self.attributesList = []
-        self.mainop = {'name': 'mainoperator', 'attrType': 'bool',
+        self.mainop = {'name': 'main_operator', 'attrType': 'bool',
                        'keyable': False, 'defaultValue': 1}
+        self.rigname = {'name': 'rig_name', 'attrType': 'string',
+                        'keyable': False}
+        self.l_ik_rig_color = {'name': 'l_ik_rig_color', 'attrType': 'long',
+                               'keyable': False, 'defaultValue': 13,
+                               'minValue': 0, 'maxValue': 31}
+        self.l_ik_rig_sub_color = {'name': 'l_ik_rig_sub_color',
+                                   'attrType': 'long',
+                                   'keyable': False, 'defaultValue': 18,
+                                   'minValue': 0, 'maxValue': 31}
+        self.r_ik_rig_color = {'name': 'r_ik_rig_color',
+                               'attrType': 'long',
+                               'keyable': False, 'defaultValue': 6,
+                               'minValue': 0, 'maxValue': 31}
+        self.r_ik_rig_sub_color = {'name': 'r_ik_rig_sub_color',
+                                   'attrType': 'long',
+                                   'keyable': False, 'defaultValue': 9,
+                                   'minValue': 0, 'maxValue': 31}
+        self.m_ik_rig_color = {'name': 'm_ik_rig_color',
+                               'attrType': 'long',
+                               'keyable': False, 'defaultValue': 17,
+                               'minValue': 0, 'maxValue': 31}
+        self.m_ik_rig_sub_color = {'name': 'm_ik_rig_sub_color',
+                                   'attrType': 'long',
+                                   'keyable': False, 'defaultValue': 11,
+                                   'minValue': 0, 'maxValue': 31}
         self.attributesList.append(self.mainop)
+        self.attributesList.append(self.rigname)
+        self.attributesList.append(self.l_ik_rig_color)
+        self.attributesList.append(self.l_ik_rig_sub_color)
+        self.attributesList.append(self.r_ik_rig_color)
+        self.attributesList.append(self.r_ik_rig_sub_color)
+        self.attributesList.append(self.m_ik_rig_color)
+        self.attributesList.append(self.m_ik_rig_sub_color)
+
 
     def createNode(self):
-        try:
-            self.rootNode = pmc.PyNode(OPROOTNAME)
-        else:
-            self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
+        self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.attributesList:
             attributes.addAttr(node=self.rootNode, **attr_)
