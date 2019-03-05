@@ -40,7 +40,8 @@ reload(attributes)
 ##########################################################
 
 moduleLogger = logging.getLogger(__name__ + '.py')
-OPROOTNAME='M_RIG_operators_0_GRP'
+OPROOTNAME = 'M_MAIN_operators_0_GRP'
+MAINOPROOTNODENAME = 'M_control_0_CON'
 
 ##########################################################
 # CLASSES
@@ -51,13 +52,14 @@ class OperatorsRootNode(object):
 
     def __init__(self):
         self.attributesList = []
-        self.mainop = {'name': 'main_operator', 'attrType': 'bool',
+        self.mainop = {'name': 'root_operator', 'attrType': 'bool',
                        'keyable': False, 'defaultValue': 1}
         self.rigname = {'name': 'rig_name', 'attrType': 'string',
                         'keyable': False}
         self.l_ik_rig_color = {'name': 'l_ik_rig_color', 'attrType': 'long',
                                'keyable': False, 'defaultValue': 13,
                                'minValue': 0, 'maxValue': 31}
+
         self.l_ik_rig_sub_color = {'name': 'l_ik_rig_sub_color',
                                    'attrType': 'long',
                                    'keyable': False, 'defaultValue': 18,
@@ -87,34 +89,29 @@ class OperatorsRootNode(object):
         self.attributesList.append(self.m_ik_rig_color)
         self.attributesList.append(self.m_ik_rig_sub_color)
 
-
     def createNode(self):
         self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.attributesList:
             attributes.addAttr(node=self.rootNode, **attr_)
-# class MainGuide(object):
 
-#     def __init__(self):
 
-#         self.attributesList = []
+class mainOperatorNode(OperatorsRootNode):
 
-#         def addAttributesToMainGuide(self, node):
+    def __init__(self):
+        super(mainOperatorNode, self).__init__()
+        self.opRootND = self.createNode()
+        self.attributesList = []
+        self.mainop = {'name': 'main_operator', 'attrType': 'bool',
+                       'keyable': False, 'defaultValue': 1}
+        self.compName = {'name': 'component_name', 'attrType': 'string',
+                         'keyable': False, 'channelBox': False}
+        self.attributesList.append(self.mainop)
+        self.attributesList.append(self.compName)
 
-#             for attr_ in self.attributesList:
-#                 if attr_['attrType'] == 'enum':
-#                     logger.log(level='error',
-#                                message='Enum attribute not allowed',
-#                                logger=moduleLogger)
-#                 elif attr_['attrType'] == 'float3':
-#                     logger.log(level='error',
-#                                message='ArrayAttribute not allowed',
-#                                logger=moduleLogger)
-#                 else:
-#                     attributes.addAttr(node=node, attrType=attr_['attrType'],
-#                                        value=attr_['value'],
-#                                        defaultValue=attr_['defaultValue'],
-#                                        minValue=attr_['minValue'],
-#                                        maxValue=attr_['maxValue'],
-#                                        keyable=attr_['keyable'],
-#                                        hidden=True, channelBox=False)
+    def createNode(self, colorIndex=9, name=MAINOPROOTNODENAME):
+        self.mainOpND = curves.DiamondControl.createCurve(colorIndex=colorIndex,
+                                                          name=name)
+        for attr_ in self.attributesList:
+            attributes.addAttr(node=self.mainOpND, **attr_)
+        self.opRootND.addChild(self.mainOpND)
