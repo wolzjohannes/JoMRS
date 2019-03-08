@@ -42,9 +42,11 @@ reload(curves)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
-MAINOPROOTNODENAME = 'M_control_0_CON'
+MAINOPROOTNODENAME = 'M_MAIN_op_0_CON'
+DEFAULTCOMPNAME = 'component'
 DEFAULTSIDE = 'M'
 DEFAULTINDEX = 0
+SUBOPERATORSCOUNT = 1
 
 ##########################################################
 # CLASSES
@@ -149,10 +151,21 @@ class mainOperatorNode(OperatorsRootNode):
 
 
 class create_component_operator(mainOperatorNode):
-    def __init__(self):
+    def __init__(self, subOperatorsCount=SUBOPERATORSCOUNT,
+                 componentName=DEFAULTCOMPNAME, defaultSide=DEFAULTSIDE,
+                 mainOperatorNodeName=MAINOPROOTNODENAME):
         super(create_component_operator, self).__init__()
+        self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
+                                                                 defaultSide +
+                                                                 '_')
+        self.mainOperatorNodeName = self.mainOperatorNodeName.replace('_op_',
+                                                                      '_op_' +
+                                                                      componentName +
+                                                                      '_')
         self.mainOperatorNode = self
-        self.mainOperatorNode = self.create_node()
+        self.mainOperatorNode = self.create_node(defaultSide=defaultSide,
+                                                 name=self.mainOperatorNodeName)
+
 
 
 
