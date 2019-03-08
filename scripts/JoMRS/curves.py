@@ -1223,7 +1223,7 @@ class DiamondControl():
                                               rotateChannel=rotateChannel,
                                               scaleChannel=scaleChannel,
                                               visibilityChannel=visibilityChannel,
-                                              )[-1]
+                                              )
         spear1 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               match=match,
@@ -1236,8 +1236,8 @@ class DiamondControl():
                                               bufferGRP=False,)[0]
         pmc.rotate(spear1.cv[:], 0, 45, 0)
         pmc.rotate(spear2.cv[:], 0, -45, 0)
-        spear0.addChild(spear1.getShape(), r=True, shape=True)
-        spear0.addChild(spear2.getShape(), r=True, shape=True)
+        spear0[-1].addChild(spear1.getShape(), r=True, shape=True)
+        spear0[-1].addChild(spear2.getShape(), r=True, shape=True)
         pmc.delete(spear1, spear2)
         if localRotateAxes:
             instance = RotateAxesControl()
@@ -1246,7 +1246,7 @@ class DiamondControl():
                                                  bufferGRP=False,
                                                  translateChannel=False,
                                                  scaleChannel=False)
-            spear0.addChild(rotatAxesCon)
+            spear0[-1].addChild(rotatAxesCon)
         return spear0
 
 

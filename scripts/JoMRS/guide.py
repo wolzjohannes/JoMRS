@@ -20,10 +20,10 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 03 / 03
+# Date:       2019 / 03 / 05
 
 """
-JoMRS main guide module.
+JoMRS main operator module. Handles the compon
 """
 
 import pymel.core as pmc
@@ -34,6 +34,7 @@ import logger
 import attributes
 import curves
 reload(attributes)
+reload(curves)
 
 ##########################################################
 # GLOBALS
@@ -42,6 +43,8 @@ reload(attributes)
 moduleLogger = logging.getLogger(__name__ + '.py')
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
 MAINOPROOTNODENAME = 'M_control_0_CON'
+DEFAULTSIDE = 'M'
+DEFAULTINDEX = 0
 
 ##########################################################
 # CLASSES
@@ -52,66 +55,109 @@ class OperatorsRootNode(object):
 
     def __init__(self):
         self.attributesList = []
-        self.mainop = {'name': 'root_operator', 'attrType': 'bool',
-                       'keyable': False, 'defaultValue': 1}
-        self.rigname = {'name': 'rig_name', 'attrType': 'string',
-                        'keyable': False}
-        self.l_ik_rig_color = {'name': 'l_ik_rig_color', 'attrType': 'long',
-                               'keyable': False, 'defaultValue': 13,
-                               'minValue': 0, 'maxValue': 31}
+        self.mainop_attr = {'name': 'JOMRS_op_root', 'attrType': 'bool',
+                            'keyable': False, 'defaultValue': 1}
 
-        self.l_ik_rig_sub_color = {'name': 'l_ik_rig_sub_color',
-                                   'attrType': 'long',
-                                   'keyable': False, 'defaultValue': 18,
-                                   'minValue': 0, 'maxValue': 31}
-        self.r_ik_rig_color = {'name': 'r_ik_rig_color',
-                               'attrType': 'long',
-                               'keyable': False, 'defaultValue': 6,
-                               'minValue': 0, 'maxValue': 31}
-        self.r_ik_rig_sub_color = {'name': 'r_ik_rig_sub_color',
-                                   'attrType': 'long',
-                                   'keyable': False, 'defaultValue': 9,
-                                   'minValue': 0, 'maxValue': 31}
-        self.m_ik_rig_color = {'name': 'm_ik_rig_color',
-                               'attrType': 'long',
-                               'keyable': False, 'defaultValue': 17,
-                               'minValue': 0, 'maxValue': 31}
-        self.m_ik_rig_sub_color = {'name': 'm_ik_rig_sub_color',
-                                   'attrType': 'long',
-                                   'keyable': False, 'defaultValue': 11,
-                                   'minValue': 0, 'maxValue': 31}
-        self.attributesList.append(self.mainop)
-        self.attributesList.append(self.rigname)
-        self.attributesList.append(self.l_ik_rig_color)
-        self.attributesList.append(self.l_ik_rig_sub_color)
-        self.attributesList.append(self.r_ik_rig_color)
-        self.attributesList.append(self.r_ik_rig_sub_color)
-        self.attributesList.append(self.m_ik_rig_color)
-        self.attributesList.append(self.m_ik_rig_sub_color)
+        self.rigname_attr = {'name': 'rig_name', 'attrType': 'string',
+                             'keyable': False}
 
-    def createNode(self):
+        self.l_ik_rig_color_attr = {'name': 'l_ik_rig_color',
+                                    'attrType': 'long',
+                                    'keyable': False, 'defaultValue': 13,
+                                    'minValue': 0, 'maxValue': 31}
+
+        self.l_ik_rig_sub_color_attr = {'name': 'l_ik_rig_sub_color',
+                                        'attrType': 'long',
+                                        'keyable': False, 'defaultValue': 18,
+                                        'minValue': 0, 'maxValue': 31}
+
+        self.r_ik_rig_color_attr = {'name': 'r_ik_rig_color',
+                                    'attrType': 'long',
+                                    'keyable': False, 'defaultValue': 6,
+                                    'minValue': 0, 'maxValue': 31}
+
+        self.r_ik_rig_sub_color_attr = {'name': 'r_ik_rig_sub_color',
+                                        'attrType': 'long',
+                                        'keyable': False, 'defaultValue': 9,
+                                        'minValue': 0, 'maxValue': 31}
+
+        self.m_ik_rig_color_attr = {'name': 'm_ik_rig_color',
+                                    'attrType': 'long',
+                                    'keyable': False, 'defaultValue': 17,
+                                    'minValue': 0, 'maxValue': 31}
+
+        self.m_ik_rig_sub_color_attr = {'name': 'm_ik_rig_sub_color',
+                                        'attrType': 'long',
+                                        'keyable': False, 'defaultValue': 11,
+                                        'minValue': 0, 'maxValue': 31}
+
+        self.attributesList.append(self.mainop_attr)
+        self.attributesList.append(self.rigname_attr)
+        self.attributesList.append(self.l_ik_rig_color_attr)
+        self.attributesList.append(self.l_ik_rig_sub_color_attr)
+        self.attributesList.append(self.r_ik_rig_color_attr)
+        self.attributesList.append(self.r_ik_rig_sub_color_attr)
+        self.attributesList.append(self.m_ik_rig_color_attr)
+        self.attributesList.append(self.m_ik_rig_sub_color_attr)
+
+    def create_node(self):
         self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.attributesList:
             attributes.addAttr(node=self.rootNode, **attr_)
+        return self.rootNode
 
 
 class mainOperatorNode(OperatorsRootNode):
-
     def __init__(self):
         super(mainOperatorNode, self).__init__()
-        self.opRootND = self.createNode()
+        self.mainOP = self
+        self.opRootND = self.mainOP.create_node()
         self.attributesList = []
-        self.mainop = {'name': 'main_operator', 'attrType': 'bool',
-                       'keyable': False, 'defaultValue': 1}
-        self.compName = {'name': 'component_name', 'attrType': 'string',
-                         'keyable': False, 'channelBox': False}
-        self.attributesList.append(self.mainop)
-        self.attributesList.append(self.compName)
 
-    def createNode(self, colorIndex=9, name=MAINOPROOTNODENAME):
-        self.mainOpND = curves.DiamondControl.createCurve(colorIndex=colorIndex,
-                                                          name=name)
+        self.mainop_attr = {'name': 'JOMRS_op_main', 'attrType': 'bool',
+                            'keyable': False, 'defaultValue': 1}
+
+        self.compName_attr = {'name': 'component_name', 'attrType': 'string',
+                              'keyable': False, 'channelBox': False}
+
+        self.compType_attr = {'name': 'component_type', 'attrType': 'string',
+                              'keyable': False, 'channelBox': False}
+
+        self.compSide_attr = {'name': 'component_side', 'attrType': 'string',
+                              'keyable': False, 'channelBox': False}
+
+        self.compIndex_attr = {'name': 'component_index', 'attrType': 'long',
+                               'keyable': False, 'channelBox': False,
+                               'defaultValue': 0}
+
+        temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
+                self.compSide_attr, self.compIndex_attr]
+        for attr_ in temp:
+            self.attributesList.append(attr_)
+
+    def createNode(self, colorIndex=18, name=MAINOPROOTNODENAME,
+                   defaultSide=DEFAULTSIDE, defaultIndex=DEFAULTINDEX):
+        self.mainOpCurve = curves.DiamondControl()
+        self.mainOpND = self.mainOpCurve.create_curve(colorIndex=colorIndex,
+                                                      name=name)
         for attr_ in self.attributesList:
-            attributes.addAttr(node=self.mainOpND, **attr_)
-        self.opRootND.addChild(self.mainOpND)
+            attributes.addAttr(node=self.mainOpND[-1], **attr_)
+        self.opRootND.addChild(self.mainOpND[0])
+        self.mainOpND[1].component_side.set(defaultSide)
+        self.mainOpND[1].component_index.set(defaultIndex)
+
+
+class create_component_operator(mainOperatorNode):
+    def __init__(self):
+        super(create_component_operator, self).__init__()
+        self.mainOperatorNode = self
+        self.mainOperatorNode = self.create_node()
+
+
+
+
+
+
+
+
