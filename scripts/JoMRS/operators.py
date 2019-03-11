@@ -43,10 +43,11 @@ reload(curves)
 moduleLogger = logging.getLogger(__name__ + '.py')
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
 MAINOPROOTNODENAME = 'M_MAIN_op_0_CON'
+SUBOPROOTNODENAME = 'M_SUB_op_0_CON'
 DEFAULTCOMPNAME = 'component'
 DEFAULTSIDE = 'M'
 DEFAULTINDEX = 0
-SUBOPERATORSCOUNT = 1
+DEFAULTSUBOPERATORSCOUNT = 1
 
 ##########################################################
 # CLASSES
@@ -114,7 +115,6 @@ class mainOperatorNode(OperatorsRootNode):
     def __init__(self):
         super(mainOperatorNode, self).__init__()
         self.mainOP = self
-        self.opRootND = self.mainOP.create_node()
         self.attributesList = []
 
         self.mainop_attr = {'name': 'JOMRS_op_main', 'attrType': 'bool',
@@ -140,6 +140,7 @@ class mainOperatorNode(OperatorsRootNode):
 
     def createNode(self, colorIndex=18, name=MAINOPROOTNODENAME,
                    defaultSide=DEFAULTSIDE, defaultIndex=DEFAULTINDEX):
+        self.opRootND = self.mainOP.create_node()
         self.mainOpCurve = curves.DiamondControl()
         self.mainOpND = self.mainOpCurve.create_curve(colorIndex=colorIndex,
                                                       name=name)
@@ -148,13 +149,17 @@ class mainOperatorNode(OperatorsRootNode):
         self.opRootND.addChild(self.mainOpND[0])
         self.mainOpND[1].component_side.set(defaultSide)
         self.mainOpND[1].component_index.set(defaultIndex)
+        return self.mainOpND
 
 
 class create_component_operator(mainOperatorNode):
-    def __init__(self, subOperatorsCount=SUBOPERATORSCOUNT,
+    def __init__(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
                  componentName=DEFAULTCOMPNAME, defaultSide=DEFAULTSIDE,
-                 mainOperatorNodeName=MAINOPROOTNODENAME):
+                 mainOperatorNodeName=MAINOPROOTNODENAME,
+                 supOperatorNodeName=SUBOPROOTNODENAME):
         super(create_component_operator, self).__init__()
+        self.jointControl = curves.JointControl()
+        self.result = []
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
                                                                  defaultSide +
                                                                  '_')
@@ -163,10 +168,17 @@ class create_component_operator(mainOperatorNode):
                                                                       componentName +
                                                                       '_')
         self.mainOperatorNode = self
-        self.mainOperatorNode = self.create_node(defaultSide=defaultSide,
-                                                 name=self.mainOperatorNodeName)
-
-
+        self.mainOperatorNode = self.createNode(defaultSide=defaultSide,
+                                                name=self.mainOperatorNodeName)
+        self.result.append(self.mainOperatorNode)
+        for sub in range(subOperatorsCount):
+            instance = '_op_{}_{}'.format(componentName, str(sub))
+            self.subOperatorNodeName = supOperatorNodeName.replace('M_',
+                                                                   defaultSide +
+                                                                   '_')
+            self.subOperatorNodeName = self.subOperatorNodeName.replace('_op_0',
+                                                                        instance)
+            subOpNode = self.jointControl.create_curve(name=self.subOperatorNodeName)
 
 
 
