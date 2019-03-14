@@ -44,10 +44,15 @@ moduleLogger = logging.getLogger(__name__ + '.py')
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
 MAINOPROOTNODENAME = 'M_MAIN_op_0_CON'
 SUBOPROOTNODENAME = 'M_SUB_op_0_CON'
+LINEARCURVENAME = 'M_linear_op_0_CRV'
 DEFAULTCOMPNAME = 'component'
 DEFAULTSIDE = 'M'
 DEFAULTINDEX = 0
 DEFAULTSUBOPERATORSCOUNT = 1
+DEFAULTAXES = 'X'
+DEFAULTSPACING = 10
+DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
+ERRORMESSAGE = {'selection': 'More then one parent not allowed'}
 
 ##########################################################
 # CLASSES
@@ -57,7 +62,7 @@ DEFAULTSUBOPERATORSCOUNT = 1
 class OperatorsRootNode(object):
 
     def __init__(self):
-        self.attributesList = []
+        self.param_list = []
         self.mainop_attr = {'name': 'JOMRS_op_root', 'attrType': 'bool',
                             'keyable': False, 'defaultValue': 1}
 
@@ -94,19 +99,19 @@ class OperatorsRootNode(object):
                                         'keyable': False, 'defaultValue': 11,
                                         'minValue': 0, 'maxValue': 31}
 
-        self.attributesList.append(self.mainop_attr)
-        self.attributesList.append(self.rigname_attr)
-        self.attributesList.append(self.l_ik_rig_color_attr)
-        self.attributesList.append(self.l_ik_rig_sub_color_attr)
-        self.attributesList.append(self.r_ik_rig_color_attr)
-        self.attributesList.append(self.r_ik_rig_sub_color_attr)
-        self.attributesList.append(self.m_ik_rig_color_attr)
-        self.attributesList.append(self.m_ik_rig_sub_color_attr)
+        self.param_list.append(self.mainop_attr)
+        self.param_list.append(self.rigname_attr)
+        self.param_list.append(self.l_ik_rig_color_attr)
+        self.param_list.append(self.l_ik_rig_sub_color_attr)
+        self.param_list.append(self.r_ik_rig_color_attr)
+        self.param_list.append(self.r_ik_rig_sub_color_attr)
+        self.param_list.append(self.m_ik_rig_color_attr)
+        self.param_list.append(self.m_ik_rig_sub_color_attr)
 
     def create_node(self):
         self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
         attributes.lockAndHideAttributes(node=self.rootNode)
-        for attr_ in self.attributesList:
+        for attr_ in self.param_list:
             attributes.addAttr(node=self.rootNode, **attr_)
         return self.rootNode
 
@@ -114,71 +119,112 @@ class OperatorsRootNode(object):
 class mainOperatorNode(OperatorsRootNode):
     def __init__(self):
         super(mainOperatorNode, self).__init__()
-        self.mainOP = self
-        self.attributesList = []
+        self.selection = pmc.ls(sl=True)
+        if self.selection is None:
+            self.mainOP = self
+            self.attribute_list = []
 
-        self.mainop_attr = {'name': 'JOMRS_op_main', 'attrType': 'bool',
-                            'keyable': False, 'defaultValue': 1}
+            self.mainop_attr = {'name': 'JOMRS_op_main', 'attrType': 'bool',
+                                'keyable': False, 'defaultValue': 1}
 
-        self.compName_attr = {'name': 'component_name', 'attrType': 'string',
-                              'keyable': False, 'channelBox': False}
+            self.compName_attr = {'name': 'component_name',
+                                  'attrType': 'string', 'keyable': False,
+                                  'channelBox': False}
 
-        self.compType_attr = {'name': 'component_type', 'attrType': 'string',
-                              'keyable': False, 'channelBox': False}
+            self.compType_attr = {'name': 'component_type',
+                                  'attrType': 'string', 'keyable': False,
+                                  'channelBox': False}
 
-        self.compSide_attr = {'name': 'component_side', 'attrType': 'string',
-                              'keyable': False, 'channelBox': False}
+            self.compSide_attr = {'name': 'component_side',
+                                  'attrType': 'string', 'keyable': False,
+                                  'channelBox': False}
 
-        self.compIndex_attr = {'name': 'component_index', 'attrType': 'long',
-                               'keyable': False, 'channelBox': False,
-                               'defaultValue': 0}
+            self.compIndex_attr = {'name': 'component_index',
+                                   'attrType': 'long', 'keyable': False,
+                                   'channelBox': False, 'defaultValue': 0}
 
-        temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
-                self.compSide_attr, self.compIndex_attr]
-        for attr_ in temp:
-            self.attributesList.append(attr_)
+            temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
+                    self.compSide_attr, self.compIndex_attr]
+            for attr_ in temp:
+                self.attribute_list.append(attr_)
 
     def createNode(self, colorIndex=18, name=MAINOPROOTNODENAME,
-                   defaultSide=DEFAULTSIDE, defaultIndex=DEFAULTINDEX):
+                   side=DEFAULTSIDE, index=DEFAULTINDEX,
+                   errorMessage=ERRORMESSAGE):
         self.opRootND = self.mainOP.create_node()
         self.mainOpCurve = curves.DiamondControl()
         self.mainOpND = self.mainOpCurve.create_curve(colorIndex=colorIndex,
                                                       name=name)
-        for attr_ in self.attributesList:
+        for attr_ in self.attribute_list:
             attributes.addAttr(node=self.mainOpND[-1], **attr_)
-        self.opRootND.addChild(self.mainOpND[0])
-        self.mainOpND[1].component_side.set(defaultSide)
-        self.mainOpND[1].component_index.set(defaultIndex)
+        if self.selection:
+            if len(self.selection) == 1:
+                self.selection.addChild(self.mainOpND[0])
+            else:
+                logger.log(level='error', message=errorMessage,
+                           logger=moduleLogger)
+        else:
+            self.opRootND.addChild(self.mainOpND[0])
+        self.mainOpND[1].component_side.set(side)
+        self.mainOpND[1].component_index.set(index)
         return self.mainOpND
 
 
 class create_component_operator(mainOperatorNode):
     def __init__(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
-                 componentName=DEFAULTCOMPNAME, defaultSide=DEFAULTSIDE,
+                 componentName=DEFAULTCOMPNAME, side=DEFAULTSIDE,
                  mainOperatorNodeName=MAINOPROOTNODENAME,
-                 supOperatorNodeName=SUBOPROOTNODENAME):
+                 subOperatorsNodeName=SUBOPROOTNODENAME,
+                 axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
+                 subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
+                 linearCurveName=LINEARCURVENAME):
         super(create_component_operator, self).__init__()
-        self.jointControl = curves.JointControl()
         self.result = []
+        self.jointControl = curves.JointControl()
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
-                                                                 defaultSide +
+                                                                 side +
                                                                  '_')
         self.mainOperatorNodeName = self.mainOperatorNodeName.replace('_op_',
                                                                       '_op_' +
                                                                       componentName +
                                                                       '_')
         self.mainOperatorNode = self
-        self.mainOperatorNode = self.createNode(defaultSide=defaultSide,
+        self.mainOperatorNode = self.createNode(side=side,
                                                 name=self.mainOperatorNodeName)
-        self.result.append(self.mainOperatorNode)
+        self.result.append(self.mainOperatorNode[1])
         for sub in range(subOperatorsCount):
             instance = '_op_{}_{}'.format(componentName, str(sub))
-            self.subOperatorNodeName = supOperatorNodeName.replace('M_',
-                                                                   defaultSide +
+            self.subOperatorNodeName = subOperatorsNodeName.replace('M_',
+                                                                   side +
                                                                    '_')
             self.subOperatorNodeName = self.subOperatorNodeName.replace('_op_0',
                                                                         instance)
-            subOpNode = self.jointControl.create_curve(name=self.subOperatorNodeName)
+            subOpNode = self.jointControl.create_curve(name=self.subOperatorNodeName,
+                                                       match=self.result[-1],
+                                                       scale=subOperatorsScale,
+                                                       bufferGRP=False,
+                                                       colorIndex=21)
+            self.result[-1].addChild(subOpNode[0])
+            if axes == '-X' or axes == '-Y' or axes == '-Z':
+                spaceing = spaceing * -1
+            if axes == '-X':
+                axes = 'X'
+            elif axes == '-Y':
+                axes = 'Y'
+            elif axes == '-Z':
+                axes = 'Z'
+            subOpNode[0].attr('translate' + axes).set(spaceing)
+            self.result.append(subOpNode[-1])
+        self.linearCurveName = linearCurveName.replace('M_',
+                                                       side +
+                                                       '_')
+        self.linearCurveName = self.linearCurveName.replace('_op_',
+                                                            '_op_' +
+                                                            componentName +
+                                                            '_')
+        linear_curve = curves.linear_curve(driverNodes=self.result,
+                                           name=self.linearCurveName)
+        self.mainOperatorNode[0].addChild(linear_curve)
 
 
 
