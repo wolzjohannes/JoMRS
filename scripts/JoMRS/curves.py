@@ -37,6 +37,7 @@ import strings
 import logging
 import logger
 import attributes
+reload(utils)
 
 moduleLogger = logging.getLogger(__name__ + '.py')
 
@@ -91,7 +92,8 @@ class ControlCurves(object):
                 shape__.overrideEnabled.set(1)
                 shape__.overrideColor.set(colorIndex)
         if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
+            buffer_ = utils.create_bufferGRP(node=self.control,
+                                             name=name)
             result.append(buffer_)
         if child:
             self.control.addChild(child)

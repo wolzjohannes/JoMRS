@@ -42,7 +42,7 @@ import logger
 moduleLogger = logging.getLogger(__name__ + '.py')
 
 
-def create_bufferGRP(node):
+def create_bufferGRP(node, name=None):
     """
     Create a buffer transform for transform node and parent
     the node under buffer group.
@@ -54,7 +54,10 @@ def create_bufferGRP(node):
             tuple: The created buffer dagnode.
     """
     parent = node.getParent()
-    name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
+    if name:
+        name = strings.string_checkup(name + '_buffer_GRP', moduleLogger)
+    else:
+        name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
     bufferGRP = pmc.createNode('transform', n=name)
     pmc.delete(pmc.parentConstraint(node, bufferGRP, mo=False))
     bufferGRP.addChild(node)

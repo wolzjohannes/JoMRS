@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 03 / 14
+# Date:       2019 / 03 / 05
 
 """
 JoMRS main operator module. Handles the compon
@@ -41,6 +41,8 @@ reload(curves)
 ##########################################################
 
 moduleLogger = logging.getLogger(__name__ + '.py')
+OPROOTTAGNAME = 'JOMRS_op_root'
+OPMAINTAGNAME = 'JOMRS_op_main'
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
 MAINOPROOTNODENAME = 'M_MAIN_op_0_CON'
 SUBOPROOTNODENAME = 'M_SUB_op_0_CON'
@@ -52,7 +54,9 @@ DEFAULTSUBOPERATORSCOUNT = 1
 DEFAULTAXES = 'X'
 DEFAULTSPACING = 10
 DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
-ERRORMESSAGE = {'selection': 'More then one parent not allowed'}
+ERRORMESSAGE = {'selection': 'More then one parent not allowed',
+                'selection1': 'Parent of main operator is no JoMRS'
+                ' operator node or operators root node'}
 
 ##########################################################
 # CLASSES
@@ -61,9 +65,9 @@ ERRORMESSAGE = {'selection': 'More then one parent not allowed'}
 
 class OperatorsRootNode(object):
 
-    def __init__(self):
+    def __init__(self, opRootTagName=OPROOTTAGNAME):
         self.param_list = []
-        self.mainop_attr = {'name': 'JOMRS_op_root', 'attrType': 'bool',
+        self.mainop_attr = {'name': opRootTagName, 'attrType': 'bool',
                             'keyable': False, 'defaultValue': 1}
 
         self.rigname_attr = {'name': 'rig_name', 'attrType': 'string',
@@ -108,8 +112,8 @@ class OperatorsRootNode(object):
         self.param_list.append(self.m_ik_rig_color_attr)
         self.param_list.append(self.m_ik_rig_sub_color_attr)
 
-    def create_node(self):
-        self.rootNode = pmc.createNode('transform', n=OPROOTNAME)
+    def create_node(self, opRootName=OPROOTNAME):
+        self.rootNode = pmc.createNode('transform', n=opRootName)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.param_list:
             attributes.addAttr(node=self.rootNode, **attr_)
@@ -117,54 +121,60 @@ class OperatorsRootNode(object):
 
 
 class mainOperatorNode(OperatorsRootNode):
-    def __init__(self):
+    def __init__(self, opMainTagName=OPMAINTAGNAME,
+                 opRootTagName=OPROOTTAGNAME,
+                 errorMessage=ERRORMESSAGE['selection1']):
         super(mainOperatorNode, self).__init__()
-        self.selection = pmc.ls(sl=True)
-        if self.selection is None:
-            self.mainOP = self
-            self.attribute_list = []
 
-            self.mainop_attr = {'name': 'JOMRS_op_main', 'attrType': 'bool',
-                                'keyable': False, 'defaultValue': 1}
+        self.selection = pmc.ls(sl=True, typ='transform')
 
-            self.compName_attr = {'name': 'component_name',
-                                  'attrType': 'string', 'keyable': False,
-                                  'channelBox': False}
+        for node in self.selection:
+            if node.hasAttr(opRootTagName) is False:
+                logger.log(level='error', message=errorMessage,
+                           logger=moduleLogger)
+            elif node.hasAttr(opMainTagName) is False:
+                logger.log(level='error', message=errorMessage,
+                           logger=moduleLogger)
 
-            self.compType_attr = {'name': 'component_type',
-                                  'attrType': 'string', 'keyable': False,
-                                  'channelBox': False}
+        self.attribute_list = []
 
-            self.compSide_attr = {'name': 'component_side',
-                                  'attrType': 'string', 'keyable': False,
-                                  'channelBox': False}
+        self.mainop_attr = {'name': opMainTagName, 'attrType': 'bool',
+                            'keyable': False, 'defaultValue': 1}
 
-            self.compIndex_attr = {'name': 'component_index',
-                                   'attrType': 'long', 'keyable': False,
-                                   'channelBox': False, 'defaultValue': 0}
+        self.compName_attr = {'name': 'component_name',
+                              'attrType': 'string', 'keyable': False,
+                              'channelBox': False}
 
-            temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
-                    self.compSide_attr, self.compIndex_attr]
-            for attr_ in temp:
-                self.attribute_list.append(attr_)
+        self.compType_attr = {'name': 'component_type',
+                              'attrType': 'string', 'keyable': False,
+                              'channelBox': False}
+
+        self.compSide_attr = {'name': 'component_side',
+                              'attrType': 'string', 'keyable': False,
+                              'channelBox': False}
+
+        self.compIndex_attr = {'name': 'component_index',
+                               'attrType': 'long', 'keyable': False,
+                               'channelBox': False, 'defaultValue': 0}
+
+        temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
+                self.compSide_attr, self.compIndex_attr]
+        for attr_ in temp:
+            self.attribute_list.append(attr_)
 
     def createNode(self, colorIndex=18, name=MAINOPROOTNODENAME,
                    side=DEFAULTSIDE, index=DEFAULTINDEX,
                    errorMessage=ERRORMESSAGE):
-        self.opRootND = self.mainOP.create_node()
+        if not self.selection:
+            self.opRootND = self.create_node()
+        else:
+            self.opRootND = self.selection[0]
         self.mainOpCurve = curves.DiamondControl()
         self.mainOpND = self.mainOpCurve.create_curve(colorIndex=colorIndex,
                                                       name=name)
         for attr_ in self.attribute_list:
             attributes.addAttr(node=self.mainOpND[-1], **attr_)
-        if self.selection:
-            if len(self.selection) == 1:
-                self.selection.addChild(self.mainOpND[0])
-            else:
-                logger.log(level='error', message=errorMessage,
-                           logger=moduleLogger)
-        else:
-            self.opRootND.addChild(self.mainOpND[0])
+        self.opRootND.addChild(self.mainOpND[0])
         self.mainOpND[1].component_side.set(side)
         self.mainOpND[1].component_index.set(index)
         return self.mainOpND
