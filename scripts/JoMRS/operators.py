@@ -129,10 +129,9 @@ class mainOperatorNode(OperatorsRootNode):
         self.selection = pmc.ls(sl=True, typ='transform')
 
         for node in self.selection:
-            if node.hasAttr(opRootTagName) is False:
-                logger.log(level='error', message=errorMessage,
-                           logger=moduleLogger)
-            elif node.hasAttr(opMainTagName) is False:
+            if node.hasAttr(opRootTagName) or node.hasAttr(opMainTagName):
+                continue
+            else:
                 logger.log(level='error', message=errorMessage,
                            logger=moduleLogger)
 
@@ -171,7 +170,8 @@ class mainOperatorNode(OperatorsRootNode):
             self.opRootND = self.selection[0]
         self.mainOpCurve = curves.DiamondControl()
         self.mainOpND = self.mainOpCurve.create_curve(colorIndex=colorIndex,
-                                                      name=name)
+                                                      name=name,
+                                                      match=self.opRootND)
         for attr_ in self.attribute_list:
             attributes.addAttr(node=self.mainOpND[-1], **attr_)
         self.opRootND.addChild(self.mainOpND[0])
@@ -234,11 +234,5 @@ class create_component_operator(mainOperatorNode):
                                                             '_')
         linear_curve = curves.linear_curve(driverNodes=self.result,
                                            name=self.linearCurveName)
+        linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
-
-
-
-
-
-
-
