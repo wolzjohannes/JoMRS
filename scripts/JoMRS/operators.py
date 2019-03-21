@@ -43,6 +43,7 @@ reload(curves)
 moduleLogger = logging.getLogger(__name__ + '.py')
 OPROOTTAGNAME = 'JOMRS_op_root'
 OPMAINTAGNAME = 'JOMRS_op_main'
+OPSUBTAGNAME = 'JOMRS_op_sub'
 OPROOTNAME = 'M_MAIN_operators_0_GRP'
 MAINOPROOTNODENAME = 'M_MAIN_op_0_CON'
 SUBOPROOTNODENAME = 'M_SUB_op_0_CON'
@@ -187,7 +188,8 @@ class create_component_operator(mainOperatorNode):
                  subOperatorsNodeName=SUBOPROOTNODENAME,
                  axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
                  subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
-                 linearCurveName=LINEARCURVENAME):
+                 linearCurveName=LINEARCURVENAME,
+                 subTagName=SUBOPROOTNODENAME):
         super(create_component_operator, self).__init__()
         self.result = []
         self.jointControl = curves.JointControl()
@@ -215,6 +217,9 @@ class create_component_operator(mainOperatorNode):
                                                        bufferGRP=False,
                                                        colorIndex=21)
             self.result[-1].addChild(subOpNode[0])
+            attributes.addAttr(node=subOpNode[0], name=subTagName,
+                               attrType='bool',
+                               value=1, defaultValue=1)
             if axes == '-X' or axes == '-Y' or axes == '-Z':
                 spaceing = spaceing * -1
             if axes == '-X':
