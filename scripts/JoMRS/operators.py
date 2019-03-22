@@ -131,7 +131,8 @@ class mainOperatorNode(OperatorsRootNode):
         self.selection = pmc.ls(sl=True, typ='transform')
 
         for node in self.selection:
-            if node.hasAttr(opRootTagName) or node.hasAttr(opMainTagName) or node.hasAttr(subTagName):
+            if node.hasAttr(opRootTagName) or node.hasAttr(opMainTagName) or \
+               node.hasAttr(subTagName):
                 continue
             else:
                 logger.log(level='error', message=errorMessage,
@@ -183,15 +184,19 @@ class mainOperatorNode(OperatorsRootNode):
 
 
 class create_component_operator(mainOperatorNode):
-    def __init__(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
-                 componentName=DEFAULTCOMPNAME, side=DEFAULTSIDE,
-                 mainOperatorNodeName=MAINOPROOTNODENAME,
-                 subOperatorsNodeName=SUBOPROOTNODENAME,
-                 axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
-                 subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
-                 linearCurveName=LINEARCURVENAME,
-                 subTagName=OPSUBTAGNAME):
+    def __init__(self):
         super(create_component_operator, self).__init__()
+        self.mainOperatorNode = self
+
+    def create_node(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
+                    compName=DEFAULTCOMPNAME, side=DEFAULTSIDE,
+                    mainOperatorNodeName=MAINOPROOTNODENAME,
+                    subOperatorsNodeName=SUBOPROOTNODENAME,
+                    axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
+                    subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
+                    linearCurveName=LINEARCURVENAME,
+                    subTagName=OPSUBTAGNAME):
+        # super(create_component_operator, self).__init__()
         self.result = []
         self.jointControl = curves.JointControl()
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
@@ -199,20 +204,17 @@ class create_component_operator(mainOperatorNode):
                                                                  '_')
         self.mainOperatorNodeName = self.mainOperatorNodeName.replace('_op_',
                                                                       '_op_' +
-                                                                      componentName +
+                                                                      compName +
                                                                       '_')
-        self.mainOperatorNode = self
+        # self.mainOperatorNode = self
         self.mainOperatorNode = self.createNode(side=side,
                                                 name=self.mainOperatorNodeName)
         self.result.append(self.mainOperatorNode[1])
         for sub in range(subOperatorsCount):
-            instance = '_op_{}_{}'.format(componentName, str(sub))
-            self.subOperatorNodeName = subOperatorsNodeName.replace('M_',
-                                                                    side +
-                                                                    '_')
-            self.subOperatorNodeName = self.subOperatorNodeName.replace('_op_0',
-                                                                        instance)
-            subOpNode = self.jointControl.create_curve(name=self.subOperatorNodeName,
+            instance = '_op_{}_{}'.format(compName, str(sub))
+            self.subOpNDName = subOperatorsNodeName.replace('M_', side + '_')
+            self.subOpNDName = self.subOpNDName.replace('_op_0', instance)
+            subOpNode = self.jointControl.create_curve(name=self.subOpNDName,
                                                        match=self.result[-1],
                                                        scale=subOperatorsScale,
                                                        bufferGRP=False,
@@ -236,7 +238,7 @@ class create_component_operator(mainOperatorNode):
                                                        '_')
         self.linearCurveName = self.linearCurveName.replace('_op_',
                                                             '_op_' +
-                                                            componentName +
+                                                            compName +
                                                             '_')
         linear_curve = curves.linear_curve(driverNodes=self.result,
                                            name=self.linearCurveName)
