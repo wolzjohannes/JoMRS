@@ -1249,6 +1249,7 @@ class DiamondControl():
                                                  translateChannel=False,
                                                  scaleChannel=False)
             spear0[-1].addChild(rotatAxesCon)
+            rotatAxesCon.rotate.set(0, 0, 0)
         return spear0
 
 
@@ -1382,4 +1383,3 @@ def mirror_curve(curve=None, search='L_', replace='R_', bufferGRP=True,
         logger.log(level='error', message='mirror only for nurbsCurves',
                    logger=moduleLogger)
     return result
-

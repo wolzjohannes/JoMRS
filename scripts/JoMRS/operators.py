@@ -57,7 +57,7 @@ DEFAULTSPACING = 10
 DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
 ERRORMESSAGE = {'selection': 'More then one parent not allowed',
                 'selection1': 'Parent of main operator is no JoMRS'
-                ' operator node or operators root node'}
+                ' operator main/sub node or operators root node'}
 
 ##########################################################
 # CLASSES
@@ -124,13 +124,14 @@ class OperatorsRootNode(object):
 class mainOperatorNode(OperatorsRootNode):
     def __init__(self, opMainTagName=OPMAINTAGNAME,
                  opRootTagName=OPROOTTAGNAME,
+                 subTagName=OPSUBTAGNAME,
                  errorMessage=ERRORMESSAGE['selection1']):
         super(mainOperatorNode, self).__init__()
 
         self.selection = pmc.ls(sl=True, typ='transform')
 
         for node in self.selection:
-            if node.hasAttr(opRootTagName) or node.hasAttr(opMainTagName):
+            if node.hasAttr(opRootTagName) or node.hasAttr(opMainTagName) or node.hasAttr(subTagName):
                 continue
             else:
                 logger.log(level='error', message=errorMessage,
@@ -189,7 +190,7 @@ class create_component_operator(mainOperatorNode):
                  axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
                  subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
                  linearCurveName=LINEARCURVENAME,
-                 subTagName=SUBOPROOTNODENAME):
+                 subTagName=OPSUBTAGNAME):
         super(create_component_operator, self).__init__()
         self.result = []
         self.jointControl = curves.JointControl()
@@ -207,8 +208,8 @@ class create_component_operator(mainOperatorNode):
         for sub in range(subOperatorsCount):
             instance = '_op_{}_{}'.format(componentName, str(sub))
             self.subOperatorNodeName = subOperatorsNodeName.replace('M_',
-                                                                   side +
-                                                                   '_')
+                                                                    side +
+                                                                    '_')
             self.subOperatorNodeName = self.subOperatorNodeName.replace('_op_0',
                                                                         instance)
             subOpNode = self.jointControl.create_curve(name=self.subOperatorNodeName,
@@ -219,7 +220,7 @@ class create_component_operator(mainOperatorNode):
             self.result[-1].addChild(subOpNode[0])
             attributes.addAttr(node=subOpNode[0], name=subTagName,
                                attrType='bool',
-                               value=1, defaultValue=1)
+                               defaultValue=1)
             if axes == '-X' or axes == '-Y' or axes == '-Z':
                 spaceing = spaceing * -1
             if axes == '-X':
