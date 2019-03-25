@@ -20,13 +20,12 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 02 / 06
+# Date:       2019 / 03 / 25
 
 """
 JoMRS nurbsCurve modification module.
 """
 ##########################################################
-# GLOBALS
 # To Do:
 # Mirror curve function. And specifie the color of the mirrored curve
 ##########################################################
@@ -39,7 +38,15 @@ import logger
 import attributes
 reload(utils)
 
+##########################################################
+# GLOBALS
+##########################################################
+
 moduleLogger = logging.getLogger(__name__ + '.py')
+
+##########################################################
+# CLASSES
+##########################################################
 
 
 class ControlCurves(object):

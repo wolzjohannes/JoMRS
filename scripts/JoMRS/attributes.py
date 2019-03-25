@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 11
+# Date:       2019 / 03 / 25
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -29,7 +29,15 @@ import logging
 import pymel.core as pmc
 import logger
 
+##########################################################
+# GLOBALS
+##########################################################
+
 moduleLogger = logging.getLogger(__name__ + '.py')
+
+##########################################################
+# FUNCTIONS
+##########################################################
 
 
 def undo(func_):
@@ -38,10 +46,6 @@ def undo(func_):
             result = func_(*args, **kwargs)
             return result
     return inner
-
-#####################################
-# SETTERS AND ADD
-#####################################
 
 
 def addAttr(node, name, attrType, value=None, defaultValue=None,

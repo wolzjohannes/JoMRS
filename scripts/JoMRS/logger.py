@@ -20,25 +20,30 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 25
+# Date:       2019 / 03 / 25
 
 """
 JoMRS logger module. Module which contains
 a standart to return and log informations.
 """
 
-##########################################################
-# GLOBAL
-##########################################################
 import os
 import logging
 import inspect
 import datetime
 
+##########################################################
+# GLOBAL
+##########################################################
+
 VERSION = ['1', '0', '0']
 DATE = ['2018', '12', '20']
 
 logging.basicConfig(level=logging.INFO)
+
+##########################################################
+# FUNCTIONS
+##########################################################
 
 
 def getVersion(version=VERSION, date=DATE):
@@ -53,7 +58,8 @@ def getVersion(version=VERSION, date=DATE):
     return "JoMRS v{} Modular Rigging System | last update {}".format(".".join([i for i in version]), "/".join([x for x in date]))
 
 
-def initialize_fileHandler(dir_path=os.path.dirname(os.path.realpath(__file__)), dateTime=datetime.datetime.now()):
+def initialize_fileHandler(dir_path=os.path.dirname(os.path.realpath(__file__)),
+                           dateTime=datetime.datetime.now()):
     """Initialize the filehandler to write a log file for any logger.
     Args:
             dir_path(str): The dir path of the python package.

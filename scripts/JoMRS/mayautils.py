@@ -20,18 +20,18 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 12 / 30
+# Date:       2019 / 03 / 25
 
 """
 JoMRS maya utils module. Utilities helps
 to create maya behaviours.
 """
-# GLOBALS
 ###############
 # TO DO:
 # config file for valid strings. For projects modifications
 # check if all srings follow the JoMRS string handling
 ###############
+
 import pymel.core as pmc
 import pymel.core.datatypes as dt
 import attributes
@@ -39,7 +39,15 @@ import strings
 import logging
 import logger
 
+##########################################################
+# GLOBAL
+##########################################################
+
 moduleLogger = logging.getLogger(__name__ + '.py')
+
+##########################################################
+# FUNCTIONS
+##########################################################
 
 
 def create_bufferGRP(node, name=None):
@@ -335,7 +343,8 @@ def create_constraint(typ='parent', source=None, target=None,
             the parent constraint. And disconnect inner cycle
             connections of the contraint.
             no_pivots(bool): Disconnect the pivot plugs.
-            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            no_parent_influ(bool): Disconnect the
+            constraintParentInverseMatrix
             plug. So that the parent transformation of the source node
             influnce the source node.
     Return:
@@ -460,7 +469,8 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
             the constraint. And disconnect inner cycle connections
             of the contraint.
             no_pivots(bool): Disconnect the pivot plugs.
-            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            no_parent_influ(bool): Disconnect the
+            constraintParentInverseMatrix
             plug. So that the parent transformation of the source node
             influnce the source node.
 
