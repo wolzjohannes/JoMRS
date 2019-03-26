@@ -206,7 +206,6 @@ class create_component_operator(mainOperatorNode):
                                                                       '_op_' +
                                                                       compName +
                                                                       '_')
-        # self.mainOperatorNode = self
         self.mainOperatorNode = self.createNode(side=side,
                                                 name=self.mainOperatorNodeName)
         self.result.append(self.mainOperatorNode[1])
