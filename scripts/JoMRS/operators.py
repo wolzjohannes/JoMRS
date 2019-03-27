@@ -196,6 +196,7 @@ class create_component_operator(mainOperatorNode):
                     subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
                     linearCurveName=LINEARCURVENAME,
                     subTagName=OPSUBTAGNAME):
+        # super(create_component_operator, self).__init__()
         self.result = []
         self.jointControl = curves.JointControl()
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
@@ -205,6 +206,7 @@ class create_component_operator(mainOperatorNode):
                                                                       '_op_' +
                                                                       compName +
                                                                       '_')
+        # self.mainOperatorNode = self
         self.mainOperatorNode = self.createNode(side=side,
                                                 name=self.mainOperatorNodeName)
         self.result.append(self.mainOperatorNode[1])
