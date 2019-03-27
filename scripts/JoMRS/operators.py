@@ -184,19 +184,16 @@ class mainOperatorNode(OperatorsRootNode):
 
 
 class create_component_operator(mainOperatorNode):
-    def __init__(self):
-        super(create_component_operator, self).__init__()
-        self.mainOperatorNode = self
 
-    def create_node(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
-                    compName=DEFAULTCOMPNAME, side=DEFAULTSIDE,
-                    mainOperatorNodeName=MAINOPROOTNODENAME,
-                    subOperatorsNodeName=SUBOPROOTNODENAME,
-                    axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
-                    subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
-                    linearCurveName=LINEARCURVENAME,
-                    subTagName=OPSUBTAGNAME):
-        # super(create_component_operator, self).__init__()
+    def __init__(self, subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
+                 compName=DEFAULTCOMPNAME, side=DEFAULTSIDE,
+                 mainOperatorNodeName=MAINOPROOTNODENAME,
+                 subOperatorsNodeName=SUBOPROOTNODENAME,
+                 axes=DEFAULTAXES, spaceing=DEFAULTSPACING,
+                 subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
+                 linearCurveName=LINEARCURVENAME,
+                 subTagName=OPSUBTAGNAME):
+        super(create_component_operator, self).__init__()
         self.result = []
         self.jointControl = curves.JointControl()
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
@@ -206,7 +203,7 @@ class create_component_operator(mainOperatorNode):
                                                                       '_op_' +
                                                                       compName +
                                                                       '_')
-        # self.mainOperatorNode = self
+        self.mainOperatorNode = self
         self.mainOperatorNode = self.createNode(side=side,
                                                 name=self.mainOperatorNodeName)
         self.result.append(self.mainOperatorNode[1])
