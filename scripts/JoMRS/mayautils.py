@@ -20,19 +20,19 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 02 / 5
+# Date:       2019 / 03 / 25
 
 """
 JoMRS maya utils module. Utilities helps
 to create maya behaviours.
 """
-# GLOBALS
 ###############
 # TO DO:
 # config file for valid strings. For projects modifications
 # check if all srings follow the JoMRS string handling
 # match position function.
 ###############
+
 import pymel.core as pmc
 import pymel.core.datatypes as dt
 import attributes
@@ -40,10 +40,18 @@ import strings
 import logging
 import logger
 
+##########################################################
+# GLOBAL
+##########################################################
+
 moduleLogger = logging.getLogger(__name__ + '.py')
 
+##########################################################
+# FUNCTIONS
+##########################################################
 
-def create_bufferGRP(node):
+
+def create_bufferGRP(node, name=None):
     """
     Create a buffer transform for transform node and parent
     the node under buffer group.
@@ -55,7 +63,10 @@ def create_bufferGRP(node):
             tuple: The created buffer dagnode.
     """
     parent = node.getParent()
-    name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
+    if name:
+        name = strings.string_checkup(name + '_buffer_GRP', moduleLogger)
+    else:
+        name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
     bufferGRP = pmc.createNode('transform', n=name)
     pmc.delete(pmc.parentConstraint(node, bufferGRP, mo=False))
     pmc.delete(pmc.scaleConstraint(node, bufferGRP, mo=False))
@@ -334,7 +345,8 @@ def create_constraint(typ='parent', source=None, target=None,
             the parent constraint. And disconnect inner cycle
             connections of the contraint.
             no_pivots(bool): Disconnect the pivot plugs.
-            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            no_parent_influ(bool): Disconnect the
+            constraintParentInverseMatrix
             plug. So that the parent transformation of the source node
             influnce the source node.
     Return:
@@ -459,7 +471,8 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
             the constraint. And disconnect inner cycle connections
             of the contraint.
             no_pivots(bool): Disconnect the pivot plugs.
-            no_parent_influ(bool): Disconnect the constraintParentInverseMatrix
+            no_parent_influ(bool): Disconnect the
+            constraintParentInverseMatrix
             plug. So that the parent transformation of the source node
             influnce the source node.
 

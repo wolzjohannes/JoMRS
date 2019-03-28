@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 02 / 04
+# Date:       2019 / 03 / 25
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -35,7 +35,15 @@ import re
 import logging
 import logger
 
+##########################################################
+# GLOBALS
+##########################################################
+
 moduleLogger = logging.getLogger(__name__ + '.py')
+
+##########################################################
+# FUNCTIONS
+##########################################################
 
 
 def normalizePrefix(string, logger_=moduleLogger):

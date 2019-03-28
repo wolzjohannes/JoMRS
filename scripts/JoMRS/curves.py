@@ -20,13 +20,12 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 02 / 06
+# Date:       2019 / 03 / 25
 
 """
 JoMRS nurbsCurve modification module.
 """
 ##########################################################
-# GLOBALS
 # To Do:
 # Mirror curve function. And specifie the color of the mirrored curve
 ##########################################################
@@ -37,8 +36,17 @@ import strings
 import logging
 import logger
 import attributes
+reload(utils)
+
+##########################################################
+# GLOBALS
+##########################################################
 
 moduleLogger = logging.getLogger(__name__ + '.py')
+
+##########################################################
+# CLASSES
+##########################################################
 
 
 class ControlCurves(object):
@@ -91,7 +99,8 @@ class ControlCurves(object):
                 shape__.overrideEnabled.set(1)
                 shape__.overrideColor.set(colorIndex)
         if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control)
+            buffer_ = utils.create_bufferGRP(node=self.control,
+                                             name=name)
             result.append(buffer_)
         if child:
             self.control.addChild(child)
@@ -1223,7 +1232,7 @@ class DiamondControl():
                                               rotateChannel=rotateChannel,
                                               scaleChannel=scaleChannel,
                                               visibilityChannel=visibilityChannel,
-                                              )[-1]
+                                              )
         spear1 = SpearControl1().create_curve(name=name,
                                               scale=scale,
                                               match=match,
@@ -1236,8 +1245,8 @@ class DiamondControl():
                                               bufferGRP=False,)[0]
         pmc.rotate(spear1.cv[:], 0, 45, 0)
         pmc.rotate(spear2.cv[:], 0, -45, 0)
-        spear0.addChild(spear1.getShape(), r=True, shape=True)
-        spear0.addChild(spear2.getShape(), r=True, shape=True)
+        spear0[-1].addChild(spear1.getShape(), r=True, shape=True)
+        spear0[-1].addChild(spear2.getShape(), r=True, shape=True)
         pmc.delete(spear1, spear2)
         if localRotateAxes:
             instance = RotateAxesControl()
@@ -1246,7 +1255,8 @@ class DiamondControl():
                                                  bufferGRP=False,
                                                  translateChannel=False,
                                                  scaleChannel=False)
-            spear0.addChild(rotatAxesCon)
+            spear0[-1].addChild(rotatAxesCon)
+            rotatAxesCon.rotate.set(0, 0, 0)
         return spear0
 
 
@@ -1380,4 +1390,3 @@ def mirror_curve(curve=None, search='L_', replace='R_', bufferGRP=True,
         logger.log(level='error', message='mirror only for nurbsCurves',
                    logger=moduleLogger)
     return result
-
