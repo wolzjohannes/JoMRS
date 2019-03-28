@@ -159,8 +159,17 @@ class mainOperatorNode(OperatorsRootNode):
                                'attrType': 'long', 'keyable': False,
                                'channelBox': False, 'defaultValue': 0}
 
+        self.subOperators_attr = {'name': 'sub_operators',
+                                  'attrType': 'string', 'keyable': False,
+                                  'channelBox': False}
+
+        self.connector_attr = {'name': 'connector',
+                               'attrType': 'string', 'keyable': False,
+                               'channelBox': False}
+
         temp = [self.mainop_attr, self.compName_attr, self.compType_attr,
-                self.compSide_attr, self.compIndex_attr]
+                self.compSide_attr, self.compIndex_attr,
+                self.subOperators_attr, self.connector_attr]
         for attr_ in temp:
             self.attribute_list.append(attr_)
 
@@ -194,7 +203,17 @@ class create_component_operator(mainOperatorNode):
                  linearCurveName=LINEARCURVENAME,
                  subTagName=OPSUBTAGNAME):
         super(create_component_operator, self).__init__()
+
+        self.connector_attr = {'name': 'connector',
+                               'attrType': 'string', 'keyable': False,
+                               'channelBox': False}
+        self.sub_tag_attr = {'name': subTagName, 'attrType': 'bool',
+                             'keyable': False, 'defaultValue': 1}
+
+        temp = [self.sub_tag_attr, self.connector_attr]
+
         self.result = []
+        self.subOperators = []
         self.jointControl = curves.JointControl()
         self.mainOperatorNodeName = mainOperatorNodeName.replace('M_',
                                                                  side +
@@ -216,10 +235,10 @@ class create_component_operator(mainOperatorNode):
                                                        scale=subOperatorsScale,
                                                        bufferGRP=False,
                                                        colorIndex=21)
+            self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
-            attributes.addAttr(node=subOpNode[0], name=subTagName,
-                               attrType='bool',
-                               defaultValue=1)
+            for attr_ in temp:
+                attributes.addAttr(node=subOpNode[0], **attr_)
             if axes == '-X' or axes == '-Y' or axes == '-Z':
                 spaceing = spaceing * -1
             if axes == '-X':
@@ -241,3 +260,5 @@ class create_component_operator(mainOperatorNode):
                                            name=self.linearCurveName)
         linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
+        supOpDataStr = ','.join([str(x[0]) for x in self.subOperators])
+        self.result[0].sub_operators.set(supOpDataStr)
