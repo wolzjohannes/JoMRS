@@ -67,7 +67,7 @@ def create_bufferGRP(node, name=None):
     else:
         name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
     bufferGRP = pmc.createNode('transform', n=name)
-    pmc.delete(pmc.parentConstraint(node, bufferGRP, mo=False))
+    bufferGRP.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     bufferGRP.addChild(node)
     if parent:
         parent.addChild(bufferGRP)
@@ -86,7 +86,7 @@ def spaceLocator_onPosition(node, bufferGRP=True):
     result = []
     name = strings.string_checkup(str(node) + '_0_LOC', moduleLogger)
     loc = pmc.spaceLocator(n=name)
-    pmc.delete(pmc.parentConstraint(node, loc, mo=False))
+    loc.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     result.append(loc)
     if bufferGRP:
         bufferGRP = create_bufferGRP(loc)
