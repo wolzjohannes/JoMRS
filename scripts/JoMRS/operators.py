@@ -262,3 +262,6 @@ class create_component_operator(mainOperatorNode):
         self.mainOperatorNode[0].addChild(linear_curve)
         supOpDataStr = ','.join([str(x[0]) for x in self.subOperators])
         self.result[0].sub_operators.set(supOpDataStr)
+
+    def get_suboperators(self):
+        print self.mainOperatorNode[1].sub_operators.get()
