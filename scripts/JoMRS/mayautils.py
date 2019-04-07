@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 03 / 25
+# Date:       2019 / 04 / 07
 
 """
 JoMRS maya utils module. Utilities helps
@@ -44,7 +44,7 @@ import logger
 # GLOBAL
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + '.py')
+moduleLogger = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
@@ -64,10 +64,10 @@ def create_bufferGRP(node, name=None):
     """
     parent = node.getParent()
     if name:
-        name = strings.string_checkup(name + '_buffer_GRP', moduleLogger)
+        name = strings.string_checkup(name + "_buffer_GRP", moduleLogger)
     else:
-        name = strings.string_checkup(str(node) + '_buffer_GRP', moduleLogger)
-    bufferGRP = pmc.createNode('transform', n=name)
+        name = strings.string_checkup(str(node) + "_buffer_GRP", moduleLogger)
+    bufferGRP = pmc.createNode("transform", n=name)
     bufferGRP.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     bufferGRP.addChild(node)
     if parent:
@@ -85,7 +85,7 @@ def spaceLocator_onPosition(node, bufferGRP=True):
             list: The buffer group, the locator node.
     """
     result = []
-    name = strings.string_checkup(str(node) + '_0_LOC', moduleLogger)
+    name = strings.string_checkup(str(node) + "_0_LOC", moduleLogger)
     loc = pmc.spaceLocator(n=name)
     loc.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     result.append(loc)
@@ -95,9 +95,18 @@ def spaceLocator_onPosition(node, bufferGRP=True):
     return result
 
 
-def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
-                    curveParent=None, curve=None, snap=True,
-                    sticky=False, weight=1, poWeight=1):
+def create_splineIK(
+    name,
+    startJNT=None,
+    endJNT=None,
+    parent=None,
+    curveParent=None,
+    curve=None,
+    snap=True,
+    sticky=False,
+    weight=1,
+    poWeight=1,
+):
     """
     Create a splineIK.
     Args:
@@ -118,24 +127,24 @@ def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
     result = []
     data = {}
     name = strings.string_checkup(name, moduleLogger)
-    data['n'] = name
-    data['solver'] = 'ikSplineSolver'
-    data['createCurve'] = False
-    data['sj'] = startJNT
-    data['ee'] = endJNT
+    data["n"] = name
+    data["solver"] = "ikSplineSolver"
+    data["createCurve"] = False
+    data["sj"] = startJNT
+    data["ee"] = endJNT
     if curve is not None:
-        data['c'] = curve
+        data["c"] = curve
     else:
-        data['createCurve'] = True
+        data["createCurve"] = True
     ikHandle = pmc.ikHandle(**data)
-    pmc.rename(ikHandle[1], str(endJNT) + '_EFF')
+    pmc.rename(ikHandle[1], str(endJNT) + "_EFF")
     result.extend(ikHandle)
     if curve:
-        pmc.rename(curve, str(curve) + '_CRV')
+        pmc.rename(curve, str(curve) + "_CRV")
         shape = curve.getShape()
         result.append(shape)
     else:
-        pmc.rename(ikHandle[2], str(ikHandle[2] + '_CRV'))
+        pmc.rename(ikHandle[2], str(ikHandle[2] + "_CRV"))
         shape = pmc.PyNode(ikHandle[2]).getShape()
         result[2] = shape
     if parent:
@@ -149,16 +158,27 @@ def create_splineIK(name, startJNT=None, endJNT=None, parent=None,
         result[0].snapEnable.set(0)
     if sticky:
         result[0].stickiness.set(1)
-    result[0].attr('weight').set(weight)
-    result[0].attr('poWeight').set(poWeight)
-    logger.log(level='info', message='Spline IK "' + name + '" created',
-               logger=moduleLogger)
+    result[0].attr("weight").set(weight)
+    result[0].attr("poWeight").set(poWeight)
+    logger.log(
+        level="info",
+        message='Spline IK "' + name + '" created',
+        logger=moduleLogger,
+    )
     return result
 
 
-def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
-              parent=None, snap=True, sticky=False,
-              weight=1, poWeight=1):
+def create_IK(
+    name,
+    solver="ikSCsolver",
+    startJNT=None,
+    endJNT=None,
+    parent=None,
+    snap=True,
+    sticky=False,
+    weight=1,
+    poWeight=1,
+):
     """
     Create a IK. Default is a single chain IK.
     Args:
@@ -177,12 +197,12 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
     """
     data = {}
     name = strings.string_checkup(name, moduleLogger)
-    data['n'] = name
-    data['solver'] = solver
-    data['sj'] = startJNT
-    data['ee'] = endJNT
+    data["n"] = name
+    data["solver"] = solver
+    data["sj"] = startJNT
+    data["ee"] = endJNT
     ikHandle = pmc.ikHandle(**data)
-    pmc.rename(ikHandle[1], str(endJNT) + '_EFF')
+    pmc.rename(ikHandle[1], str(endJNT) + "_EFF")
     if parent:
         parent.addChild(ikHandle[0])
     ikHandle[0].visibility.set(0)
@@ -190,15 +210,23 @@ def create_IK(name, solver='ikSCsolver', startJNT=None, endJNT=None,
         ikHandle[0].snapEnable.set(0)
     if sticky:
         ikHandle[0].stickiness.set(1)
-    ikHandle[0].attr('weight').set(weight)
-    ikHandle[0].attr('poWeight').set(poWeight)
-    logger.log(level='info', message=solver + ' "' + name + '" created',
-               logger=moduleLogger)
+    ikHandle[0].attr("weight").set(weight)
+    ikHandle[0].attr("poWeight").set(poWeight)
+    logger.log(
+        level="info",
+        message=solver + ' "' + name + '" created',
+        logger=moduleLogger,
+    )
     return ikHandle
 
 
-def constraint(typ='parent', source=None, target=None,
-               maintainOffset=True, axes=['X', 'Y', 'Z']):
+def constraint(
+    typ="parent",
+    source=None,
+    target=None,
+    maintainOffset=True,
+    axes=["X", "Y", "Z"],
+):
     """
     Create contraints. By default it creates a parentConstraint
     with maintain offset.
@@ -213,39 +241,46 @@ def constraint(typ='parent', source=None, target=None,
             list: The created constraint.
     """
     result = []
-    skipAxes = ['x', 'y', 'z']
-    if typ == 'parent':
-        result = pmc.parentConstraint(target, source, mo=maintainOffset,
-                                      skipRotate=skipAxes,
-                                      skipTranslate=skipAxes)
+    skipAxes = ["x", "y", "z"]
+    if typ == "parent":
+        result = pmc.parentConstraint(
+            target,
+            source,
+            mo=maintainOffset,
+            skipRotate=skipAxes,
+            skipTranslate=skipAxes,
+        )
         for ax in axes:
-            result.attr('constraintTranslate' +
-                        ax.upper()).connect(source.attr('translate' +
-                                                        ax.upper()))
-            result.attr('constraintRotate' +
-                        ax.upper()).connect(source.attr('rotate' +
-                                                        ax.upper()))
-    if typ == 'point':
-        result = pmc.pointConstraint(target, source, mo=maintainOffset,
-                                     skip=skipAxes)
+            result.attr("constraintTranslate" + ax.upper()).connect(
+                source.attr("translate" + ax.upper())
+            )
+            result.attr("constraintRotate" + ax.upper()).connect(
+                source.attr("rotate" + ax.upper())
+            )
+    if typ == "point":
+        result = pmc.pointConstraint(
+            target, source, mo=maintainOffset, skip=skipAxes
+        )
         for ax in axes:
-            result.attr('constraintTranslate' +
-                        ax.upper()).connect(source.attr('translate' +
-                                                        ax.upper()))
-    if typ == 'orient':
-        result = pmc.orientConstraint(target, source, mo=maintainOffset,
-                                      skip=skipAxes)
+            result.attr("constraintTranslate" + ax.upper()).connect(
+                source.attr("translate" + ax.upper())
+            )
+    if typ == "orient":
+        result = pmc.orientConstraint(
+            target, source, mo=maintainOffset, skip=skipAxes
+        )
         for ax in axes:
-            result.attr('constraintRotate' +
-                        ax.upper()).connect(source.attr('rotate' +
-                                                        ax.upper()))
-    if typ == 'scale':
-        result = pmc.scaleConstraint(target, source, mo=maintainOffset,
-                                     skip=skipAxes)
+            result.attr("constraintRotate" + ax.upper()).connect(
+                source.attr("rotate" + ax.upper())
+            )
+    if typ == "scale":
+        result = pmc.scaleConstraint(
+            target, source, mo=maintainOffset, skip=skipAxes
+        )
         for ax in axes:
-            result.attr('constraintScale' +
-                        ax.upper()).connect(source.attr('scale' +
-                                                        ax.upper()))
+            result.attr("constraintScale" + ax.upper()).connect(
+                source.attr("scale" + ax.upper())
+            )
     return result
 
 
@@ -261,25 +296,33 @@ def constraint_UI_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_UI = pmc.createNode('transform', n='{}{}'.format(
-                                       str(constraint), '_UI_GRP'))
+        constraint_UI = pmc.createNode(
+            "transform", n="{}{}".format(str(constraint), "_UI_GRP")
+        )
         constraint.addChild(constraint_UI)
         attributes.lockAndHideAttributes(node=constraint_UI)
         for x in range(len(target)):
-            longName = '{}_{}'.format(str(target[x]), 'W' + str(x))
-            attributes.addAttr(node=constraint_UI, name=longName,
-                               attrType='float', minValue=0,
-                               maxValue=1, keyable=True)
+            longName = "{}_{}".format(str(target[x]), "W" + str(x))
+            attributes.addAttr(
+                node=constraint_UI,
+                name=longName,
+                attrType="float",
+                minValue=0,
+                maxValue=1,
+                keyable=True,
+            )
             constraint_UI.attr(longName).set(1)
             constraint_UI.attr(longName).connect(
-                constraint.target[x].targetWeight,
-                force=True)
+                constraint.target[x].targetWeight, force=True
+            )
         for udAttr in constraint.listAttr(ud=True):
             pmc.deleteAttr(udAttr)
     else:
-        logger.log(level='error',
-                   message='source and constraint needed for'
-                   ' constraint_UI_node', logger=moduleLogger)
+        logger.log(
+            level="error",
+            message="source and constraint needed for" " constraint_UI_node",
+            logger=moduleLogger,
+        )
     return constraint_UI
 
 
@@ -303,7 +346,7 @@ def no_pivots_no_rotateOrder_(constraint):
     except Exception as e:
         exceptions.append(e)
     if exceptions:
-        logger.log(level='warning', message=exceptions, logger=moduleLogger)
+        logger.log(level="warning", message=exceptions, logger=moduleLogger)
 
 
 def no_constraint_cycle(constraint=None, source=None, target=None):
@@ -322,14 +365,22 @@ def no_constraint_cycle(constraint=None, source=None, target=None):
     parent = source[0].getParent()
     if parent:
         constraint.constraintParentInverseMatrix.disconnect()
-        parent.worldInverseMatrix.connect(constraint.
-                                          constraintParentInverseMatrix)
+        parent.worldInverseMatrix.connect(
+            constraint.constraintParentInverseMatrix
+        )
     return constraint_UI_node_(constraint=constraint, target=target)
 
 
-def create_constraint(typ='parent', source=None, target=None,
-                      maintainOffset=True, axes=['X', 'Y', 'Z'],
-                      no_cycle=False, no_pivots=False, no_parent_influ=False):
+def create_constraint(
+    typ="parent",
+    source=None,
+    target=None,
+    maintainOffset=True,
+    axes=["X", "Y", "Z"],
+    no_cycle=False,
+    no_pivots=False,
+    no_parent_influ=False,
+):
     """
     Create constraints with a lot more functionality.
     By default it creates a parentConstraint.
@@ -352,13 +403,18 @@ def create_constraint(typ='parent', source=None, target=None,
             list: The constraint node, constraint_UI_node
     """
     result = []
-    constraint_ = constraint(typ=typ, source=source, target=target,
-                             maintainOffset=maintainOffset, axes=axes)
+    constraint_ = constraint(
+        typ=typ,
+        source=source,
+        target=target,
+        maintainOffset=maintainOffset,
+        axes=axes,
+    )
     result.append(constraint_)
     if no_cycle:
-        con_UI_node = no_constraint_cycle(constraint=constraint_,
-                                          source=source,
-                                          target=target)
+        con_UI_node = no_constraint_cycle(
+            constraint=constraint_, source=source, target=target
+        )
         result.append(con_UI_node)
     if no_pivots:
         no_pivots_no_rotateOrder_(constraint=constraint_)
@@ -367,11 +423,19 @@ def create_constraint(typ='parent', source=None, target=None,
     return result
 
 
-def aimConstraint_(source=None, target=None, maintainOffset=True,
-                   axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
-                   upAxes=[0, 1, 0], worldUpType='object',
-                   killUpVecObj=None, parentUpVecObj=None,
-                   worldUpObject=None, worldUpVector=[0, 1, 0]):
+def aimConstraint_(
+    source=None,
+    target=None,
+    maintainOffset=True,
+    axes=["X", "Y", "Z"],
+    aimAxes=[1, 0, 0],
+    upAxes=[0, 1, 0],
+    worldUpType="object",
+    killUpVecObj=None,
+    parentUpVecObj=None,
+    worldUpObject=None,
+    worldUpVector=[0, 1, 0],
+):
     """
     Create a aimConstraint.
     By default it creates a object as upVector.
@@ -396,40 +460,65 @@ def aimConstraint_(source=None, target=None, maintainOffset=True,
     Return:
             list: The aim constraint, the upVector locator node.
     """
-    skipAxes = ['x', 'y', 'z']
+    skipAxes = ["x", "y", "z"]
     temp = []
-    if worldUpType == 'object':
+    if worldUpType == "object":
         if not worldUpObject:
-            worldUpObject = pmc.spaceLocator(n=str(source) + '_upVec_0_LOC')
-            worldUpObjectBuffer = pmc.group(worldUpObject,
-                                            n=str(worldUpObject) +
-                                            '_buffer_GRP')
+            worldUpObject = pmc.spaceLocator(n=str(source) + "_upVec_0_LOC")
+            worldUpObjectBuffer = pmc.group(
+                worldUpObject, n=str(worldUpObject) + "_buffer_GRP"
+            )
             temp.append(worldUpObjectBuffer)
-            pmc.delete(pmc.parentConstraint(source, worldUpObjectBuffer,
-                                            mo=False))
+            pmc.delete(
+                pmc.parentConstraint(source, worldUpObjectBuffer, mo=False)
+            )
             worldUpObject.translate.set(v * 5 for v in upAxes)
-        con = pmc.aimConstraint(target, source, mo=maintainOffset,
-                                aim=aimAxes, skip=skipAxes, u=upAxes,
-                                worldUpType=worldUpType,
-                                worldUpObject=worldUpObject)
-    elif worldUpType == 'objectrotation':
-        con = pmc.aimConstraint(target, source, mo=maintainOffset,
-                                aim=aimAxes, skip=skipAxes, u=upAxes,
-                                worldUpType=worldUpType,
-                                worldUpObject=worldUpObject)
-    elif worldUpType == 'vector':
-        con = pmc.aimConstraint(target, source, mo=maintainOffset,
-                                aim=aimAxes, skip=skipAxes, u=upAxes,
-                                worldUpType=worldUpType,
-                                worldUpVector=worldUpVector)
+        con = pmc.aimConstraint(
+            target,
+            source,
+            mo=maintainOffset,
+            aim=aimAxes,
+            skip=skipAxes,
+            u=upAxes,
+            worldUpType=worldUpType,
+            worldUpObject=worldUpObject,
+        )
+    elif worldUpType == "objectrotation":
+        con = pmc.aimConstraint(
+            target,
+            source,
+            mo=maintainOffset,
+            aim=aimAxes,
+            skip=skipAxes,
+            u=upAxes,
+            worldUpType=worldUpType,
+            worldUpObject=worldUpObject,
+        )
+    elif worldUpType == "vector":
+        con = pmc.aimConstraint(
+            target,
+            source,
+            mo=maintainOffset,
+            aim=aimAxes,
+            skip=skipAxes,
+            u=upAxes,
+            worldUpType=worldUpType,
+            worldUpVector=worldUpVector,
+        )
     else:
-        con = pmc.aimConstraint(target, source, mo=maintainOffset,
-                                aim=aimAxes, skip=skipAxes, u=upAxes,
-                                worldUpType=worldUpType)
+        con = pmc.aimConstraint(
+            target,
+            source,
+            mo=maintainOffset,
+            aim=aimAxes,
+            skip=skipAxes,
+            u=upAxes,
+            worldUpType=worldUpType,
+        )
     for ax in axes:
-        con.attr('constraintRotate' +
-                 ax.upper()).connect(source.attr('rotate' +
-                                     ax.upper()))
+        con.attr("constraintRotate" + ax.upper()).connect(
+            source.attr("rotate" + ax.upper())
+        )
     temp.append(worldUpObject)
     if killUpVecObj:
         pmc.delete(temp)
@@ -439,13 +528,22 @@ def aimConstraint_(source=None, target=None, maintainOffset=True,
     return [con, temp[:]]
 
 
-def create_aimConstraint(source=None, target=None, maintainOffset=True,
-                         axes=['X', 'Y', 'Z'], aimAxes=[1, 0, 0],
-                         upAxes=[0, 1, 0], worldUpType='object',
-                         killUpVecObj=None, parentUpVecObj=None,
-                         worldUpObject=None, worldUpVector=[0, 1, 0],
-                         no_cycle=False, no_pivots=False,
-                         no_parent_influ=False):
+def create_aimConstraint(
+    source=None,
+    target=None,
+    maintainOffset=True,
+    axes=["X", "Y", "Z"],
+    aimAxes=[1, 0, 0],
+    upAxes=[0, 1, 0],
+    worldUpType="object",
+    killUpVecObj=None,
+    parentUpVecObj=None,
+    worldUpObject=None,
+    worldUpVector=[0, 1, 0],
+    no_cycle=False,
+    no_pivots=False,
+    no_parent_influ=False,
+):
     """
     Create a aimConstraint with advanced options
     By default it creates a object as upVector.
@@ -479,17 +577,23 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
             list: The aim constraint, the upVector locator node,
             the constraint_UI_node.
     """
-    result = aimConstraint_(source=source, target=target,
-                            maintainOffset=maintainOffset,
-                            axes=axes, aimAxes=aimAxes,
-                            upAxes=upAxes, worldUpType=worldUpType,
-                            killUpVecObj=killUpVecObj,
-                            parentUpVecObj=parentUpVecObj,
-                            worldUpObject=worldUpObject,
-                            worldUpVector=worldUpVector)
+    result = aimConstraint_(
+        source=source,
+        target=target,
+        maintainOffset=maintainOffset,
+        axes=axes,
+        aimAxes=aimAxes,
+        upAxes=upAxes,
+        worldUpType=worldUpType,
+        killUpVecObj=killUpVecObj,
+        parentUpVecObj=parentUpVecObj,
+        worldUpObject=worldUpObject,
+        worldUpVector=worldUpVector,
+    )
     if no_cycle:
-        con_UI_node = no_constraint_cycle(constraint=result[0], target=target,
-                                          source=source)
+        con_UI_node = no_constraint_cycle(
+            constraint=result[0], target=target, source=source
+        )
         result.append(con_UI_node)
     if no_pivots:
         no_pivots_no_rotateOrder_(constraint=result[0])
@@ -498,8 +602,9 @@ def create_aimConstraint(source=None, target=None, maintainOffset=True,
     return result
 
 
-def decompose_matrix_constraint(source, target, translation=True,
-                                rotation=True, scale=True):
+def decompose_matrix_constraint(
+    source, target, translation=True, rotation=True, scale=True
+):
     """
     Create decompose matrix constraint.
     Args:
@@ -511,8 +616,7 @@ def decompose_matrix_constraint(source, target, translation=True,
     Return:
             tuple: Created decompose matrix node.
     """
-    decomp = pmc.createNode('decomposeMatrix', n=str(source) +
-                            '_0_DEMAND')
+    decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
     target.worldMatrix[0].connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
@@ -547,9 +651,10 @@ def matrixConstraint_UI_GRP_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    UI_GRP = pmc.createNode('transform', n=str(source) +
-                            '_matrixConstraint_UI_GRP')
-    attributes.addAttr(node=UI_GRP, name='offset_matrix', attrType='matrix')
+    UI_GRP = pmc.createNode(
+        "transform", n=str(source) + "_matrixConstraint_UI_GRP"
+    )
+    attributes.addAttr(node=UI_GRP, name="offset_matrix", attrType="matrix")
     attributes.lockAndHideAttributes(node=UI_GRP)
     source.addChild(UI_GRP)
     return UI_GRP
@@ -566,7 +671,7 @@ def multMatrix_setup_(source, target, maintainOffset=None):
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
-    mulMaND = pmc.createNode('multMatrix', n=str(source) + '_0_MUMAND')
+    mulMaND = pmc.createNode("multMatrix", n=str(source) + "_0_MUMAND")
     target.worldMatrix[0].connect(mulMaND.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mulMaND.matrixIn[2])
@@ -574,14 +679,19 @@ def multMatrix_setup_(source, target, maintainOffset=None):
         source.parentInverseMatrix[0].connect(mulMaND.matrixIn[2])
     if maintainOffset:
         UI_GRP = matrixConstraint_UI_GRP_(source=source)
-        UI_GRP.offset_matrix.set(
-            calculate_matrix_offset_(target, source))
+        UI_GRP.offset_matrix.set(calculate_matrix_offset_(target, source))
         UI_GRP.offset_matrix.connect(mulMaND.matrixIn[0])
     return mulMaND
 
 
-def create_matrixConstraint(source, target, translation=True,
-                            rotation=True, scale=True, maintainOffset=None):
+def create_matrixConstraint(
+    source,
+    target,
+    translation=True,
+    rotation=True,
+    scale=True,
+    maintainOffset=None,
+):
     """
     Creates the matrix constraint.
     Args:
@@ -592,24 +702,29 @@ def create_matrixConstraint(source, target, translation=True,
             scale(bool): Connect/Disconnect the scale channel.
             maintainOffste(bool): Enable/Disable the maintainOffset option.
     """
-    axis = ['X', 'Y', 'Z']
-    decompMatND = pmc.createNode('decomposeMatrix', n=str(source) +
-                                 '_0_DEMAND')
-    mulMaND = multMatrix_setup_(source=source, target=target,
-                                maintainOffset=maintainOffset)
+    axis = ["X", "Y", "Z"]
+    decompMatND = pmc.createNode(
+        "decomposeMatrix", n=str(source) + "_0_DEMAND"
+    )
+    mulMaND = multMatrix_setup_(
+        source=source, target=target, maintainOffset=maintainOffset
+    )
     mulMaND.matrixSum.connect(decompMatND.inputMatrix)
     if translation:
         for axe in axis:
-            decompMatND.attr('outputTranslate' +
-                             axe).connect(source.attr('translate' + axe))
+            decompMatND.attr("outputTranslate" + axe).connect(
+                source.attr("translate" + axe)
+            )
     if rotation:
         for axe in axis:
-            decompMatND.attr('outputRotate' +
-                             axe).connect(source.attr('rotate' + axe))
+            decompMatND.attr("outputRotate" + axe).connect(
+                source.attr("rotate" + axe)
+            )
     if scale:
         for axe in axis:
-            decompMatND.attr('outputScale' +
-                             axe).connect(source.attr('scale' + axe))
+            decompMatND.attr("outputScale" + axe).connect(
+                source.attr("scale" + axe)
+            )
 
 
 def ancestors(node):
@@ -629,7 +744,7 @@ def ancestors(node):
     return result
 
 
-def descendants(rootNode, reverse=None, typ='transform'):
+def descendants(rootNode, reverse=None, typ="transform"):
     """
     Gets the descendants of a hierarchy.
     By default it starts with the rootNode and goes down.
@@ -652,8 +767,7 @@ def descendants(rootNode, reverse=None, typ='transform'):
     return result
 
 
-def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
-                       upAxes=[0, 1, 0]):
+def custom_orientJoint(source, target, aimAxes=[1, 0, 0], upAxes=[0, 1, 0]):
     """
     Orient a joint based on aimConstraint technic.
     By default it orients the x axes
@@ -666,28 +780,38 @@ def custom_orientJoint(source, target, aimAxes=[1, 0, 0],
     Return:
             tuple: The orientated joint.
     """
-    if source.nodeType() == 'joint':
+    if source.nodeType() == "joint":
         upObject = spaceLocator_onPosition(source, bufferGRP=True)
         upObject[1].translate.set(v * 5 for v in upAxes)
         source.rotate.set(0, 0, 0)
         source.jointOrient.set(0, 0, 0)
-        pmc.delete(create_aimConstraint(source=source, target=target,
-                                        maintainOffset=False,
-                                        aimAxes=aimAxes, upAxes=upAxes,
-                                        worldUpType='object',
-                                        worldUpObject=upObject[1],
-                                        killUpVecObj=False)[0])
+        pmc.delete(
+            create_aimConstraint(
+                source=source,
+                target=target,
+                maintainOffset=False,
+                aimAxes=aimAxes,
+                upAxes=upAxes,
+                worldUpType="object",
+                worldUpObject=upObject[1],
+                killUpVecObj=False,
+            )[0]
+        )
         pmc.delete(upObject)
         source.jointOrient.set(source.rotate.get())
         source.rotate.set(0, 0, 0)
         return source
     else:
-        logger.log(level='error', message='The source node must be a joint',
-                   logger=moduleLogger)
+        logger.log(
+            level="error",
+            message="The source node must be a joint",
+            logger=moduleLogger,
+        )
 
 
-def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
-                                upAxes=[0, 1, 0]):
+def custom_orientJointHierarchy(
+    rootJNT=None, aimAxes=[1, 0, 0], upAxes=[0, 1, 0]
+):
     """
     Orient a joint hierarchy based on a aimConstraint technic.
     By default it orients the x axes
@@ -699,28 +823,30 @@ def custom_orientJointHierarchy(rootJNT=None, aimAxes=[1, 0, 0],
     Return:
             list: The hierarchy.
     """
-    hierarchy = descendants(rootNode=rootJNT, reverse=True,
-                            typ='joint')
+    hierarchy = descendants(rootNode=rootJNT, reverse=True, typ="joint")
     if len(hierarchy) > 1:
         temp = hierarchy[:]
         for jnt in hierarchy:
             pmc.parent(jnt, w=True)
         for jnt_ in hierarchy:
             if len(temp) > 1:
-                custom_orientJoint(temp[1], temp[0],
-                                   aimAxes=aimAxes, upAxes=upAxes)
+                custom_orientJoint(
+                    temp[1], temp[0], aimAxes=aimAxes, upAxes=upAxes
+                )
                 temp[1].addChild(temp[0])
                 temp.remove(temp[0])
         hierarchy[0].rotate.set(0, 0, 0)
         hierarchy[0].jointOrient.set(0, 0, 0)
         return hierarchy
     else:
-        logger.log(level='error',
-                   message='It must be a hierarchy for a proper orient',
-                   logger=moduleLogger)
+        logger.log(
+            level="error",
+            message="It must be a hierarchy for a proper orient",
+            logger=moduleLogger,
+        )
 
 
-def default_orientJoint(node, aimAxes='xyz', upAxes='yup'):
+def default_orientJoint(node, aimAxes="xyz", upAxes="yup"):
     """
     Orient a joint in a hierarchy.
     By default it orients the x axes
@@ -732,20 +858,25 @@ def default_orientJoint(node, aimAxes='xyz', upAxes='yup'):
             upAxes(str): Valid is xup, xdown, yup, ydown,
             zup, zdown, none.
     """
-    if node.nodeType() == 'joint':
+    if node.nodeType() == "joint":
         try:
             node.orientJoint(val=aimAxes, secondaryAxisOrient=upAxes)
         except:
-            logger.log(level='error',
-                       message='Joint not in hierarchy. Or'
-                       ' rotate channels has values.',
-                       logger=moduleLogger)
+            logger.log(
+                level="error",
+                message="Joint not in hierarchy. Or"
+                " rotate channels has values.",
+                logger=moduleLogger,
+            )
     else:
-        logger.log(level='error', message='Node has to be a joint',
-                   logger=moduleLogger)
+        logger.log(
+            level="error",
+            message="Node has to be a joint",
+            logger=moduleLogger,
+        )
 
 
-def default_orientJointHierarchy(rootNode, aimAxes='xyz', upAxes='yup'):
+def default_orientJointHierarchy(rootNode, aimAxes="xyz", upAxes="yup"):
     """
     Orient a joint hierarchy.
     By default it orients the x axes
@@ -759,15 +890,15 @@ def default_orientJointHierarchy(rootNode, aimAxes='xyz', upAxes='yup'):
     Return:
             list: The hierarchy.
     """
-    hierarchy = descendants(rootNode=rootNode, reverse=True,
-                            typ='joint')
+    hierarchy = descendants(rootNode=rootNode, reverse=True, typ="joint")
     for jnt in hierarchy[1:]:
         default_orientJoint(node=jnt, aimAxes=aimAxes, upAxes=upAxes)
     hierarchy[0].jointOrient.set(0, 0, 0)
 
 
-def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
-                 orientMatchRotation=True):
+def create_joint(
+    name="M_BND_0_JNT", typ="BND", node=None, orientMatchRotation=True
+):
     """
     Create a joint node with a specific typ.
     By Default it creates a 'BND' joint and match the jointOrient with
@@ -783,17 +914,19 @@ def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
             tuple: The created joint node.
     """
     name = strings.string_checkup(name, moduleLogger)
-    data = [{'typ': 'BND', 'radius': 1, 'overrideColor': 17},
-            {'typ': 'DRV', 'radius': 2.5, 'overrideColor': 18},
-            {'typ': 'FK', 'radius': 1.5, 'overrideColor': 4},
-            {'typ': 'IK', 'radius': 2, 'overrideColor': 6}]
+    data = [
+        {"typ": "BND", "radius": 1, "overrideColor": 17},
+        {"typ": "DRV", "radius": 2.5, "overrideColor": 18},
+        {"typ": "FK", "radius": 1.5, "overrideColor": 4},
+        {"typ": "IK", "radius": 2, "overrideColor": 6},
+    ]
     pmc.select(clear=True)
     JNT = pmc.joint(n=name)
     for util in data:
-        if util['typ'] == typ:
+        if util["typ"] == typ:
             JNT.overrideEnabled.set(1)
-            JNT.radius.set(util['radius'])
-            JNT.overrideColor.set(util['overrideColor'])
+            JNT.radius.set(util["radius"])
+            JNT.overrideColor.set(util["overrideColor"])
     if node:
         pmc.delete(pmc.parentConstraint(node, JNT, mo=False))
     if orientMatchRotation:
@@ -802,8 +935,14 @@ def create_joint(name='M_BND_0_JNT', typ='BND', node=None,
     return JNT
 
 
-def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
-                        typ='BND', bufferGRP=True, inverseScale=True):
+def convert_to_skeleton(
+    rootNode=None,
+    prefix="M_BND",
+    suffix="JNT",
+    typ="BND",
+    bufferGRP=True,
+    inverseScale=True,
+):
     """
     Convert a hierarchy of transform nodes into a joint skeleton.
     By default it is a BND joint hierarchy with a buffer group.
@@ -825,7 +964,7 @@ def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
     hierarchy = descendants(rootNode=rootNode)
     if hierarchy:
         for tra in range(len(hierarchy)):
-            name = '{}_{}_{}'.format(prefix, str(tra), suffix)
+            name = "{}_{}_{}".format(prefix, str(tra), suffix)
             name = strings.string_checkup(name, moduleLogger)
             JNT = create_joint(name=name, node=hierarchy[tra], typ=typ)
             result.append(JNT)
@@ -846,10 +985,18 @@ def convert_to_skeleton(rootNode=None, prefix='M_BND', suffix='JNT',
     return result
 
 
-def create_motionPath(name='M_test_0_MPND', curveShape=None, target=None,
-                      position=1, worldUpType='objectUp', upVecObj=None,
-                      aimAxes='x', upAxes='y', follow=True,
-                      worldUpVector=[0, 0, 1]):
+def create_motionPath(
+    name="M_test_0_MPND",
+    curveShape=None,
+    target=None,
+    position=1,
+    worldUpType="objectUp",
+    upVecObj=None,
+    aimAxes="x",
+    upAxes="y",
+    follow=True,
+    worldUpVector=[0, 0, 1],
+):
     """
     Create a motionPath node. By default the worldUpType is objectUp. The
     aimAxes is 'x' and the upAxes is 'y'. Follow mode is enabled.
@@ -869,49 +1016,52 @@ def create_motionPath(name='M_test_0_MPND', curveShape=None, target=None,
     Return:
             tuple: The created motion path node.
     """
-    axes = ['X', 'Y', 'Z']
+    axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, moduleLogger)
-    MPND = pmc.createNode('motionPath', n=name)
+    MPND = pmc.createNode("motionPath", n=name)
     MPND.fractionMode.set(1)
     MPND.uValue.set(position)
     curveShape.worldSpace[0].connect(MPND.geometryPath)
     if target:
         for axe in axes:
-            MPND.attr('rotate' + axe).connect(target.attr('rotate' + axe),
-                                              force=True)
-            MPND.attr(axe.lower() +
-                      'Coordinate').connect(target.attr('translate' + axe),
-                                            force=True)
+            MPND.attr("rotate" + axe).connect(
+                target.attr("rotate" + axe), force=True
+            )
+            MPND.attr(axe.lower() + "Coordinate").connect(
+                target.attr("translate" + axe), force=True
+            )
     if follow:
-        if aimAxes == 'x':
+        if aimAxes == "x":
             value = 0
-        elif aimAxes == 'y':
+        elif aimAxes == "y":
             value = 1
-        elif aimAxes == 'z':
+        elif aimAxes == "z":
             value = 2
-        if upAxes == 'x':
+        if upAxes == "x":
             value_ = 0
-        elif upAxes == 'y':
+        elif upAxes == "y":
             value_ = 1
-        elif upAxes == 'z':
+        elif upAxes == "z":
             value_ = 2
-        if worldUpType == 'sceneUp':
+        if worldUpType == "sceneUp":
             value__ = 0
-        elif worldUpType == 'objectUp':
+        elif worldUpType == "objectUp":
             value__ = 1
-        elif worldUpType == 'objectRotationUp':
+        elif worldUpType == "objectRotationUp":
             value__ = 2
-        elif worldUpType == 'vector':
+        elif worldUpType == "vector":
             value__ = 3
-        elif worldUpType == 'normal':
+        elif worldUpType == "normal":
             value__ = 4
         if value__ == 1 or value__ == 2:
             if upVecObj:
                 upVecObj.worldMatrix.connect(MPND.worldUpMatrix, force=True)
             else:
-                logger.log(level='error',
-                           message='You need a upvector transform',
-                           logger=moduleLogger)
+                logger.log(
+                    level="error",
+                    message="You need a upvector transform",
+                    logger=moduleLogger,
+                )
         if value__ == 2 or value__ == 3:
             MPND.worldUpVectorX.set(worldUpVector[0])
             MPND.worldUpVectorY.set(worldUpVector[1])
@@ -942,13 +1092,15 @@ def create_hierarchy(nodes=None, inverseScale=None):
             temp.remove(temp[-1])
     if inverseScale:
         for node in nodes:
-            if node.nodeType() == 'joint':
+            if node.nodeType() == "joint":
                 node.inverseScale.disconnect()
             else:
-                logger.log(level='error',
-                           message='Inverse scale option only'
-                           ' available for joints',
-                           logger=moduleLogger)
+                logger.log(
+                    level="error",
+                    message="Inverse scale option only"
+                    " available for joints",
+                    logger=moduleLogger,
+                )
     return nodes
 
 
@@ -960,7 +1112,7 @@ def reduce_shapeNodes(node=None):
     Return:
             list: The true shape node of the transform.
     """
-    searchPattern = 'ShapeOrig|ShapeDeformed'
+    searchPattern = "ShapeOrig|ShapeDeformed"
     shapes = node.getShapes()
     for shape in shapes:
         shape.intermediateObject.set(0)

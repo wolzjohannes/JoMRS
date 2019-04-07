@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 03 / 25
+# Date:       2019 / 04 / 07
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -33,7 +33,7 @@ import logger
 # GLOBALS
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + '.py')
+moduleLogger = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
@@ -45,13 +45,26 @@ def undo(func_):
         with pmc.UndoChunk():
             result = func_(*args, **kwargs)
             return result
+
     return inner
 
 
-def addAttr(node, name, attrType, value=None, defaultValue=None,
-            minValue=None, maxValue=None, keyable=True,
-            hidden=False, writable=True, channelBox=True,
-            lock=False, input=None, output=None):
+def addAttr(
+    node,
+    name,
+    attrType,
+    value=None,
+    defaultValue=None,
+    minValue=None,
+    maxValue=None,
+    keyable=True,
+    hidden=False,
+    writable=True,
+    channelBox=True,
+    lock=False,
+    input=None,
+    output=None,
+):
     """
     Add attribute to a node.
     Args:
@@ -75,27 +88,30 @@ def addAttr(node, name, attrType, value=None, defaultValue=None,
     """
 
     if node.hasAttr(name):
-        logger.log(level='error', message=name +
-                   ' attribute already exist', logger=moduleLogger)
+        logger.log(
+            level="error",
+            message=name + " attribute already exist",
+            logger=moduleLogger,
+        )
         return
 
     dataDic = {}
 
-    if attrType == 'string':
-        dataDic['dataType'] = attrType
+    if attrType == "string":
+        dataDic["dataType"] = attrType
     else:
-        dataDic['attributeType'] = attrType
+        dataDic["attributeType"] = attrType
 
-    dataDic['keyable'] = keyable
-    dataDic['hidden'] = hidden
-    dataDic['writable'] = writable
+    dataDic["keyable"] = keyable
+    dataDic["hidden"] = hidden
+    dataDic["writable"] = writable
 
     if minValue is not None:
-        dataDic['minValue'] = minValue
+        dataDic["minValue"] = minValue
     if maxValue is not None:
-        dataDic['maxValue'] = maxValue
+        dataDic["maxValue"] = maxValue
     if defaultValue is not None:
-        dataDic['defaultValue'] = defaultValue
+        dataDic["defaultValue"] = defaultValue
 
     node.addAttr(name, **dataDic)
 
@@ -113,9 +129,17 @@ def addAttr(node, name, attrType, value=None, defaultValue=None,
     return node.attr(name)
 
 
-def addArrayAttribute(node, name, plugsName, values=None, keyable=True,
-                      hidden=False, writable=True, channelBox=True,
-                      lock=False):
+def addArrayAttribute(
+    node,
+    name,
+    plugsName,
+    values=None,
+    keyable=True,
+    hidden=False,
+    writable=True,
+    channelBox=True,
+    lock=False,
+):
     """
     Add a array attribute to the node.
     Args:
@@ -134,22 +158,25 @@ def addArrayAttribute(node, name, plugsName, values=None, keyable=True,
     """
 
     if node.hasAttr(name):
-        logger.log(level='error', message=name +
-                   ' attribute already exist', logger=moduleLogger)
+        logger.log(
+            level="error",
+            message=name + " attribute already exist",
+            logger=moduleLogger,
+        )
         return
 
     dataDic = {}
 
-    dataDic['attributeType'] = 'float3'
+    dataDic["attributeType"] = "float3"
 
-    dataDic['keyable'] = keyable
-    dataDic['hidden'] = hidden
-    dataDic['writable'] = writable
+    dataDic["keyable"] = keyable
+    dataDic["hidden"] = hidden
+    dataDic["writable"] = writable
 
     dataChildsDic = {}
 
-    dataChildsDic['attributeType'] = 'float'
-    dataChildsDic['parent'] = name
+    dataChildsDic["attributeType"] = "float"
+    dataChildsDic["parent"] = name
 
     node.addAttr(name, **dataDic)
 
@@ -168,8 +195,17 @@ def addArrayAttribute(node, name, plugsName, values=None, keyable=True,
     return result
 
 
-def addEnumAttribute(node, name, enum, value=0, keyable=True,
-                     hidden=False, writable=True, channelBox=True, lock=False):
+def addEnumAttribute(
+    node,
+    name,
+    enum,
+    value=0,
+    keyable=True,
+    hidden=False,
+    writable=True,
+    channelBox=True,
+    lock=False,
+):
     """
     Add a enum attribute to the node.
     Args:
@@ -190,31 +226,35 @@ def addEnumAttribute(node, name, enum, value=0, keyable=True,
     """
 
     if node.hasAttr(name):
-        logger.log(level='error', message=name +
-                   ' attribute already exist', logger=moduleLogger)
+        logger.log(
+            level="error",
+            message=name + " attribute already exist",
+            logger=moduleLogger,
+        )
         return
 
     enumDic = {}
     dataDic = {}
 
-    dataDic['attributeType'] = 'enum'
+    dataDic["attributeType"] = "enum"
 
-    dataDic['en'] = ':'.join(enum)
-    dataDic['keyable'] = keyable
-    dataDic['hidden'] = hidden
-    dataDic['writable'] = writable
+    dataDic["en"] = ":".join(enum)
+    dataDic["keyable"] = keyable
+    dataDic["hidden"] = hidden
+    dataDic["writable"] = writable
 
     node.addAttr(name, **dataDic)
 
-    node.attr(name).set(lock=lock, keyable=keyable,
-                        channelBox=True, value=value)
+    node.attr(name).set(
+        lock=lock, keyable=keyable, channelBox=True, value=value
+    )
     if not channelBox:
         node.attr(name).set(lock=lock, keyable=False, channelBox=False)
 
     for x in range(len(enum)):
-        enumDic['index_' + str(x)] = enum[x]
+        enumDic["index_" + str(x)] = enum[x]
 
-    enumDic['attributeName'] = name
+    enumDic["attributeName"] = name
 
     return enumDic
 
@@ -227,11 +267,15 @@ def addSeparatorAttr(node, name):
             name(str): Longname of the attribute.
     """
     if name:
-        addEnumAttribute(node=node, name=name, enum='#######',
-                         keyable=False, lock=True)
+        addEnumAttribute(
+            node=node, name=name, enum="#######", keyable=False, lock=True
+        )
         return
-    logger.log(level='error', message='no attributes name specified',
-               logger=moduleLogger)
+    logger.log(
+        level="error",
+        message="no attributes name specified",
+        logger=moduleLogger,
+    )
     return
 
 
@@ -247,8 +291,7 @@ def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
     Return:
             list: The locked attributes.
     """
-    defaultAttr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz",
-                   "sx", "sy", "sz"]
+    defaultAttr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]
     result = []
     if attributes:
         if not isinstance(attributes, list):
@@ -274,8 +317,19 @@ def setNonKeyableAttribute(node, keyable=None, attributes=None):
     Return:
             list: The keyable/nonkeyable attributes.
     """
-    defaultAttr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz",
-                   "sx", "sy", "sz", "visibility"]
+    defaultAttr = [
+        "tx",
+        "ty",
+        "tz",
+        "ro",
+        "rx",
+        "ry",
+        "rz",
+        "sx",
+        "sy",
+        "sz",
+        "visibility",
+    ]
     result = []
     if attributes:
         if not isinstance(attributes, list):
@@ -286,6 +340,7 @@ def setNonKeyableAttribute(node, keyable=None, attributes=None):
         node.attr(attr_).set(keyable=keyable)
         result.append(node.attr(attr_))
     return result
+
 
 #####################################
 # GETTERS AND CUSTOMS
@@ -315,36 +370,37 @@ def getUsdAttributes(node, index=None):
     usdAttr = node.listAttr(ud=True)
     for x in range(len(usdAttr)):
         attrDic = {}
-        attrDic['usdAttr'] = usdAttr[x]
-        attrDic['attrType'] = usdAttr[x].get(typ=True)
-        attrDic['value'] = usdAttr[x].get()
-        if attrDic['attrType'] != 'double' or attrDic['attrType'] != 'long':
-            attrDic['minValue'] = None
-            attrDic['maxValue'] = None
-            attrDic['defaultValue'] = None
+        attrDic["usdAttr"] = usdAttr[x]
+        attrDic["attrType"] = usdAttr[x].get(typ=True)
+        attrDic["value"] = usdAttr[x].get()
+        if attrDic["attrType"] != "double" or attrDic["attrType"] != "long":
+            attrDic["minValue"] = None
+            attrDic["maxValue"] = None
+            attrDic["defaultValue"] = None
         else:
-            attrDic['minValue'] = usdAttr[x].getMin()
-            attrDic['maxValue'] = usdAttr[x].getMax()
-            attrDic['defaultValue'] = pmc.addAttr(str(usdAttr[x]),
-                                                  query=True, dv=True)
-        attrDic['hidden'] = usdAttr[x].isHidden()
-        attrDic['keyable'] = usdAttr[x].isKeyable()
-        attrDic['channelBox'] = usdAttr[x].isInChannelBox()
-        attrDic['lock'] = usdAttr[x].isLocked()
-        attrDic['input'] = usdAttr[x].connections(s=True, d=False, p=True)
-        attrDic['output'] = usdAttr[x].connections(s=False, d=True, p=True)
-        attrDic['enums'] = None
-        if attrDic['attrType'] == 'enum':
-            attrDic['enums'] = usdAttr[x].getEnums()
+            attrDic["minValue"] = usdAttr[x].getMin()
+            attrDic["maxValue"] = usdAttr[x].getMax()
+            attrDic["defaultValue"] = pmc.addAttr(
+                str(usdAttr[x]), query=True, dv=True
+            )
+        attrDic["hidden"] = usdAttr[x].isHidden()
+        attrDic["keyable"] = usdAttr[x].isKeyable()
+        attrDic["channelBox"] = usdAttr[x].isInChannelBox()
+        attrDic["lock"] = usdAttr[x].isLocked()
+        attrDic["input"] = usdAttr[x].connections(s=True, d=False, p=True)
+        attrDic["output"] = usdAttr[x].connections(s=False, d=True, p=True)
+        attrDic["enums"] = None
+        if attrDic["attrType"] == "enum":
+            attrDic["enums"] = usdAttr[x].getEnums()
         if index:
-            attrDic['index'] = x
+            attrDic["index"] = x
         result.append(attrDic)
     return result
 
 
-def reArrangeUsdAttributesByIndex(node, indexChange=None,
-                                  newIndexing=True, stepUp=True,
-                                  stepDown=None):
+def reArrangeUsdAttributesByIndex(
+    node, indexChange=None, newIndexing=True, stepUp=True, stepDown=None
+):
     """
     Rearrange the userdefined Attributes by index.
     By Default it moves the attribute up in the
@@ -379,34 +435,39 @@ def reArrangeUsdAttributesByIndex(node, indexChange=None,
     if indexChange:
         indexes = []
         for dic in usdAttr:
-            indexes.append(dic['index'])
+            indexes.append(dic["index"])
         if opValue:
             if indexChange[0] + opValue >= 0:
-                indexes.insert(indexChange[0] + opValue,
-                               indexes.pop(indexChange[0]))
+                indexes.insert(
+                    indexChange[0] + opValue, indexes.pop(indexChange[0])
+                )
             else:
-                logger.log(level='error',
-                           message='Negative newIndex not allowed',
-                           func=reArrangeUsdAttributesByIndex,
-                           logger=moduleLogger)
+                logger.log(
+                    level="error",
+                    message="Negative newIndex not allowed",
+                    func=reArrangeUsdAttributesByIndex,
+                    logger=moduleLogger,
+                )
                 return
         else:
             indexes.insert(indexChange[1], indexes.pop(indexChange[0]))
         usdAttr = [usdAttr[x] for x in indexes]
     else:
-        logger.log(level='error',
-                   message='You have to specifie the indexChange',
-                   func=reArrangeUsdAttributesByIndex,
-                   logger=moduleLogger)
+        logger.log(
+            level="error",
+            message="You have to specifie the indexChange",
+            func=reArrangeUsdAttributesByIndex,
+            logger=moduleLogger,
+        )
     if newIndexing:
         for x in range(len(usdAttr)):
-            usdAttr[x]['index'] = x
+            usdAttr[x]["index"] = x
     return usdAttr
 
 
-def reArrangeUsdAttributesByName(node, attributeName=None,
-                                 newIndex=None, stepUp=True,
-                                 stepDown=None):
+def reArrangeUsdAttributesByName(
+    node, attributeName=None, newIndex=None, stepUp=True, stepDown=None
+):
     """
     Rearrange a userdefined Attribute by name.
     By Default it moves the attribute up in the
@@ -423,8 +484,8 @@ def reArrangeUsdAttributesByName(node, attributeName=None,
     """
     usdAttr = getUsdAttributes(node=node, index=True)
     for x in range(len(usdAttr)):
-        if usdAttr[x]['usdAttr'] == node.attr(attributeName):
-            oldIndex = usdAttr[x]['index']
+        if usdAttr[x]["usdAttr"] == node.attr(attributeName):
+            oldIndex = usdAttr[x]["index"]
     if stepDown:
         newIndex = oldIndex + 1
         stepUp = None
@@ -432,16 +493,20 @@ def reArrangeUsdAttributesByName(node, attributeName=None,
         newIndex = oldIndex - 1
         stepDown = None
     indexChange = [oldIndex, newIndex]
-    return reArrangeUsdAttributesByIndex(node=node, indexChange=indexChange,
-                                         stepUp=stepUp, stepDown=stepDown)
+    return reArrangeUsdAttributesByIndex(
+        node=node, indexChange=indexChange, stepUp=stepUp, stepDown=stepDown
+    )
 
 
 @undo
-def moveAttributeInChannelBox(node, attributeName=None,
-                              exchangeAttrName=None,
-                              newIndex=None,
-                              stepUp=True,
-                              stepDown=None):
+def moveAttributeInChannelBox(
+    node,
+    attributeName=None,
+    exchangeAttrName=None,
+    newIndex=None,
+    stepUp=True,
+    stepDown=None,
+):
     """
     Moves a selected user defined attribute in the channelBox
     by index or step by step.
@@ -458,31 +523,36 @@ def moveAttributeInChannelBox(node, attributeName=None,
             stepUp(bool): newIndex = oldIndex - 1.
     """
     if not attributeName:
-        if len(pmc.channelBox('mainChannelBox', q=True, sma=True)) == 1:
-            attributeName = pmc.channelBox('mainChannelBox',
-                                           q=True, sma=True)[0]
+        if len(pmc.channelBox("mainChannelBox", q=True, sma=True)) == 1:
+            attributeName = pmc.channelBox("mainChannelBox", q=True, sma=True)[
+                0
+            ]
         else:
-            logger.log(level='error',
-                       message='more then one selection '
-                               'in the channelBox not supported',
-                       func=moveAttributeInChannelBox,
-                       logger=moduleLogger)
+            logger.log(
+                level="error",
+                message="more then one selection "
+                "in the channelBox not supported",
+                func=moveAttributeInChannelBox,
+                logger=moduleLogger,
+            )
             return
     if exchangeAttrName:
         stepUp = None
         stepDown = None
         usdAttr = getUsdAttributes(node=node, index=True)
         for attr_ in usdAttr:
-            name = attr_['usdAttr'].split('.')[1]
+            name = attr_["usdAttr"].split(".")[1]
             if name == exchangeAttrName:
-                print attr_['usdAttr']
-                newIndex = attr_['index']
+                print attr_["usdAttr"]
+                newIndex = attr_["index"]
                 print newIndex
-    usdAttr = reArrangeUsdAttributesByName(node=node,
-                                           attributeName=attributeName,
-                                           newIndex=newIndex,
-                                           stepUp=stepUp,
-                                           stepDown=stepDown)
+    usdAttr = reArrangeUsdAttributesByName(
+        node=node,
+        attributeName=attributeName,
+        newIndex=newIndex,
+        stepUp=stepUp,
+        stepDown=stepDown,
+    )
 
     def reCreateAttr():
         """
@@ -490,35 +560,49 @@ def moveAttributeInChannelBox(node, attributeName=None,
         """
         if usdAttr:
             for x in usdAttr:
-                x['usdAttr'].disconnect()
-                x['usdAttr'].set(lock=False)
-                x['usdAttr'].delete()
-                if x['attrType'] == 'string':
-                    node.addAttr(x['usdAttr'].split('.')[1],
-                                 dt=x['attrType'], hidden=x['hidden'],
-                                 keyable=x['keyable'], en=x['enums'])
+                x["usdAttr"].disconnect()
+                x["usdAttr"].set(lock=False)
+                x["usdAttr"].delete()
+                if x["attrType"] == "string":
+                    node.addAttr(
+                        x["usdAttr"].split(".")[1],
+                        dt=x["attrType"],
+                        hidden=x["hidden"],
+                        keyable=x["keyable"],
+                        en=x["enums"],
+                    )
                 else:
-                    node.addAttr(x['usdAttr'].split('.')[1],
-                                 at=x['attrType'], hidden=x['hidden'],
-                                 keyable=x['keyable'], en=x['enums'])
-                node.attr(x['usdAttr']
-                          .split('.')[1]).set(x['value'], lock=x['lock'],
-                                              keyable=x['keyable'],
-                                              channelBox=x['channelBox'])
-                if x['input']:
-                    x['input'][0].connect(x['usdAttr'])
-                if x['output']:
-                    for out in x['output']:
-                        x['usdAttr'].connect(out)
-            logger.log(level='info',
-                       message=attributeName + ' reordered in channelBox',
-                       logger=moduleLogger)
+                    node.addAttr(
+                        x["usdAttr"].split(".")[1],
+                        at=x["attrType"],
+                        hidden=x["hidden"],
+                        keyable=x["keyable"],
+                        en=x["enums"],
+                    )
+                node.attr(x["usdAttr"].split(".")[1]).set(
+                    x["value"],
+                    lock=x["lock"],
+                    keyable=x["keyable"],
+                    channelBox=x["channelBox"],
+                )
+                if x["input"]:
+                    x["input"][0].connect(x["usdAttr"])
+                if x["output"]:
+                    for out in x["output"]:
+                        x["usdAttr"].connect(out)
+            logger.log(
+                level="info",
+                message=attributeName + " reordered in channelBox",
+                logger=moduleLogger,
+            )
+
     reCreateAttr()
 
 
 @undo
-def transferAttributes(source, target, outputConnections=None,
-                       inputConnections=None):
+def transferAttributes(
+    source, target, outputConnections=None, inputConnections=None
+):
     """
     Transfers the userdefined attributes from a source object
     to a target object.
@@ -535,34 +619,57 @@ def transferAttributes(source, target, outputConnections=None,
     sourceUsdAttr = getUsdAttributes(node=source, index=True)
     if sourceUsdAttr:
         for attr_ in sourceUsdAttr:
-            if attr_['attrType'] == 'string':
-                target.addAttr(attr_['usdAttr'].split('.')[1],
-                               dt=attr_['attrType'], hidden=attr_['hidden'],
-                               keyable=attr_['keyable'], en=attr_['enums'])
+            if attr_["attrType"] == "string":
+                target.addAttr(
+                    attr_["usdAttr"].split(".")[1],
+                    dt=attr_["attrType"],
+                    hidden=attr_["hidden"],
+                    keyable=attr_["keyable"],
+                    en=attr_["enums"],
+                )
             else:
-                target.addAttr(attr_['usdAttr'].split('.')[1],
-                               at=attr_['attrType'], hidden=attr_['hidden'],
-                               keyable=attr_['keyable'], en=attr_['enums'])
-            target.attr(attr_['usdAttr'].split('.')[1]).set(attr_['value'],
-                                                            lock=attr_['lock'],
-                                                            keyable=attr_
-                                                            ['keyable'],
-                                                            channelBox=attr_
-                                                            ['channelBox'])
+                target.addAttr(
+                    attr_["usdAttr"].split(".")[1],
+                    at=attr_["attrType"],
+                    hidden=attr_["hidden"],
+                    keyable=attr_["keyable"],
+                    en=attr_["enums"],
+                )
+            target.attr(attr_["usdAttr"].split(".")[1]).set(
+                attr_["value"],
+                lock=attr_["lock"],
+                keyable=attr_["keyable"],
+                channelBox=attr_["channelBox"],
+            )
             if inputConnections:
-                if attr_['input']:
-                    attr_['input'][0].connect(pmc.PyNode(str(attr_['usdAttr'])
-                                              .replace(str(source),
-                                              str(target))), force=True)
+                if attr_["input"]:
+                    attr_["input"][0].connect(
+                        pmc.PyNode(
+                            str(attr_["usdAttr"]).replace(
+                                str(source), str(target)
+                            )
+                        ),
+                        force=True,
+                    )
             if outputConnections:
-                if attr_['output']:
-                    for out in attr_['output']:
-                        pmc.PyNode(str(attr_['usdAttr']).replace(str(source),
-                                   str(target))).connect(out, force=True)
-        logger.log(level='info',
-                   message='Attributes transfered from ' + str(source) +
-                   ' to ' + str(target), logger=moduleLogger)
+                if attr_["output"]:
+                    for out in attr_["output"]:
+                        pmc.PyNode(
+                            str(attr_["usdAttr"]).replace(
+                                str(source), str(target)
+                            )
+                        ).connect(out, force=True)
+        logger.log(
+            level="info",
+            message="Attributes transfered from "
+            + str(source)
+            + " to "
+            + str(target),
+            logger=moduleLogger,
+        )
         return sourceUsdAttr
-    logger.log(level='error',
-               message='No user defined attributes found for ' +
-               str(source), logger=moduleLogger)
+    logger.log(
+        level="error",
+        message="No user defined attributes found for " + str(source),
+        logger=moduleLogger,
+    )
