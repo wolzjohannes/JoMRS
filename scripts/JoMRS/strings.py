@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -196,9 +196,9 @@ def normalizeNumbers(string, logger_=moduleLogger):
     numbers = re.search("_[0-9]{1,}_", string)
     if numbers:
         instance = numbers.group(0)
-        stringEnd = string[string.find(instance) + len(instance) :].split("_")[
-            -1
-        ]
+        stringEnd = string[string.find(instance) + len(instance) :].split(
+            "_"
+        )[-1]
         string = string.replace(instance, "_")
         string = string.replace("_" + stringEnd, instance + stringEnd)
     else:

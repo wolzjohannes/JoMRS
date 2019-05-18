@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS maya utils module. Utilities helps

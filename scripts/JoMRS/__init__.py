@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2018 / 09 / 12
+# Date:       2018 / 05 / 18
 
 """
 JoMRS init module

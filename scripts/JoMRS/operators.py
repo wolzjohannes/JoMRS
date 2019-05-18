@@ -20,15 +20,13 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS main operator module. Handles the compon
 """
 
 import pymel.core as pmc
-import mayautils as utils
-import strings
 import logging
 import logger
 import attributes

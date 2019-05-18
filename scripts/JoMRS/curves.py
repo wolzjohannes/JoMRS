@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS nurbsCurve modification module.
@@ -1523,13 +1523,25 @@ class DoubleCurvedCircleControl(ControlCurves):
             n=name,
         )[0]
         for v in values0:
-            circle0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
-            circle0.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
-            circle0.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
+            circle0.getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            circle0.getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            circle0.getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
         for v in values1:
-            circle1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
-            circle1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
-            circle1.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
+            circle1.getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            circle1.getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            circle1.getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
         pmc.parent(circle1.getShape(), circle0, r=True, shape=True)
         pmc.delete(circle1)
         return circle0
@@ -1633,7 +1645,11 @@ class RotateAxesControl:
             name=name, match=match, bufferGRP=False, scale=scale, colorIndex=6
         )[0]
         arrow2 = SingleArrowThinControl().create_curve(
-            name=name, match=match, bufferGRP=False, scale=scale, colorIndex=14
+            name=name,
+            match=match,
+            bufferGRP=False,
+            scale=scale,
+            colorIndex=14,
         )[0]
         for v in arrowValue0:
             arrow0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
@@ -1795,10 +1811,7 @@ def linear_curve(
 
 
 def cubic_curve(
-    name="M_cubic_0_CRV",
-    position=None,
-    driverNodes=None,
-    template=True
+    name="M_cubic_0_CRV", position=None, driverNodes=None, template=True
 ):
     """
     Create a cubic curve. If driverNodes specified
@@ -1840,11 +1853,7 @@ def cubic_curve(
 
 
 def mirror_curve(
-    curve=None,
-    search="L_",
-    replace="R_",
-    bufferGRP=True,
-    colorIndex=6
+    curve=None, search="L_", replace="R_", bufferGRP=True, colorIndex=6
 ):
     """
     Mirror a curve from + X to - X. By default it search about 'L_' in

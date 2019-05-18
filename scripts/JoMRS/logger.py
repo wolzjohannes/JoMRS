@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS logger module. Module which contains
@@ -130,7 +130,10 @@ def log(level="info", message="", func=None, logger=None):
             run_time = _runTime(func)
             logger.debug(
                 "{} | {} | RUNTIME: {} | {}".format(
-                    message, func_name, run_time, str(inspect.getargspec(func))
+                    message,
+                    func_name,
+                    run_time,
+                    str(inspect.getargspec(func)),
                 )
             )
         else:
@@ -141,18 +144,26 @@ def log(level="info", message="", func=None, logger=None):
             run_time = _runTime(func)
             logger.warning(
                 "Something unexpected happend : {} | {} | RUNTIME: {} | {}".format(
-                    message, func_name, run_time, str(inspect.getargspec(func))
+                    message,
+                    func_name,
+                    run_time,
+                    str(inspect.getargspec(func)),
                 )
             )
         else:
-            logger.warning("Something unexpected happend : {}".format(message))
+            logger.warning(
+                "Something unexpected happend : {}".format(message)
+            )
     elif level == "error":
         if func:
             func_name = _functionName(func)
             run_time = _runTime(func)
             logger.error(
                 "Serious Shit : {} | {} | RUNTIME: {} | {}".format(
-                    message, func_name, run_time, str(inspect.getargspec(func))
+                    message,
+                    func_name,
+                    run_time,
+                    str(inspect.getargspec(func)),
                 )
             )
         else:
@@ -163,7 +174,10 @@ def log(level="info", message="", func=None, logger=None):
             run_time = _runTime(func)
             logger.critical(
                 "UPS you deleted the internet : {} | {} | RUNTIME: {} | {}".format(
-                    message, func_name, run_time, str(inspect.getargspec(func))
+                    message,
+                    func_name,
+                    run_time,
+                    str(inspect.getargspec(func)),
                 )
             )
         else:

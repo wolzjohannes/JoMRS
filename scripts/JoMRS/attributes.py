@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 04 / 07
+# Date:       2019 / 05 / 18
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -524,9 +524,9 @@ def moveAttributeInChannelBox(
     """
     if not attributeName:
         if len(pmc.channelBox("mainChannelBox", q=True, sma=True)) == 1:
-            attributeName = pmc.channelBox("mainChannelBox", q=True, sma=True)[
-                0
-            ]
+            attributeName = pmc.channelBox(
+                "mainChannelBox", q=True, sma=True
+            )[0]
         else:
             logger.log(
                 level="error",
