@@ -46,6 +46,8 @@ OPSUBTAGNAME = "JOMRS_op_sub"
 OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
+SUBMETANODENAME = "M_SUB_op_0_METAND"
+SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTCOMPNAME = "component"
 DEFAULTSIDE = "M"
@@ -216,7 +218,7 @@ class mainOperatorNode(OperatorsRootNode):
 
         self.subOperators_attr = {
             "name": "sub_operators",
-            "attrType": "string",
+            "attrType": "message",
             "keyable": False,
             "channelBox": False,
         }
@@ -244,6 +246,7 @@ class mainOperatorNode(OperatorsRootNode):
         self,
         colorIndex=18,
         name=MAINOPROOTNODENAME,
+        sub_meta_nd_name=SUBMETANODENAME,
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
         errorMessage=ERRORMESSAGE,
@@ -261,6 +264,9 @@ class mainOperatorNode(OperatorsRootNode):
         self.opRootND.addChild(self.mainOpND[0])
         self.mainOpND[1].component_side.set(side)
         self.mainOpND[1].component_index.set(index)
+        self.sub_op_meta_node = pmc.createNode("network", n=sub_meta_nd_name)
+        self.sub_op_meta_node.message.connect(self.mainOpND[-1].sub_operators)
+        self.mainOpND.append(self.sub_op_meta_node)
         return self.mainOpND
 
 
@@ -277,6 +283,7 @@ class create_component_operator(mainOperatorNode):
         subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
         linearCurveName=LINEARCURVENAME,
         subTagName=OPSUBTAGNAME,
+        sub_meta_node_attr_name=SUBMETANODEATTRNAME,
     ):
         super(create_component_operator, self).__init__()
 
@@ -304,7 +311,6 @@ class create_component_operator(mainOperatorNode):
         self.mainOperatorNodeName = self.mainOperatorNodeName.replace(
             "_op_", "_op_" + compName + "_"
         )
-        self.mainOperatorNode = self
         self.mainOperatorNode = self.createNode(
             side=side, name=self.mainOperatorNodeName
         )
@@ -319,6 +325,13 @@ class create_component_operator(mainOperatorNode):
                 scale=subOperatorsScale,
                 bufferGRP=False,
                 colorIndex=21,
+            )
+            sub_attr_name = "{}_{}".format(sub_meta_node_attr_name, str(sub))
+            attributes.addAttr(
+                self.mainOperatorNode[2], sub_attr_name, "message"
+            )
+            subOpNode[0].message.connect(
+                self.mainOperatorNode[2].attr(sub_attr_name)
             )
             self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
@@ -343,8 +356,8 @@ class create_component_operator(mainOperatorNode):
         )
         linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
-        supOpDataStr = ",".join([str(x[0]) for x in self.subOperators])
-        self.result[0].sub_operators.set(supOpDataStr)
+        # supOpDataStr = ",".join([str(x[0]) for x in self.subOperators])
+        # self.result[0].sub_operators.set(supOpDataStr)
 
     def get_suboperators(self):
         print self.mainOperatorNode[1].sub_operators.get()
