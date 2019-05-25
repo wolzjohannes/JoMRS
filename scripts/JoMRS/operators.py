@@ -45,6 +45,7 @@ OPMAINTAGNAME = "JOMRS_op_main"
 OPSUBTAGNAME = "JOMRS_op_sub"
 OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
+MAINMETANODENAME = "M_MAIN_op_0_METAND"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
 SUBMETANODENAME = "SUB_op_0_METAND"
 SUBMETANODEATTRNAME = "sub_node"
@@ -137,6 +138,13 @@ class OperatorsRootNode(object):
             "maxValue": 31,
         }
 
+        self.main_op_nodes_attr = {
+            "name": "main_op_nodes",
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
         self.param_list.append(self.mainop_attr)
         self.param_list.append(self.rigname_attr)
         self.param_list.append(self.l_ik_rig_color_attr)
@@ -145,12 +153,17 @@ class OperatorsRootNode(object):
         self.param_list.append(self.r_ik_rig_sub_color_attr)
         self.param_list.append(self.m_ik_rig_color_attr)
         self.param_list.append(self.m_ik_rig_sub_color_attr)
+        self.param_list.append(self.main_op_nodes_attr)
 
-    def create_node(self, opRootName=OPROOTNAME):
+    def create_node(self, opRootName=OPROOTNAME,
+                    mainMetaNdName=MAINMETANODENAME):
         self.rootNode = pmc.createNode("transform", n=opRootName)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.param_list:
             attributes.addAttr(node=self.rootNode, **attr_)
+        self.main_op_meta_nd = pmc.createNode('network',
+                                              n=mainMetaNdName)
+        self.main_op_meta_nd.message.connect(self.rootNode.main_op_nodes)
         return self.rootNode
 
 
