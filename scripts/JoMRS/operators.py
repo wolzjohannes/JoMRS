@@ -46,7 +46,7 @@ OPSUBTAGNAME = "JOMRS_op_sub"
 OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
-SUBMETANODENAME = "M_SUB_op_0_METAND"
+SUBMETANODENAME = "SUB_op_0_METAND"
 SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTCOMPNAME = "component"
@@ -250,6 +250,7 @@ class mainOperatorNode(OperatorsRootNode):
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
         errorMessage=ERRORMESSAGE,
+        compName=DEFAULTCOMPNAME,
     ):
         if not self.selection:
             self.opRootND = self.create_node()
@@ -264,7 +265,13 @@ class mainOperatorNode(OperatorsRootNode):
         self.opRootND.addChild(self.mainOpND[0])
         self.mainOpND[1].component_side.set(side)
         self.mainOpND[1].component_index.set(index)
-        self.sub_op_meta_node = pmc.createNode("network", n=sub_meta_nd_name)
+        self.sub_meta_nd_name = "{}_{}".format(side, sub_meta_nd_name)
+        self.sub_meta_nd_name = self.sub_meta_nd_name.replace(
+            "_op_", "_op_" + compName + "_"
+        )
+        self.sub_op_meta_node = pmc.createNode(
+            "network", n=self.sub_meta_nd_name
+        )
         self.sub_op_meta_node.message.connect(self.mainOpND[-1].sub_operators)
         self.mainOpND.append(self.sub_op_meta_node)
         return self.mainOpND
@@ -312,7 +319,8 @@ class create_component_operator(mainOperatorNode):
             "_op_", "_op_" + compName + "_"
         )
         self.mainOperatorNode = self.createNode(
-            side=side, name=self.mainOperatorNodeName
+            side=side, name=self.mainOperatorNodeName,
+            compName=compName
         )
         self.result.append(self.mainOperatorNode[1])
         for sub in range(subOperatorsCount):
