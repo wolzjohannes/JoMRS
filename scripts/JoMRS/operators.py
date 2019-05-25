@@ -65,6 +65,14 @@ ERRORMESSAGE = {
 
 ##########################################################
 # CLASSES
+# To Do:
+# - add entry to main_op_meta node by main op
+#   creation time.
+# - change use of lists.
+# - code optimization
+# - give methods. for example: give all sub nodes or
+#   all main nodes. Give all attributes.
+# - docstrinngs
 ##########################################################
 
 
