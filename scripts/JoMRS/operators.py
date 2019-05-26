@@ -20,17 +20,19 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 05 / 26
 
 """
 JoMRS main operator module. Handles the compon
 """
 
 import pymel.core as pmc
+import strings
 import logging
 import logger
 import attributes
 import curves
+import mayautils
 
 reload(attributes)
 reload(curves)
@@ -48,6 +50,7 @@ MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
 MAINMETANODENAME = "M_MAIN_op_0_METAND"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
 SUBMETANODENAME = "SUB_op_0_METAND"
+MAINMETANODEATTRNAME = "main_node"
 SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTCOMPNAME = "component"
@@ -66,19 +69,18 @@ ERRORMESSAGE = {
 ##########################################################
 # CLASSES
 # To Do:
-# - add entry to main_op_meta node by main op
-#   creation time.
 # - change use of lists.
 # - code optimization
 # - give methods. for example: give all sub nodes or
 #   all main nodes. Give all attributes.
 # - docstrinngs
+# - increase performance
 ##########################################################
 
 
 class OperatorsRootNode(object):
     def __init__(self, opRootTagName=OPROOTTAGNAME):
-        self.param_list = []
+
         self.mainop_attr = {
             "name": opRootTagName,
             "attrType": "bool",
@@ -153,24 +155,26 @@ class OperatorsRootNode(object):
             "channelBox": False,
         }
 
-        self.param_list.append(self.mainop_attr)
-        self.param_list.append(self.rigname_attr)
-        self.param_list.append(self.l_ik_rig_color_attr)
-        self.param_list.append(self.l_ik_rig_sub_color_attr)
-        self.param_list.append(self.r_ik_rig_color_attr)
-        self.param_list.append(self.r_ik_rig_sub_color_attr)
-        self.param_list.append(self.m_ik_rig_color_attr)
-        self.param_list.append(self.m_ik_rig_sub_color_attr)
-        self.param_list.append(self.main_op_nodes_attr)
+        self.param_list = [
+            self.mainop_attr,
+            self.rigname_attr,
+            self.l_ik_rig_color_attr,
+            self.l_ik_rig_sub_color_attr,
+            self.r_ik_rig_color_attr,
+            self.r_ik_rig_sub_color_attr,
+            self.m_ik_rig_color_attr,
+            self.m_ik_rig_sub_color_attr,
+            self.main_op_nodes_attr,
+        ]
 
-    def create_node(self, opRootName=OPROOTNAME,
-                    mainMetaNdName=MAINMETANODENAME):
+    def create_node(
+        self, opRootName=OPROOTNAME, mainMetaNdName=MAINMETANODENAME
+    ):
         self.rootNode = pmc.createNode("transform", n=opRootName)
         attributes.lockAndHideAttributes(node=self.rootNode)
         for attr_ in self.param_list:
             attributes.addAttr(node=self.rootNode, **attr_)
-        self.main_op_meta_nd = pmc.createNode('network',
-                                              n=mainMetaNdName)
+        self.main_op_meta_nd = pmc.createNode("network", n=mainMetaNdName)
         self.main_op_meta_nd.message.connect(self.rootNode.main_op_nodes)
         return self.rootNode
 
@@ -193,6 +197,7 @@ class mainOperatorNode(OperatorsRootNode):
                 or node.hasAttr(opMainTagName)
                 or node.hasAttr(subTagName)
             ):
+
                 continue
             else:
                 logger.log(
@@ -312,6 +317,7 @@ class create_component_operator(mainOperatorNode):
         linearCurveName=LINEARCURVENAME,
         subTagName=OPSUBTAGNAME,
         sub_meta_node_attr_name=SUBMETANODEATTRNAME,
+        main_meta_node_attr_name=MAINMETANODEATTRNAME,
     ):
         super(create_component_operator, self).__init__()
 
@@ -340,8 +346,7 @@ class create_component_operator(mainOperatorNode):
             "_op_", "_op_" + compName + "_"
         )
         self.mainOperatorNode = self.createNode(
-            side=side, name=self.mainOperatorNodeName,
-            compName=compName
+            side=side, name=self.mainOperatorNodeName, compName=compName
         )
         self.result.append(self.mainOperatorNode[1])
         for sub in range(subOperatorsCount):
@@ -385,6 +390,22 @@ class create_component_operator(mainOperatorNode):
         )
         linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
+        self.opRootND = mayautils.ancestors(self.result[-1])[-1]
+        self.main_op_meta_nd = self.opRootND.main_op_nodes.get()
+        ud_attr = self.main_op_meta_nd.listAttr(ud=True)
+        temp = []
+        for attribute in ud_attr:
+            if strings.search(main_meta_node_attr_name, str(attribute)):
+                temp.append(attribute)
+        attr_name = "{}_{}".format(
+            main_meta_node_attr_name, str(len(temp))
+        )
+        attributes.addAttr(
+            node=self.main_op_meta_nd, name=attr_name, attrType="message"
+        )
+        self.result[0].message.connect(
+            self.main_op_meta_nd.attr(attr_name)
+        )
         # supOpDataStr = ",".join([str(x[0]) for x in self.subOperators])
         # self.result[0].sub_operators.set(supOpDataStr)
 
