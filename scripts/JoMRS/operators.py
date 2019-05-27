@@ -204,8 +204,6 @@ class mainOperatorNode(OperatorsRootNode):
                     level="error", message=errorMessage, logger=moduleLogger
                 )
 
-        self.attribute_list = []
-
         self.mainop_attr = {
             "name": opMainTagName,
             "attrType": "bool",
@@ -256,7 +254,7 @@ class mainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
-        temp = [
+        self.attribute_list = [
             self.mainop_attr,
             self.compName_attr,
             self.compType_attr,
@@ -265,8 +263,6 @@ class mainOperatorNode(OperatorsRootNode):
             self.subOperators_attr,
             self.connector_attr,
         ]
-        for attr_ in temp:
-            self.attribute_list.append(attr_)
 
     def createNode(
         self,
@@ -334,7 +330,7 @@ class create_component_operator(mainOperatorNode):
             "defaultValue": 1,
         }
 
-        temp = [self.sub_tag_attr, self.connector_attr]
+        self.para_list_ = [self.sub_tag_attr, self.connector_attr]
 
         self.result = []
         self.subOperators = []
@@ -369,7 +365,7 @@ class create_component_operator(mainOperatorNode):
             )
             self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
-            for attr_ in temp:
+            for attr_ in self.para_list_:
                 attributes.addAttr(node=subOpNode[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
