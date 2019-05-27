@@ -330,7 +330,7 @@ class create_component_operator(mainOperatorNode):
             "defaultValue": 1,
         }
 
-        self.para_list_ = [self.sub_tag_attr, self.connector_attr]
+        self.para_list = [self.sub_tag_attr, self.connector_attr]
 
         self.result = []
         self.subOperators = []
@@ -365,7 +365,7 @@ class create_component_operator(mainOperatorNode):
             )
             self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
-            for attr_ in self.para_list_:
+            for attr_ in self.para_list:
                 attributes.addAttr(node=subOpNode[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
