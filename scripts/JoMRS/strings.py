@@ -46,7 +46,7 @@ module_logger = logging.getLogger(__name__ + ".py")
 ##########################################################
 
 
-def normalizePrefix(string, logger_=module_logger):
+def normalize_prefix(string, logger_=module_logger):
     """
     Normalize the string start. It cut offs the first letter and
     put a '_' inbetween.
