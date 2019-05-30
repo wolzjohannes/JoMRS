@@ -44,14 +44,14 @@ import logger
 # GLOBAL
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + ".py")
+module_logger = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
 ##########################################################
 
 
-def create_bufferGRP(node, name=None):
+def create_buffer_grp(node, name=None):
     """
     Create a buffer transform for transform node and parent
     the node under buffer group.
@@ -64,9 +64,9 @@ def create_bufferGRP(node, name=None):
     """
     parent = node.getParent()
     if name:
-        name = strings.string_checkup(name + "_buffer_GRP", moduleLogger)
+        name = strings.string_checkup(name + "_buffer_GRP", module_logger)
     else:
-        name = strings.string_checkup(str(node) + "_buffer_GRP", moduleLogger)
+        name = strings.string_checkup(str(node) + "_buffer_GRP", module_logger)
     bufferGRP = pmc.createNode("transform", n=name)
     bufferGRP.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     bufferGRP.addChild(node)
@@ -75,37 +75,37 @@ def create_bufferGRP(node, name=None):
     return bufferGRP
 
 
-def spaceLocator_onPosition(node, bufferGRP=True):
+def space_locator_on_position(node, buffer_grp=True):
     """
     Create a spaceLocator on the position of a node.
     Args:
             node(dagnode): The match transform node.
-            bufferGRP(bool): Create a buffer group for the locator.
+            buffer_grp(bool): Create a buffer group for the locator.
     Return:
             list: The buffer group, the locator node.
     """
     result = []
-    name = strings.string_checkup(str(node) + "_0_LOC", moduleLogger)
+    name = strings.string_checkup(str(node) + "_0_LOC", module_logger)
     loc = pmc.spaceLocator(n=name)
     loc.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     result.append(loc)
-    if bufferGRP:
-        bufferGRP = create_bufferGRP(loc)
-        result.insert(0, bufferGRP)
+    if buffer_grp:
+        buffer_grp = create_buffer_grp(loc)
+        result.insert(0, buffer_grp)
     return result
 
 
-def create_splineIK(
+def create_spline_ik(
     name,
-    startJNT=None,
-    endJNT=None,
+    start_jnt=None,
+    end_jnt=None,
     parent=None,
-    curveParent=None,
+    curve_parent=None,
     curve=None,
     snap=True,
     sticky=False,
     weight=1,
-    poWeight=1,
+    po_weight=1,
 ):
     """
     Create a splineIK.
@@ -113,44 +113,44 @@ def create_splineIK(
             name(str): The spline IK name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
-            startJNT(dagNode): The start joint of the chain.
-            endJNT(dagNode): The end joint of the chain.
+            start_jnt(dagNode): The start joint of the chain.
+            end_jnt(dagNode): The end joint of the chain.
             parent(dagNode): The parent for the IK_handle.
             snap(bool): Enable/Disalbe snap option of the IK.
             sticky(bool): Enable/Disalbe stickieness option of the IK.
             weight(float): Set handle weight.
-            poWeight(float): Set the poleVector weight.
+            po_weight(float): Set the poleVector weight.
     Return:
             list(dagnodes): the ik Handle, the effector,
             the spline ik curve shape.
     """
     result = []
     data = {}
-    name = strings.string_checkup(name, moduleLogger)
+    name = strings.string_checkup(name, module_logger)
     data["n"] = name
     data["solver"] = "ikSplineSolver"
     data["createCurve"] = False
-    data["sj"] = startJNT
-    data["ee"] = endJNT
+    data["sj"] = start_jnt
+    data["ee"] = end_jnt
     if curve is not None:
         data["c"] = curve
     else:
         data["createCurve"] = True
-    ikHandle = pmc.ikHandle(**data)
-    pmc.rename(ikHandle[1], str(endJNT) + "_EFF")
-    result.extend(ikHandle)
+    ik_handle = pmc.ikHandle(**data)
+    pmc.rename(ik_handle[1], str(end_jnt) + "_EFF")
+    result.extend(ik_handle)
     if curve:
         pmc.rename(curve, str(curve) + "_CRV")
         shape = curve.getShape()
         result.append(shape)
     else:
-        pmc.rename(ikHandle[2], str(ikHandle[2] + "_CRV"))
-        shape = pmc.PyNode(ikHandle[2]).getShape()
+        pmc.rename(ik_handle[2], str(ik_handle[2] + "_CRV"))
+        shape = pmc.PyNode(ik_handle[2]).getShape()
         result[2] = shape
     if parent:
         parent.addChild(result[0])
-    if curveParent:
-        curveParent.addChild(result[2].getParent())
+    if curve_parent:
+        curve_parent.addChild(result[2].getParent())
     result[2].getParent().visibility.set(0)
     attributes.lockAndHideAttributes(result[2].getParent())
     result[0].visibility.set(0)
@@ -159,11 +159,11 @@ def create_splineIK(
     if sticky:
         result[0].stickiness.set(1)
     result[0].attr("weight").set(weight)
-    result[0].attr("poWeight").set(poWeight)
+    result[0].attr("po_weight").set(po_weight)
     logger.log(
         level="info",
         message='Spline IK "' + name + '" created',
-        logger=moduleLogger,
+        logger=module_logger,
     )
     return result
 
@@ -171,13 +171,13 @@ def create_splineIK(
 def create_IK(
     name,
     solver="ikSCsolver",
-    startJNT=None,
-    endJNT=None,
+    start_jnt=None,
+    end_jnt=None,
     parent=None,
     snap=True,
     sticky=False,
     weight=1,
-    poWeight=1,
+    po_weight=1,
 ):
     """
     Create a IK. Default is a single chain IK.
@@ -186,45 +186,45 @@ def create_IK(
             the JoMRS naming convention. If not it will throw some
             warnings.
             solver(str): The solver of the IK.
-            startJNT(dagNode): The start joint of the chain.
-            endJNT(dagNode): The end joint of the chain.
+            start_jnt(dagNode): The start joint of the chain.
+            end_jnt(dagNode): The end joint of the chain.
             parent(dagNode): The parent for the IK_handle.
             snap(bool): Enable/Disalbe snap option of the IK.
             sticky(bool): Enable/Disalbe stickieness option of the IK.
             weight(float): Set handle weight.
-            poWeight(float): Set the poleVector weight.
+            po_weight(float): Set the poleVector weight.
     Return:
     """
     data = {}
-    name = strings.string_checkup(name, moduleLogger)
+    name = strings.string_checkup(name, module_logger)
     data["n"] = name
     data["solver"] = solver
-    data["sj"] = startJNT
-    data["ee"] = endJNT
-    ikHandle = pmc.ikHandle(**data)
-    pmc.rename(ikHandle[1], str(endJNT) + "_EFF")
+    data["sj"] = start_jnt
+    data["ee"] = end_jnt
+    ik_handle = pmc.ikHandle(**data)
+    pmc.rename(ik_handle[1], str(end_jnt) + "_EFF")
     if parent:
-        parent.addChild(ikHandle[0])
-    ikHandle[0].visibility.set(0)
+        parent.addChild(ik_handle[0])
+    ik_handle[0].visibility.set(0)
     if snap is False:
-        ikHandle[0].snapEnable.set(0)
+        ik_handle[0].snapEnable.set(0)
     if sticky:
-        ikHandle[0].stickiness.set(1)
-    ikHandle[0].attr("weight").set(weight)
-    ikHandle[0].attr("poWeight").set(poWeight)
+        ik_handle[0].stickiness.set(1)
+    ik_handle[0].attr("weight").set(weight)
+    ik_handle[0].attr("po_weight").set(po_weight)
     logger.log(
         level="info",
         message=solver + ' "' + name + '" created',
-        logger=moduleLogger,
+        logger=module_logger,
     )
-    return ikHandle
+    return ik_handle
 
 
 def constraint(
     typ="parent",
     source=None,
     target=None,
-    maintainOffset=True,
+    maintain_offset=True,
     axes=["X", "Y", "Z"],
 ):
     """
@@ -234,21 +234,21 @@ def constraint(
             typ(str): The constraint type.
             source(dagnode): The source node.
             target(dagnode): The target node.
-            maintainOffset(bool): If the constraint should keep
+            maintain_offset(bool): If the constraint should keep
             the offset of the target.
             axes(list): The axes to contraint as strings.
     Return:
             list: The created constraint.
     """
     result = []
-    skipAxes = ["x", "y", "z"]
+    skip_axes = ["x", "y", "z"]
     if typ == "parent":
         result = pmc.parentConstraint(
             target,
             source,
-            mo=maintainOffset,
-            skipRotate=skipAxes,
-            skipTranslate=skipAxes,
+            mo=maintain_offset,
+            skipRotate=skip_axes,
+            skipTranslate=skip_axes,
         )
         for ax in axes:
             result.attr("constraintTranslate" + ax.upper()).connect(
@@ -259,7 +259,7 @@ def constraint(
             )
     if typ == "point":
         result = pmc.pointConstraint(
-            target, source, mo=maintainOffset, skip=skipAxes
+            target, source, mo=maintain_offset, skip=skip_axes
         )
         for ax in axes:
             result.attr("constraintTranslate" + ax.upper()).connect(
@@ -267,7 +267,7 @@ def constraint(
             )
     if typ == "orient":
         result = pmc.orientConstraint(
-            target, source, mo=maintainOffset, skip=skipAxes
+            target, source, mo=maintain_offset, skip=skip_axes
         )
         for ax in axes:
             result.attr("constraintRotate" + ax.upper()).connect(
@@ -275,7 +275,7 @@ def constraint(
             )
     if typ == "scale":
         result = pmc.scaleConstraint(
-            target, source, mo=maintainOffset, skip=skipAxes
+            target, source, mo=maintain_offset, skip=skip_axes
         )
         for ax in axes:
             result.attr("constraintScale" + ax.upper()).connect(
@@ -284,7 +284,7 @@ def constraint(
     return result
 
 
-def constraint_UI_node_(constraint=None, target=None):
+def constraint_ui_node_(constraint=None, target=None):
     """
     Create a contraint UI node to uncycle the constraint graph.
     Args:
@@ -296,23 +296,23 @@ def constraint_UI_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_UI = pmc.createNode(
+        constraint_ui = pmc.createNode(
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
-        constraint.addChild(constraint_UI)
-        attributes.lockAndHideAttributes(node=constraint_UI)
+        constraint.addChild(constraint_ui)
+        attributes.lockAndHideAttributes(node=constraint_ui)
         for x in range(len(target)):
-            longName = "{}_{}".format(str(target[x]), "W" + str(x))
+            long_name = "{}_{}".format(str(target[x]), "W" + str(x))
             attributes.addAttr(
-                node=constraint_UI,
-                name=longName,
+                node=constraint_ui,
+                name=long_name,
                 attrType="float",
                 minValue=0,
                 maxValue=1,
                 keyable=True,
             )
-            constraint_UI.attr(longName).set(1)
-            constraint_UI.attr(longName).connect(
+            constraint_ui.attr(long_name).set(1)
+            constraint_ui.attr(long_name).connect(
                 constraint.target[x].targetWeight, force=True
             )
         for udAttr in constraint.listAttr(ud=True):
@@ -321,12 +321,12 @@ def constraint_UI_node_(constraint=None, target=None):
         logger.log(
             level="error",
             message="source and constraint needed for" " constraint_UI_node",
-            logger=moduleLogger,
+            logger=module_logger,
         )
-    return constraint_UI
+    return constraint_ui
 
 
-def no_pivots_no_rotateOrder_(constraint):
+def no_pivots_no_rotate_order_(constraint):
     """
     Disconnect the connections to the pivot plugs of a constraint.
     Args:
@@ -346,7 +346,7 @@ def no_pivots_no_rotateOrder_(constraint):
     except Exception as e:
         exceptions.append(e)
     if exceptions:
-        logger.log(level="warning", message=exceptions, logger=moduleLogger)
+        logger.log(level="warning", message=exceptions, logger=module_logger)
 
 
 def no_constraint_cycle(constraint=None, source=None, target=None):
@@ -368,14 +368,14 @@ def no_constraint_cycle(constraint=None, source=None, target=None):
         parent.worldInverseMatrix.connect(
             constraint.constraintParentInverseMatrix
         )
-    return constraint_UI_node_(constraint=constraint, target=target)
+    return constraint_ui_node_(constraint=constraint, target=target)
 
 
 def create_constraint(
     typ="parent",
     source=None,
     target=None,
-    maintainOffset=True,
+    maintain_offset=True,
     axes=["X", "Y", "Z"],
     no_cycle=False,
     no_pivots=False,
@@ -388,7 +388,7 @@ def create_constraint(
             typ(str): The constraint type.
             source(dagnode): The source node.
             target(dagnode): The target node.
-            maintainOffset(bool): If the constraint should keep
+            maintain_offset(bool): If the constraint should keep
             the offset of the target.
             axes(list): The axes to contraint as strings.
             no_cycle(bool): It creates a constraint_UI_node under
@@ -407,17 +407,17 @@ def create_constraint(
         typ=typ,
         source=source,
         target=target,
-        maintainOffset=maintainOffset,
+        maintain_offset=maintain_offset,
         axes=axes,
     )
     result.append(constraint_)
     if no_cycle:
-        con_UI_node = no_constraint_cycle(
+        con_ui_node = no_constraint_cycle(
             constraint=constraint_, source=source, target=target
         )
-        result.append(con_UI_node)
+        result.append(con_ui_node)
     if no_pivots:
-        no_pivots_no_rotateOrder_(constraint=constraint_)
+        no_pivots_no_rotate_order_(constraint=constraint_)
     if no_parent_influ:
         constraint_.constraintParentInverseMatrix.disconnect()
     return result
@@ -596,7 +596,7 @@ def create_aimConstraint(
         )
         result.append(con_UI_node)
     if no_pivots:
-        no_pivots_no_rotateOrder_(constraint=result[0])
+        no_pivots_no_rotate_order_(constraint=result[0])
     if no_parent_influ:
         result[0].constraintParentInverseMatrix.disconnect()
     return result
@@ -781,7 +781,7 @@ def custom_orientJoint(source, target, aimAxes=[1, 0, 0], upAxes=[0, 1, 0]):
             tuple: The orientated joint.
     """
     if source.nodeType() == "joint":
-        upObject = spaceLocator_onPosition(source, bufferGRP=True)
+        upObject = space_locator_on_position(source, buffer_grp=True)
         upObject[1].translate.set(v * 5 for v in upAxes)
         source.rotate.set(0, 0, 0)
         source.jointOrient.set(0, 0, 0)
@@ -805,7 +805,7 @@ def custom_orientJoint(source, target, aimAxes=[1, 0, 0], upAxes=[0, 1, 0]):
         logger.log(
             level="error",
             message="The source node must be a joint",
-            logger=moduleLogger,
+            logger=module_logger,
         )
 
 
@@ -842,7 +842,7 @@ def custom_orientJointHierarchy(
         logger.log(
             level="error",
             message="It must be a hierarchy for a proper orient",
-            logger=moduleLogger,
+            logger=module_logger,
         )
 
 
@@ -866,13 +866,13 @@ def default_orientJoint(node, aimAxes="xyz", upAxes="yup"):
                 level="error",
                 message="Joint not in hierarchy. Or"
                 " rotate channels has values.",
-                logger=moduleLogger,
+                logger=module_logger,
             )
     else:
         logger.log(
             level="error",
             message="Node has to be a joint",
-            logger=moduleLogger,
+            logger=module_logger,
         )
 
 
@@ -913,7 +913,7 @@ def create_joint(
     Return:
             tuple: The created joint node.
     """
-    name = strings.string_checkup(name, moduleLogger)
+    name = strings.string_checkup(name, module_logger)
     data = [
         {"typ": "BND", "radius": 1, "overrideColor": 17},
         {"typ": "DRV", "radius": 2.5, "overrideColor": 18},
@@ -965,7 +965,7 @@ def convert_to_skeleton(
     if hierarchy:
         for tra in range(len(hierarchy)):
             name = "{}_{}_{}".format(prefix, str(tra), suffix)
-            name = strings.string_checkup(name, moduleLogger)
+            name = strings.string_checkup(name, module_logger)
             JNT = create_joint(name=name, node=hierarchy[tra], typ=typ)
             result.append(JNT)
     temp = result[:]
@@ -974,7 +974,7 @@ def convert_to_skeleton(
             temp[-2].addChild(temp[-1])
             temp.remove(temp[-1])
     if bufferGRP:
-        bufferGRP = create_bufferGRP(node=result[0])
+        bufferGRP = create_buffer_grp(node=result[0])
         result.insert(0, bufferGRP)
     if inverseScale:
         for node in result:
@@ -1017,7 +1017,7 @@ def create_motionPath(
             tuple: The created motion path node.
     """
     axes = ["X", "Y", "Z"]
-    name = strings.string_checkup(name, moduleLogger)
+    name = strings.string_checkup(name, module_logger)
     MPND = pmc.createNode("motionPath", n=name)
     MPND.fractionMode.set(1)
     MPND.uValue.set(position)
@@ -1060,7 +1060,7 @@ def create_motionPath(
                 logger.log(
                     level="error",
                     message="You need a upvector transform",
-                    logger=moduleLogger,
+                    logger=module_logger,
                 )
         if value__ == 2 or value__ == 3:
             MPND.worldUpVectorX.set(worldUpVector[0])
@@ -1099,7 +1099,7 @@ def create_hierarchy(nodes=None, inverseScale=None):
                     level="error",
                     message="Inverse scale option only"
                     " available for joints",
-                    logger=moduleLogger,
+                    logger=module_logger,
                 )
     return nodes
 

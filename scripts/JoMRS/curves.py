@@ -109,7 +109,7 @@ class ControlCurves(object):
                 shape__.overrideEnabled.set(1)
                 shape__.overrideColor.set(colorIndex)
         if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control, name=name)
+            buffer_ = utils.create_buffer_grp(node=self.control, name=name)
             result.append(buffer_)
         if child:
             self.control.addChild(child)
@@ -1886,7 +1886,7 @@ def mirror_curve(
         pmc.parent(duplCurve, w=True)
         pmc.delete(mirrorGRP)
         if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=duplCurve)
+            buffer_ = utils.create_buffer_grp(node=duplCurve)
             result.append(buffer_)
         for shape in duplCurve.getShapes():
             shape.overrideColor.set(colorIndex)
