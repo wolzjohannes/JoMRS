@@ -254,7 +254,7 @@ class mainOperatorNode(OperatorsRootNode):
             self.opRootND = self.selection[0]
         self.mainOpCurve = curves.DiamondControl()
         self.mainOpND = self.mainOpCurve.create_curve(
-            colorIndex=color_index, name=name, match=self.opRootND
+            color_index=color_index, name=name, match=self.opRootND
         )
         for attr_ in self.attribute_list:
             attributes.addAttr(node=self.mainOpND[-1], **attr_)
@@ -317,8 +317,8 @@ class create_component_operator(mainOperatorNode):
                 name=self.subOpNDName,
                 match=self.result[-1],
                 scale=sub_operators_scale,
-                bufferGRP=False,
-                colorIndex=21,
+                buffer_grp=False,
+                color_index=21,
             )
             self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
@@ -339,7 +339,7 @@ class create_component_operator(mainOperatorNode):
             "_op_", "_op_" + comp_name + "_"
         )
         linear_curve = curves.linear_curve(
-            driverNodes=self.result, name=self.linear_curve_name
+            driver_nodes=self.result, name=self.linear_curve_name
         )
         linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
