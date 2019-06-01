@@ -152,7 +152,7 @@ def create_spline_ik(
     if curve_parent:
         curve_parent.addChild(result[2].getParent())
     result[2].getParent().visibility.set(0)
-    attributes.lockAndHideAttributes(result[2].getParent())
+    attributes.lock_and_hide_attributes(result[2].getParent())
     result[0].visibility.set(0)
     if snap is False:
         result[0].snapEnable.set(0)
@@ -300,15 +300,15 @@ def constraint_ui_node_(constraint=None, target=None):
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
         constraint.addChild(constraint_ui)
-        attributes.lockAndHideAttributes(node=constraint_ui)
+        attributes.lock_and_hide_attributes(node=constraint_ui)
         for x in range(len(target)):
             long_name = "{}_{}".format(str(target[x]), "W" + str(x))
-            attributes.addAttr(
+            attributes.add_attr(
                 node=constraint_ui,
                 name=long_name,
-                attrType="float",
-                minValue=0,
-                maxValue=1,
+                attr_type="float",
+                min_value=0,
+                max_value=1,
                 keyable=True,
             )
             constraint_ui.attr(long_name).set(1)
@@ -654,8 +654,8 @@ def matrix_constraint_ui_grp_(source):
     ui_grp = pmc.createNode(
         "transform", n=str(source) + "_matrixConstraint_UI_GRP"
     )
-    attributes.addAttr(node=ui_grp, name="offset_matrix", attrType="matrix")
-    attributes.lockAndHideAttributes(node=ui_grp)
+    attributes.add_attr(node=ui_grp, name="offset_matrix", attr_type="matrix")
+    attributes.lock_and_hide_attributes(node=ui_grp)
     source.addChild(ui_grp)
     return ui_grp
 

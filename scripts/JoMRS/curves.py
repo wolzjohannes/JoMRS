@@ -113,19 +113,19 @@ class ControlCurves(object):
         if child:
             self.control.addChild(child)
         if translate_channel is False:
-            attributes.lockAndHideAttributes(
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["tx", "ty", "tz"]
             )
         if rotate_channel is False:
-            attributes.lockAndHideAttributes(
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["rx", "ry", "rz"]
             )
         if scale_channel is False:
-            attributes.lockAndHideAttributes(
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["sx", "sy", "sz"]
             )
         if visibility_channel is False:
-            attributes.lockAndHideAttributes(
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["visibility"]
             )
         result.append(self.control)
@@ -1798,7 +1798,7 @@ def linear_curve(
         data["p"] = tuple(data["p"])
         data["k"] = tuple(data["k"])
     result = pmc.curve(**data)
-    attributes.lockAndHideAttributes(result)
+    attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
         decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
@@ -1840,7 +1840,7 @@ def cubic_curve(
             data["p"].append((0, 0, 0))
         data["p"] = tuple(data["p"])
     result = pmc.curve(**data)
-    attributes.lockAndHideAttributes(result)
+    attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
         decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)

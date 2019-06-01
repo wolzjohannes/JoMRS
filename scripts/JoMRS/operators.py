@@ -146,9 +146,9 @@ class OperatorsRootNode(object):
 
     def create_node(self, op_root_name=OPROOTNAME):
         self.rootNode = pmc.createNode("transform", n=op_root_name)
-        attributes.lockAndHideAttributes(node=self.rootNode)
+        attributes.lock_and_hide_attributes(node=self.rootNode)
         for attr_ in self.param_list:
-            attributes.addAttr(node=self.rootNode, **attr_)
+            attributes.add_attr(node=self.rootNode, **attr_)
         return self.rootNode
 
 
@@ -257,7 +257,7 @@ class mainOperatorNode(OperatorsRootNode):
             color_index=color_index, name=name, match=self.opRootND
         )
         for attr_ in self.attribute_list:
-            attributes.addAttr(node=self.mainOpND[-1], **attr_)
+            attributes.add_attr(node=self.mainOpND[-1], **attr_)
         self.opRootND.addChild(self.mainOpND[0])
         self.mainOpND[1].component_side.set(side)
         self.mainOpND[1].component_index.set(index)
@@ -323,7 +323,7 @@ class create_component_operator(mainOperatorNode):
             self.subOperators.append(subOpNode)
             self.result[-1].addChild(subOpNode[0])
             for attr_ in temp:
-                attributes.addAttr(node=subOpNode[0], **attr_)
+                attributes.add_attr(node=subOpNode[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
             if axes == "-X":
