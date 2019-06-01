@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 05 / 31
 
 """
 JoMRS logger module. Module which contains
@@ -37,7 +37,7 @@ import datetime
 ##########################################################
 
 VERSION = ["1", "0", "0"]
-DATE = ["2019", "04", "07"]
+DATE = ["2019", "05", "31"]
 
 logging.basicConfig(level=logging.INFO)
 
@@ -46,7 +46,7 @@ logging.basicConfig(level=logging.INFO)
 ##########################################################
 
 
-def getVersion(version=VERSION, date=DATE):
+def get_version(version=VERSION, date=DATE):
     """Get System Version and last update date.
     Args:
             version(list): The list with the version strings.
@@ -60,7 +60,7 @@ def getVersion(version=VERSION, date=DATE):
     )
 
 
-def initialize_fileHandler(
+def initialize_file_handler(
     dir_path=os.path.dirname(os.path.realpath(__file__)),
     dateTime=datetime.datetime.now(),
 ):
@@ -69,11 +69,11 @@ def initialize_fileHandler(
             dir_path(str): The dir path of the python package.
             datetime(int): The actual date.
     """
-    fileName = "{}.log".format(
+    file_name = "{}.log".format(
         "-".join([str(dateTime.year), str(dateTime.month), str(dateTime.day)])
     )
-    fileHandlerPath = "{}/logFiles/{}".format(dir_path, fileName)
-    hdlr = logging.FileHandler(fileHandlerPath)
+    file_handler_path = "{}/logFiles/{}".format(dir_path, file_name)
+    hdlr = logging.FileHandler(file_handler_path)
     formatter = logging.Formatter(
         "%(levelname)s:%(asctime)s:%(name)s:%(message)s"
     )
@@ -82,20 +82,20 @@ def initialize_fileHandler(
     logging.getLogger("").addHandler(hdlr)
 
 
-def _runTime(func):
+def _run_time(func):
     """Gives the runTime of a function back
     Args:
             func(func): The function to pass through.
     Return:
             The result of the inner function.
     """
-    startTime = datetime.datetime.now()
+    start_time = datetime.datetime.now()
     result = func
-    endTime = datetime.datetime.now()
-    return endTime - startTime
+    end_time = datetime.datetime.now()
+    return end_time - start_time
 
 
-def _functionName(func):
+def _function_name(func):
     """Gives the name of the function
     Args:
             func(func): The function to pass through.
@@ -116,7 +116,7 @@ def log(level="info", message="", func=None, logger=None):
         logger = logging
     if level == "info":
         if func:
-            func_name = _functionName(func)
+            func_name = _function_name(func)
             logger.info(
                 "{} | {} | {}".format(
                     message, func_name, str(inspect.getdoc(func))
@@ -126,8 +126,8 @@ def log(level="info", message="", func=None, logger=None):
             logger.info(message)
     elif level == "debug":
         if func:
-            func_name = _functionName(func)
-            run_time = _runTime(func)
+            func_name = _function_name(func)
+            run_time = _run_time(func)
             logger.debug(
                 "{} | {} | RUNTIME: {} | {}".format(
                     message,
@@ -140,8 +140,8 @@ def log(level="info", message="", func=None, logger=None):
             logger.debug(message)
     elif level == "warning":
         if func:
-            func_name = _functionName(func)
-            run_time = _runTime(func)
+            func_name = _function_name(func)
+            run_time = _run_time(func)
             logger.warning(
                 "Something unexpected happend : {} | {} | RUNTIME: {} | {}".format(
                     message,
@@ -156,8 +156,8 @@ def log(level="info", message="", func=None, logger=None):
             )
     elif level == "error":
         if func:
-            func_name = _functionName(func)
-            run_time = _runTime(func)
+            func_name = _function_name(func)
+            run_time = _run_time(func)
             logger.error(
                 "Serious Shit : {} | {} | RUNTIME: {} | {}".format(
                     message,
@@ -170,8 +170,8 @@ def log(level="info", message="", func=None, logger=None):
             logger.error("Serious Shit : {}".format(message))
     elif level == "critical":
         if func:
-            func_name = _functionName(func)
-            run_time = _runTime(func)
+            func_name = _function_name(func)
+            run_time = _run_time(func)
             logger.critical(
                 "UPS you deleted the internet : {} | {} | RUNTIME: {} | {}".format(
                     message,
@@ -184,17 +184,17 @@ def log(level="info", message="", func=None, logger=None):
             logger.critical("You deleted the internet : {}".format(message))
 
 
-def functionName(func):
+def function_name(func):
     """Gives the name of the function
     Args:
             func(func): The function to pass through.
     Return:
             The function as string.
     """
-    return log(level="info", message=_functionName(func))
+    return log(level="info", message=_function_name(func))
 
 
-def runTimeWrapper(func):
+def run_time_wrapper(func):
     """Decorator to record the runtime of a function.
     Args:
             func(func): The function to pass through.
@@ -203,10 +203,10 @@ def runTimeWrapper(func):
     """
 
     def inner(*args, **kwargs):
-        startTime = datetime.datetime.now()
+        start_time = datetime.datetime.now()
         result = func(*args, **kwargs)
-        endTime = datetime.datetime.now()
-        result = endTime - startTime
+        end_time = datetime.datetime.now()
+        result = end_time - start_time
         log(level="info", message="RUNTIME: {}".format(result))
 
     return inner
