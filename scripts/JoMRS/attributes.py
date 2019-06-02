@@ -27,6 +27,8 @@ JoMRS attributes module. Module for attributes handling.
 """
 import logging
 import pymel.core as pmc
+from typing import Dict, Union
+
 import logger
 
 ##########################################################
@@ -554,7 +556,7 @@ def move_attribute_in_channel_box(
         step_down=step_down,
     )
 
-    def reCreateAttr():
+    def re_create_attr():
         """
         Executes the rebuild of the attributes.
         """
@@ -596,29 +598,29 @@ def move_attribute_in_channel_box(
                 logger=module_logger,
             )
 
-    reCreateAttr()
+    re_create_attr()
 
 
 @undo
-def transferAttributes(
-    source, target, outputConnections=None, inputConnections=None
+def transfer_attributes(
+    source, target, output_connections=None, input_connections=None
 ):
     """
-    Transfers the userdefined attributes from a source object
+    Transfers the user defined attributes from a source object
     to a target object.
     By default its not recreating connections.
     Args:
             source(dagNode): The node with the source attributes.
             target(dagNode): The target node.
-            outputConnections(bool): Recreate output connections.
-            inputConnections(bool): Recreate input connections.
+            output_connections(bool): Recreate output connections.
+            input_connections(bool): Recreate input connections.
     Return:
-            list with dicts: The userdefined Attribute of the
+            list with dicts: The user defined Attribute of the
             source object.
     """
-    sourceUsdAttr = get_usd_attributes(node=source, index=True)
-    if sourceUsdAttr:
-        for attr_ in sourceUsdAttr:
+    source_usd_attr = get_usd_attributes(node=source, index=True)
+    if source_usd_attr:
+        for attr_ in source_usd_attr:
             if attr_["attrType"] == "string":
                 target.addAttr(
                     attr_["usdAttr"].split(".")[1],
@@ -641,7 +643,7 @@ def transferAttributes(
                 keyable=attr_["keyable"],
                 channelBox=attr_["channelBox"],
             )
-            if inputConnections:
+            if input_connections:
                 if attr_["input"]:
                     attr_["input"][0].connect(
                         pmc.PyNode(
@@ -651,7 +653,7 @@ def transferAttributes(
                         ),
                         force=True,
                     )
-            if outputConnections:
+            if output_connections:
                 if attr_["output"]:
                     for out in attr_["output"]:
                         pmc.PyNode(
@@ -667,7 +669,7 @@ def transferAttributes(
             + str(target),
             logger=module_logger,
         )
-        return sourceUsdAttr
+        return source_usd_attr
     logger.log(
         level="error",
         message="No user defined attributes found for " + str(source),
