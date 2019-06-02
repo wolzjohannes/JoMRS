@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 06 / 02
 
 """
 JoMRS main operator module. Handles the compon
@@ -32,14 +32,12 @@ import logger
 import attributes
 import curves
 
-reload(attributes)
-reload(curves)
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + ".py")
+module_logger = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = "JOMRS_op_root"
 OPMAINTAGNAME = "JOMRS_op_main"
 OPSUBTAGNAME = "JOMRS_op_sub"
@@ -135,24 +133,26 @@ class OperatorsRootNode(object):
             "maxValue": 31,
         }
 
-        self.param_list.append(self.mainop_attr)
-        self.param_list.append(self.rigname_attr)
-        self.param_list.append(self.l_ik_rig_color_attr)
-        self.param_list.append(self.l_ik_rig_sub_color_attr)
-        self.param_list.append(self.r_ik_rig_color_attr)
-        self.param_list.append(self.r_ik_rig_sub_color_attr)
-        self.param_list.append(self.m_ik_rig_color_attr)
-        self.param_list.append(self.m_ik_rig_sub_color_attr)
+        self.param_list = [
+            self.mainop_attr,
+            self.rigname_attr,
+            self.l_ik_rig_color_attr,
+            self.l_ik_rig_sub_color_attr,
+            self.r_ik_rig_color_attr,
+            self.r_ik_rig_sub_color_attr,
+            self.m_ik_rig_color_attr,
+            self.m_ik_rig_sub_color_attr
+        ]
 
     def create_node(self, op_root_name=OPROOTNAME):
-        self.rootNode = pmc.createNode("transform", n=op_root_name)
-        attributes.lock_and_hide_attributes(node=self.rootNode)
+        self.root_node = pmc.construct_node("transform", n=op_root_name)
+        attributes.lock_and_hide_attributes(node=self.root_node)
         for attr_ in self.param_list:
-            attributes.add_attr(node=self.rootNode, **attr_)
-        return self.rootNode
+            attributes.add_attr(node=self.root_node, **attr_)
+        return self.root_node
 
 
-class mainOperatorNode(OperatorsRootNode):
+class MainOperatorNode(OperatorsRootNode):
     def __init__(
         self,
         op_main_tag_name=OPMAINTAGNAME,
@@ -160,7 +160,7 @@ class mainOperatorNode(OperatorsRootNode):
         sub_tag_name=OPSUBTAGNAME,
         error_message=ERRORMESSAGE["selection1"],
     ):
-        super(mainOperatorNode, self).__init__()
+        super(MainOperatorNode, self).__init__()
 
         self.selection = pmc.ls(sl=True, typ="transform")
 
@@ -173,7 +173,7 @@ class mainOperatorNode(OperatorsRootNode):
                 continue
             else:
                 logger.log(
-                    level="error", message=error_message, logger=moduleLogger
+                    level="error", message=error_message, logger=module_logger
                 )
 
         self.attribute_list = []
@@ -185,28 +185,28 @@ class mainOperatorNode(OperatorsRootNode):
             "defaultValue": 1,
         }
 
-        self.compName_attr = {
+        self.comp_name_attr = {
             "name": "component_name",
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.compType_attr = {
+        self.comp_type_attr = {
             "name": "component_type",
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.compSide_attr = {
+        self.comp_side_attr = {
             "name": "component_side",
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.compIndex_attr = {
+        self.comp_index_attr = {
             "name": "component_index",
             "attrType": "long",
             "keyable": False,
@@ -214,7 +214,7 @@ class mainOperatorNode(OperatorsRootNode):
             "defaultValue": 0,
         }
 
-        self.subOperators_attr = {
+        self.sub_operators_attr = {
             "name": "sub_operators",
             "attrType": "string",
             "keyable": False,
@@ -230,41 +230,40 @@ class mainOperatorNode(OperatorsRootNode):
 
         temp = [
             self.mainop_attr,
-            self.compName_attr,
-            self.compType_attr,
-            self.compSide_attr,
-            self.compIndex_attr,
-            self.subOperators_attr,
+            self.comp_name_attr,
+            self.comp_type_attr,
+            self.comp_side_attr,
+            self.comp_index_attr,
+            self.sub_operators_attr,
             self.connector_attr,
         ]
         for attr_ in temp:
             self.attribute_list.append(attr_)
 
-    def createNode(
+    def construct_node(
         self,
         color_index=18,
         name=MAINOPROOTNODENAME,
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
-        error_message=ERRORMESSAGE,
     ):
         if not self.selection:
-            self.opRootND = self.create_node()
+            self.op_root_nd = self.create_node()
         else:
-            self.opRootND = self.selection[0]
-        self.mainOpCurve = curves.DiamondControl()
-        self.mainOpND = self.mainOpCurve.create_curve(
-            color_index=color_index, name=name, match=self.opRootND
+            self.op_root_nd = self.selection[0]
+        self.main_op_curve = curves.DiamondControl()
+        self.main_op_nd = self.main_op_curve.create_curve(
+            color_index=color_index, name=name, match=self.op_root_nd
         )
         for attr_ in self.attribute_list:
-            attributes.add_attr(node=self.mainOpND[-1], **attr_)
-        self.opRootND.addChild(self.mainOpND[0])
-        self.mainOpND[1].component_side.set(side)
-        self.mainOpND[1].component_index.set(index)
-        return self.mainOpND
+            attributes.add_attr(node=self.main_op_nd[-1], **attr_)
+        self.op_root_nd.addChild(self.main_op_nd[0])
+        self.main_op_nd[1].component_side.set(side)
+        self.main_op_nd[1].component_index.set(index)
+        return self.main_op_nd
 
 
-class create_component_operator(mainOperatorNode):
+class create_component_operator(MainOperatorNode):
     def __init__(
         self,
         sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
@@ -305,7 +304,7 @@ class create_component_operator(mainOperatorNode):
             "_op_", "_op_" + comp_name + "_"
         )
         self.mainOperatorNode = self
-        self.mainOperatorNode = self.createNode(
+        self.mainOperatorNode = self.construct_node(
             side=side, name=self.main_operator_node_name
         )
         self.result.append(self.mainOperatorNode[1])

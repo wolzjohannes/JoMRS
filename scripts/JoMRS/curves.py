@@ -1800,7 +1800,7 @@ def linear_curve(
     result = pmc.curve(**data)
     attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
-        decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
+        decomp = pmc.construct_node("decomposeMatrix", n=name + "_DEMAND")
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
     if template:
@@ -1842,7 +1842,7 @@ def cubic_curve(
     result = pmc.curve(**data)
     attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
-        decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
+        decomp = pmc.construct_node("decomposeMatrix", n=name + "_DEMAND")
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
     if template:
@@ -1879,7 +1879,7 @@ def mirror_curve(
             )[0]
             name = strings.string_checkup(name)
             pmc.rename(node, name)
-        mirror_grp = pmc.createNode("transform", n="M_temp_mirror_0_GRP")
+        mirror_grp = pmc.construct_node("transform", n="M_temp_mirror_0_GRP")
         mirror_grp.addChild(dupl_curve)
         mirror_grp.scaleX.set(-1)
         pmc.parent(dupl_curve, w=True)

@@ -67,7 +67,7 @@ def create_buffer_grp(node, name=None):
         name = strings.string_checkup(name + "_buffer_GRP", module_logger)
     else:
         name = strings.string_checkup(str(node) + "_buffer_GRP", module_logger)
-    bufferGRP = pmc.createNode("transform", n=name)
+    bufferGRP = pmc.construct_node("transform", n=name)
     bufferGRP.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     bufferGRP.addChild(node)
     if parent:
@@ -296,7 +296,7 @@ def constraint_ui_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_ui = pmc.createNode(
+        constraint_ui = pmc.construct_node(
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
         constraint.addChild(constraint_ui)
@@ -616,7 +616,7 @@ def decompose_matrix_constraint(
     Return:
             tuple: Created decompose matrix node.
     """
-    decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
+    decomp = pmc.construct_node("decomposeMatrix", n=str(source) + "_0_DEMAND")
     target.worldMatrix[0].connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
@@ -651,7 +651,7 @@ def matrix_constraint_ui_grp_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    ui_grp = pmc.createNode(
+    ui_grp = pmc.construct_node(
         "transform", n=str(source) + "_matrixConstraint_UI_GRP"
     )
     attributes.add_attr(node=ui_grp, name="offset_matrix", attr_type="matrix")
@@ -671,7 +671,7 @@ def mult_matrix_setup_(source, target, maintainOffset=None):
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
-    mul_ma_nd = pmc.createNode("multMatrix", n=str(source) + "_0_MUMAND")
+    mul_ma_nd = pmc.construct_node("multMatrix", n=str(source) + "_0_MUMAND")
     target.worldMatrix[0].connect(mul_ma_nd.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
@@ -703,7 +703,7 @@ def create_matrix_constraint(
             maintainOffste(bool): Enable/Disable the maintain_offset option.
     """
     axis = ["X", "Y", "Z"]
-    decomp_mat_nd = pmc.createNode(
+    decomp_mat_nd = pmc.construct_node(
         "decomposeMatrix", n=str(source) + "_0_DEMAND"
     )
     mul_ma_nd = mult_matrix_setup_(
@@ -747,7 +747,7 @@ def ancestors(node):
 def descendants(root_node, reverse=None, typ="transform"):
     """
     Gets the descendants of a hierarchy.
-    By default it starts with the rootNode and goes down.
+    By default it starts with the root_node and goes down.
     Args:
             root_node(dagnode): The root of the hierarchy.
             reverse(bool): Reverse the order of the output.
@@ -817,7 +817,7 @@ def custom_orient_joint_hierarchy(
     By default it orients the x axes
     with the y axes as up vector.
     Args:
-            root_jnt(dagnode): The rootNode of the hierarchy.
+            root_jnt(dagnode): The root_node of the hierarchy.
             aim_axes(list): The aim axes. [1, 1, 1] = [x, y, z]
             up_axes(list): The aim axes. [1, 1, 1] = [x, y, z]
     Return:
@@ -948,7 +948,7 @@ def convert_to_skeleton(
     By default it is a BND joint hierarchy with a buffer group.
     The hierarchy has disconnected inverse scale plugs.
     Args:
-            root_node(dagnode): The rootNode of the transform
+            root_node(dagnode): The root_node of the transform
             hierarchy.
             prefix(str): The prefix of the joints.
             suffix(str): The suffix of the joints.
@@ -1018,7 +1018,7 @@ def create_motion_path(
     """
     axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, module_logger)
-    mpnd = pmc.createNode("motionPath", n=name)
+    mpnd = pmc.construct_node("motionPath", n=name)
     mpnd.fractionMode.set(1)
     mpnd.uValue.set(position)
     curve_shape.worldSpace[0].connect(mpnd.geometryPath)
