@@ -20,10 +20,10 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 02
+# Date:       2019 / 06 / 03
 
 """
-JoMRS main operator module. Handles the compon
+JoMRS main operator module. Handles the operator creation.
 """
 
 import pymel.core as pmc
@@ -295,13 +295,13 @@ class create_component_operator(MainOperatorNode):
         temp = [self.sub_tag_attr, self.connector_attr]
 
         self.result = []
-        self.subOperators = []
+        self.sub_operators = []
         self.jointControl = curves.JointControl()
         self.main_operator_node_name = main_operator_node_name.replace(
-            "M_", side + "_"
+            "M_", "{}_".format(side)
         )
         self.main_operator_node_name = self.main_operator_node_name.replace(
-            "_op_", "_op_" + comp_name + "_"
+            "_op_", "_op_{}_".format(comp_name)
         )
         self.mainOperatorNode = self
         self.mainOperatorNode = self.construct_node(
@@ -310,19 +310,21 @@ class create_component_operator(MainOperatorNode):
         self.result.append(self.mainOperatorNode[1])
         for sub in range(sub_operators_count):
             instance = "_op_{}_{}".format(comp_name, str(sub))
-            self.subOpNDName = sub_operators_node_name.replace("M_", side + "_")
+            self.subOpNDName = sub_operators_node_name.replace("M_",
+                                                               "{}_".format(
+                                                                   side))
             self.subOpNDName = self.subOpNDName.replace("_op_0", instance)
-            subOpNode = self.jointControl.create_curve(
+            sub_op_node = self.jointControl.create_curve(
                 name=self.subOpNDName,
                 match=self.result[-1],
                 scale=sub_operators_scale,
                 buffer_grp=False,
                 color_index=21,
             )
-            self.subOperators.append(subOpNode)
-            self.result[-1].addChild(subOpNode[0])
+            self.sub_operators.append(sub_op_node)
+            self.result[-1].addChild(sub_op_node[0])
             for attr_ in temp:
-                attributes.add_attr(node=subOpNode[0], **attr_)
+                attributes.add_attr(node=sub_op_node[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
             if axes == "-X":
@@ -331,19 +333,20 @@ class create_component_operator(MainOperatorNode):
                 axes = "Y"
             elif axes == "-Z":
                 axes = "Z"
-            subOpNode[0].attr("translate" + axes).set(spaceing)
-            self.result.append(subOpNode[-1])
-        self.linear_curve_name = linear_curve_name.replace("M_", side + "_")
+            sub_op_node[0].attr("translate" + axes).set(spaceing)
+            self.result.append(sub_op_node[-1])
+        self.linear_curve_name = linear_curve_name.replace("M_", "{}_".format(
+                                                                   side))
         self.linear_curve_name = self.linear_curve_name.replace(
-            "_op_", "_op_" + comp_name + "_"
+            "_op_", "_op_{}_".format(comp_name)
         )
         linear_curve = curves.linear_curve(
             driver_nodes=self.result, name=self.linear_curve_name
         )
         linear_curve.inheritsTransform.set(0)
         self.mainOperatorNode[0].addChild(linear_curve)
-        supOpDataStr = ",".join([str(x[0]) for x in self.subOperators])
-        self.result[0].sub_operators.set(supOpDataStr)
+        sup_op_data_str = ",".join([str(x[0]) for x in self.sub_operators])
+        self.result[0].sub_operators.set(sup_op_data_str)
 
-    def get_suboperators(self):
-        print self.mainOperatorNode[1].sub_operators.get()
+    # def get_suboperators(self):
+    #     print self.mainOperatorNode[1].sub_operators.get()
