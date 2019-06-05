@@ -20,20 +20,22 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 06 / 01
 
 """
 JoMRS attributes module. Module for attributes handling.
 """
 import logging
 import pymel.core as pmc
+from typing import Dict, Union
+
 import logger
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + ".py")
+module_logger = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
@@ -91,31 +93,31 @@ def addAttr(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=moduleLogger,
+            logger=module_logger,
         )
         return
 
-    dataDic = {}
+    data_dic = {}
 
-    if attrType == "string":
-        dataDic["dataType"] = attrType
+    if attr_type == "string":
+        data_dic["dataType"] = attr_type
     else:
-        dataDic["attributeType"] = attrType
+        data_dic["attributeType"] = attr_type
 
-    dataDic["keyable"] = keyable
-    dataDic["hidden"] = hidden
-    dataDic["writable"] = writable
+    data_dic["keyable"] = keyable
+    data_dic["hidden"] = hidden
+    data_dic["writable"] = writable
 
-    if minValue is not None:
-        dataDic["minValue"] = minValue
-    if maxValue is not None:
-        dataDic["maxValue"] = maxValue
-    if defaultValue is not None:
-        dataDic["defaultValue"] = defaultValue
+    if min_value is not None:
+        data_dic["min_value"] = min_value
+    if max_value is not None:
+        data_dic["max_value"] = max_value
+    if default_value is not None:
+        data_dic["default_value"] = default_value
 
-    node.addAttr(name, **dataDic)
+    node.addAttr(name, **data_dic)
 
-    if not channelBox:
+    if not channel_box:
         node.attr(name).set(channelBox=False)
     if lock:
         node.attr(name).set(lock=True)
@@ -129,15 +131,15 @@ def addAttr(
     return node.attr(name)
 
 
-def addArrayAttribute(
+def add_array_attribute(
     node,
     name,
-    plugsName,
+    plugs_name,
     values=None,
     keyable=True,
     hidden=False,
     writable=True,
-    channelBox=True,
+    channel_box=True,
     lock=False,
 ):
     """
@@ -145,12 +147,12 @@ def addArrayAttribute(
     Args:
             node(dagNode): The node to add the attribute.
             name(str): Longname of the attribute.
-            plugsName(list with str): Longnames of the child attributes.
+            plugs_name(list with str): Longnames of the child attributes.
             value(list with float or int): The value of the child attributes.
             keyable(bool): Defines if the child attributes are keyable.
             hidden(bool): Defines if the attribute are hidden.
             writable(bool): Defines if the attribute can get input connections.
-            channelBox(bool): Defines if the child attributes are
+            channel_box(bool): Defines if the child attributes are
                               in the channelbox.
             lock(bool): Lock/Unlock the child atttibutes.
     Return:
@@ -161,41 +163,41 @@ def addArrayAttribute(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=moduleLogger,
+            logger=module_logger,
         )
         return
 
-    dataDic = {}
+    data_dic = {}
 
-    dataDic["attributeType"] = "float3"
+    data_dic["attributeType"] = "float3"
 
-    dataDic["keyable"] = keyable
-    dataDic["hidden"] = hidden
-    dataDic["writable"] = writable
+    data_dic["keyable"] = keyable
+    data_dic["hidden"] = hidden
+    data_dic["writable"] = writable
 
-    dataChildsDic = {}
+    data_childs_dic = {}
 
-    dataChildsDic["attributeType"] = "float"
-    dataChildsDic["parent"] = name
+    data_childs_dic["attributeType"] = "float"
+    data_childs_dic["parent"] = name
 
-    node.addAttr(name, **dataDic)
+    node.addAttr(name, **data_dic)
 
-    for plug in plugsName:
-        node.addAttr(plug, **dataChildsDic)
+    for plug in plugs_name:
+        node.addAttr(plug, **data_childs_dic)
     if values:
         for x in range(len(values)):
-            node.attr(plugsName[x]).set(values[x])
-    for plug_ in plugsName:
+            node.attr(plugs_name[x]).set(values[x])
+    for plug_ in plugs_name:
         node.attr(plug_).set(lock=lock, keyable=keyable, channelBox=True)
-        if not channelBox:
+        if not channel_box:
             node.attr(plug_).set(lock=lock, keyable=False, channelBox=False)
 
     result = [node.attr(name)]
-    result.extend([node.attr(plug__) for plug__ in plugsName])
+    result.extend([node.attr(plug__) for plug__ in plugs_name])
     return result
 
 
-def addEnumAttribute(
+def add_enum_attribute(
     node,
     name,
     enum,
@@ -203,7 +205,7 @@ def addEnumAttribute(
     keyable=True,
     hidden=False,
     writable=True,
-    channelBox=True,
+    channel_box=True,
     lock=False,
 ):
     """
@@ -216,7 +218,7 @@ def addEnumAttribute(
             keyable(bool): Defines if the attribute is keyable.
             hidden(bool): Defines if the attribute are hidden.
             writable(bool): Defines if the attribute can get input connections.
-            channelBox(bool): Defines if the attribute is in the channelbox.
+            channel_box(bool): Defines if the attribute is in the channelbox.
             lock(bool): Lock/Unlock the atttibute.
 
     Return:
@@ -229,37 +231,37 @@ def addEnumAttribute(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=moduleLogger,
+            logger=module_logger,
         )
         return
 
-    enumDic = {}
-    dataDic = {}
+    enum_dic = {}
+    data_dic = {}
 
-    dataDic["attributeType"] = "enum"
+    data_dic["attributeType"] = "enum"
 
-    dataDic["en"] = ":".join(enum)
-    dataDic["keyable"] = keyable
-    dataDic["hidden"] = hidden
-    dataDic["writable"] = writable
+    data_dic["en"] = ":".join(enum)
+    data_dic["keyable"] = keyable
+    data_dic["hidden"] = hidden
+    data_dic["writable"] = writable
 
-    node.addAttr(name, **dataDic)
+    node.addAttr(name, **data_dic)
 
     node.attr(name).set(
         lock=lock, keyable=keyable, channelBox=True, value=value
     )
-    if not channelBox:
+    if not channel_box:
         node.attr(name).set(lock=lock, keyable=False, channelBox=False)
 
     for x in range(len(enum)):
-        enumDic["index_" + str(x)] = enum[x]
+        enum_dic["index_" + str(x)] = enum[x]
 
-    enumDic["attributeName"] = name
+    enum_dic["attributeName"] = name
 
-    return enumDic
+    return enum_dic
 
 
-def addSeparatorAttr(node, name):
+def add_separator_attr(node, name):
     """
     Function to add a separator attribute.
     Args:
@@ -267,19 +269,19 @@ def addSeparatorAttr(node, name):
             name(str): Longname of the attribute.
     """
     if name:
-        addEnumAttribute(
+        add_enum_attribute(
             node=node, name=name, enum="#######", keyable=False, lock=True
         )
         return
     logger.log(
         level="error",
         message="no attributes name specified",
-        logger=moduleLogger,
+        logger=module_logger,
     )
     return
 
 
-def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
+def lock_and_hide_attributes(node, lock=True, hide=True, attributes=None):
     """
     Lock and hide a attribute of the node.
     In Default it will lock and hide the default channels.
@@ -291,13 +293,13 @@ def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
     Return:
             list: The locked attributes.
     """
-    defaultAttr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]
+    default_attr = ["tx", "ty", "tz", "ro", "rx", "ry", "rz", "sx", "sy", "sz"]
     result = []
     if attributes:
         if not isinstance(attributes, list):
             attributes = [attributes]
     else:
-        attributes = defaultAttr
+        attributes = default_attr
     for attr_ in attributes:
         node.attr(attr_).set(lock=lock)
         if hide:
@@ -306,7 +308,7 @@ def lockAndHideAttributes(node, lock=True, hide=True, attributes=None):
     return result
 
 
-def setNonKeyableAttribute(node, keyable=None, attributes=None):
+def set_non_keyable_attribute(node, keyable=None, attributes=None):
     """
     Set attribute of a node to nonkeyable.
     By default it sets the default channels unkeyable.
@@ -317,7 +319,7 @@ def setNonKeyableAttribute(node, keyable=None, attributes=None):
     Return:
             list: The keyable/nonkeyable attributes.
     """
-    defaultAttr = [
+    default_attr = [
         "tx",
         "ty",
         "tz",
@@ -335,7 +337,7 @@ def setNonKeyableAttribute(node, keyable=None, attributes=None):
         if not isinstance(attributes, list):
             attributes = [attributes]
     else:
-        attributes = defaultAttr
+        attributes = default_attr
     for attr_ in attributes:
         node.attr(attr_).set(keyable=keyable)
         result.append(node.attr(attr_))
@@ -347,7 +349,7 @@ def setNonKeyableAttribute(node, keyable=None, attributes=None):
 #####################################
 
 
-def getUsdAttributes(node, index=None):
+def get_usd_attributes(node, index=None):
     """
     Get the user defined attributes of a node.
     Args:
@@ -358,7 +360,7 @@ def getUsdAttributes(node, index=None):
             list with dics: The attributes values as keys in a dic.
             Example:
                     [{'attrType': u'double',
-                    'usdAttr': Attribute(u'null1.test_float'),
+                    'usd_attr': Attribute(u'null1.test_float'),
                     'index': 1, 'lock': False, 'defaultValue': 1.0,
                     'maxValue': 10.0, 'value': 0.0, 'minValue': 0.0,
                     'keyable': True, 'channelBox': False,
@@ -367,39 +369,39 @@ def getUsdAttributes(node, index=None):
                     'hidden': False, 'enums': None}]
     """
     result = []
-    usdAttr = node.listAttr(ud=True)
-    for x in range(len(usdAttr)):
-        attrDic = {}
-        attrDic["usdAttr"] = usdAttr[x]
-        attrDic["attrType"] = usdAttr[x].get(typ=True)
-        attrDic["value"] = usdAttr[x].get()
-        if attrDic["attrType"] != "double" or attrDic["attrType"] != "long":
-            attrDic["minValue"] = None
-            attrDic["maxValue"] = None
-            attrDic["defaultValue"] = None
+    usd_attr = node.listAttr(ud=True)
+    for x in range(len(usd_attr)):
+        attr_dic = {}
+        attr_dic["usd_attr"] = usd_attr[x]
+        attr_dic["attrType"] = usd_attr[x].get(typ=True)
+        attr_dic["value"] = usd_attr[x].get()
+        if attr_dic["attrType"] != "double" or attr_dic["attrType"] != "long":
+            attr_dic["minValue"] = None
+            attr_dic["maxValue"] = None
+            attr_dic["defaultValue"] = None
         else:
-            attrDic["minValue"] = usdAttr[x].getMin()
-            attrDic["maxValue"] = usdAttr[x].getMax()
-            attrDic["defaultValue"] = pmc.addAttr(
-                str(usdAttr[x]), query=True, dv=True
+            attr_dic["minValue"] = usd_attr[x].getMin()
+            attr_dic["maxValue"] = usd_attr[x].getMax()
+            attr_dic["defaultValue"] = pmc.addAttr(
+                str(usd_attr[x]), query=True, dv=True
             )
-        attrDic["hidden"] = usdAttr[x].isHidden()
-        attrDic["keyable"] = usdAttr[x].isKeyable()
-        attrDic["channelBox"] = usdAttr[x].isInChannelBox()
-        attrDic["lock"] = usdAttr[x].isLocked()
-        attrDic["input"] = usdAttr[x].connections(s=True, d=False, p=True)
-        attrDic["output"] = usdAttr[x].connections(s=False, d=True, p=True)
-        attrDic["enums"] = None
-        if attrDic["attrType"] == "enum":
-            attrDic["enums"] = usdAttr[x].getEnums()
+        attr_dic["hidden"] = usd_attr[x].isHidden()
+        attr_dic["keyable"] = usd_attr[x].isKeyable()
+        attr_dic["channelBox"] = usd_attr[x].isInChannelBox()
+        attr_dic["lock"] = usd_attr[x].isLocked()
+        attr_dic["input"] = usd_attr[x].connections(s=True, d=False, p=True)
+        attr_dic["output"] = usd_attr[x].connections(s=False, d=True, p=True)
+        attr_dic["enums"] = None
+        if attr_dic["attrType"] == "enum":
+            attr_dic["enums"] = usd_attr[x].getEnums()
         if index:
-            attrDic["index"] = x
-        result.append(attrDic)
+            attr_dic["index"] = x
+        result.append(attr_dic)
     return result
 
 
-def reArrangeUsdAttributesByIndex(
-    node, indexChange=None, newIndexing=True, stepUp=True, stepDown=None
+def re_arrange_usd_attributes_by_index(
+    node, index_change=None, new_indexing=True, step_up=True, step_down=None
 ):
     """
     Rearrange the userdefined Attributes by index.
@@ -407,10 +409,10 @@ def reArrangeUsdAttributesByIndex(
     channelBox.
     Args:
             node(dagNode): The node the attributes belongs to.
-            indexChange(list): [oldIndex, newIndex].
-            newIndexing(bool): New indexing of the attributes in the list.
-            stepUp(bool): newIndex = oldIndex + -1.
-            stepDown(bool): newIndex = oldIndex + 1.
+            index_change(list): [oldIndex, newIndex].
+            new_indexing(bool): New indexing of the attributes in the list.
+            step_up(bool): newIndex = oldIndex + -1.
+            step_down(bool): newIndex = oldIndex + 1.
 
     Return:
             list with dics: The rearranged attributes values as keys in a dic.
@@ -424,49 +426,49 @@ def reArrangeUsdAttributesByIndex(
                     'input': [Attribute(u'null2.translateX')],
                     'hidden': False, 'enums': None}].
     """
-    usdAttr = getUsdAttributes(node, index=True)
-    opValue = 0
-    if stepDown:
-        opValue = 1
-        stepUp = None
-    if stepUp:
-        opValue = -1
-        stepDown = None
-    if indexChange:
+    usd_attr = get_usd_attributes(node, index=True)
+    op_value = 0
+    if step_down:
+        op_value = 1
+        step_up = None
+    if step_up:
+        op_value = -1
+        step_down = None
+    if index_change:
         indexes = []
-        for dic in usdAttr:
+        for dic in usd_attr:
             indexes.append(dic["index"])
-        if opValue:
-            if indexChange[0] + opValue >= 0:
+        if op_value:
+            if index_change[0] + op_value >= 0:
                 indexes.insert(
-                    indexChange[0] + opValue, indexes.pop(indexChange[0])
+                    index_change[0] + op_value, indexes.pop(index_change[0])
                 )
             else:
                 logger.log(
                     level="error",
                     message="Negative newIndex not allowed",
-                    func=reArrangeUsdAttributesByIndex,
-                    logger=moduleLogger,
+                    func=re_arrange_usd_attributes_by_index,
+                    logger=module_logger,
                 )
                 return
         else:
-            indexes.insert(indexChange[1], indexes.pop(indexChange[0]))
-        usdAttr = [usdAttr[x] for x in indexes]
+            indexes.insert(index_change[1], indexes.pop(index_change[0]))
+        usd_attr = [usd_attr[x] for x in indexes]
     else:
         logger.log(
             level="error",
-            message="You have to specifie the indexChange",
-            func=reArrangeUsdAttributesByIndex,
-            logger=moduleLogger,
+            message="You have to specifie the index_change",
+            func=re_arrange_usd_attributes_by_index,
+            logger=module_logger,
         )
-    if newIndexing:
-        for x in range(len(usdAttr)):
-            usdAttr[x]["index"] = x
-    return usdAttr
+    if new_indexing:
+        for x in range(len(usd_attr)):
+            usd_attr[x]["index"] = x
+    return usd_attr
 
 
-def reArrangeUsdAttributesByName(
-    node, attributeName=None, newIndex=None, stepUp=True, stepDown=None
+def re_arrange_usd_attributes_by_name(
+    node, attribute_name=None, new_index=None, step_up=True, step_down=None
 ):
     """
     Rearrange a userdefined Attribute by name.
@@ -474,38 +476,38 @@ def reArrangeUsdAttributesByName(
     channelBox.
     Args:
             node(dagNode): The node the attributes belongs to.
-            attributeName(str): The name of the attribute.
-            newIndex(int): new position of the attibute.
-            stepUp(bool): newIndex = oldIndex - 1.
-            stepDown(bool): newIndex = oldIndex + 1.
+            attribute_name(str): The name of the attribute.
+            new_index(int): new position of the attibute.
+            step_up(bool): new_index = oldIndex - 1.
+            step_down(bool): new_index = oldIndex + 1.
     Return:
             list with dicts: The rearranged userdefined
             attributes.
     """
-    usdAttr = getUsdAttributes(node=node, index=True)
-    for x in range(len(usdAttr)):
-        if usdAttr[x]["usdAttr"] == node.attr(attributeName):
-            oldIndex = usdAttr[x]["index"]
-    if stepDown:
-        newIndex = oldIndex + 1
-        stepUp = None
-    if stepUp:
-        newIndex = oldIndex - 1
-        stepDown = None
-    indexChange = [oldIndex, newIndex]
-    return reArrangeUsdAttributesByIndex(
-        node=node, indexChange=indexChange, stepUp=stepUp, stepDown=stepDown
+    usd_attr = get_usd_attributes(node=node, index=True)
+    for x in range(len(usd_attr)):
+        if usd_attr[x]["usdAttr"] == node.attr(attribute_name):
+            old_index = usd_attr[x]["index"]
+    if step_down:
+        new_index = old_index + 1
+        step_up = None
+    if step_up:
+        new_index = old_index - 1
+        step_down = None
+    index_change = [old_index, new_index]
+    return re_arrange_usd_attributes_by_index(
+        node=node, index_change=index_change, step_up=step_up, step_down=step_down
     )
 
 
 @undo
-def moveAttributeInChannelBox(
+def move_attribute_in_channel_box(
     node,
-    attributeName=None,
-    exchangeAttrName=None,
-    newIndex=None,
-    stepUp=True,
-    stepDown=None,
+    attribute_name=None,
+    exchange_attr_name=None,
+    new_index=None,
+    step_up=True,
+    step_down=None,
 ):
     """
     Moves a selected user defined attribute in the channelBox
@@ -514,17 +516,17 @@ def moveAttributeInChannelBox(
     channelBox and moves the attribute one step upwards.
     Args:
             node(dagNode): The node the attributes belongs to.
-            attributeName(str): The name of the attribute.
+            attribute_name(str): The name of the attribute.
                                 If None it takes the selected
                                 attribute in the channelBox.
-            exchangeAttrName(str): The name of the attribute
+            exchange_attr_name(str): The name of the attribute
                                    to exchange with.
-            newIndex(int): new position of the attibute.
-            stepUp(bool): newIndex = oldIndex - 1.
+            new_index(int): new position of the attibute.
+            step_up(bool): new_index = oldIndex - 1.
     """
-    if not attributeName:
+    if not attribute_name:
         if len(pmc.channelBox("mainChannelBox", q=True, sma=True)) == 1:
-            attributeName = pmc.channelBox(
+            attribute_name = pmc.channelBox(
                 "mainChannelBox", q=True, sma=True
             )[0]
         else:
@@ -532,40 +534,40 @@ def moveAttributeInChannelBox(
                 level="error",
                 message="more then one selection "
                 "in the channelBox not supported",
-                func=moveAttributeInChannelBox,
-                logger=moduleLogger,
+                func=move_attribute_in_channel_box,
+                logger=module_logger,
             )
             return
-    if exchangeAttrName:
-        stepUp = None
-        stepDown = None
-        usdAttr = getUsdAttributes(node=node, index=True)
-        for attr_ in usdAttr:
-            name = attr_["usdAttr"].split(".")[1]
-            if name == exchangeAttrName:
-                print attr_["usdAttr"]
-                newIndex = attr_["index"]
-                print newIndex
-    usdAttr = reArrangeUsdAttributesByName(
+    if exchange_attr_name:
+        step_up = None
+        step_down = None
+        usd_attr = get_usd_attributes(node=node, index=True)
+        for attr_ in usd_attr:
+            name = attr_["usd_attr"].split(".")[1]
+            if name == exchange_attr_name:
+                print attr_["usd_attr"]
+                new_index = attr_["index"]
+                print new_index
+    usd_attr = re_arrange_usd_attributes_by_name(
         node=node,
-        attributeName=attributeName,
-        newIndex=newIndex,
-        stepUp=stepUp,
-        stepDown=stepDown,
+        attribute_name=attribute_name,
+        new_index=new_index,
+        step_up=step_up,
+        step_down=step_down,
     )
 
-    def reCreateAttr():
+    def re_create_attr():
         """
         Executes the rebuild of the attributes.
         """
-        if usdAttr:
-            for x in usdAttr:
-                x["usdAttr"].disconnect()
-                x["usdAttr"].set(lock=False)
-                x["usdAttr"].delete()
+        if usd_attr:
+            for x in usd_attr:
+                x["usd_attr"].disconnect()
+                x["usd_attr"].set(lock=False)
+                x["usd_attr"].delete()
                 if x["attrType"] == "string":
                     node.addAttr(
-                        x["usdAttr"].split(".")[1],
+                        x["usd_attr"].split(".")[1],
                         dt=x["attrType"],
                         hidden=x["hidden"],
                         keyable=x["keyable"],
@@ -573,52 +575,52 @@ def moveAttributeInChannelBox(
                     )
                 else:
                     node.addAttr(
-                        x["usdAttr"].split(".")[1],
+                        x["usd_attr"].split(".")[1],
                         at=x["attrType"],
                         hidden=x["hidden"],
                         keyable=x["keyable"],
                         en=x["enums"],
                     )
-                node.attr(x["usdAttr"].split(".")[1]).set(
+                node.attr(x["usd_attr"].split(".")[1]).set(
                     x["value"],
                     lock=x["lock"],
                     keyable=x["keyable"],
                     channelBox=x["channelBox"],
                 )
                 if x["input"]:
-                    x["input"][0].connect(x["usdAttr"])
+                    x["input"][0].connect(x["usd_attr"])
                 if x["output"]:
                     for out in x["output"]:
-                        x["usdAttr"].connect(out)
+                        x["usd_attr"].connect(out)
             logger.log(
                 level="info",
-                message=attributeName + " reordered in channelBox",
-                logger=moduleLogger,
+                message=attribute_name + " reordered in channelBox",
+                logger=module_logger,
             )
 
-    reCreateAttr()
+    re_create_attr()
 
 
 @undo
-def transferAttributes(
-    source, target, outputConnections=None, inputConnections=None
+def transfer_attributes(
+    source, target, output_connections=None, input_connections=None
 ):
     """
-    Transfers the userdefined attributes from a source object
+    Transfers the user defined attributes from a source object
     to a target object.
     By default its not recreating connections.
     Args:
             source(dagNode): The node with the source attributes.
             target(dagNode): The target node.
-            outputConnections(bool): Recreate output connections.
-            inputConnections(bool): Recreate input connections.
+            output_connections(bool): Recreate output connections.
+            input_connections(bool): Recreate input connections.
     Return:
-            list with dicts: The userdefined Attribute of the
+            list with dicts: The user defined Attribute of the
             source object.
     """
-    sourceUsdAttr = getUsdAttributes(node=source, index=True)
-    if sourceUsdAttr:
-        for attr_ in sourceUsdAttr:
+    source_usd_attr = get_usd_attributes(node=source, index=True)
+    if source_usd_attr:
+        for attr_ in source_usd_attr:
             if attr_["attrType"] == "string":
                 target.addAttr(
                     attr_["usdAttr"].split(".")[1],
@@ -641,7 +643,7 @@ def transferAttributes(
                 keyable=attr_["keyable"],
                 channelBox=attr_["channelBox"],
             )
-            if inputConnections:
+            if input_connections:
                 if attr_["input"]:
                     attr_["input"][0].connect(
                         pmc.PyNode(
@@ -651,7 +653,7 @@ def transferAttributes(
                         ),
                         force=True,
                     )
-            if outputConnections:
+            if output_connections:
                 if attr_["output"]:
                     for out in attr_["output"]:
                         pmc.PyNode(
@@ -665,11 +667,11 @@ def transferAttributes(
             + str(source)
             + " to "
             + str(target),
-            logger=moduleLogger,
+            logger=module_logger,
         )
-        return sourceUsdAttr
+        return source_usd_attr
     logger.log(
         level="error",
         message="No user defined attributes found for " + str(source),
-        logger=moduleLogger,
+        logger=module_logger,
     )

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 06 / 01
 
 """
 JoMRS nurbsCurve modification module.
@@ -37,13 +37,12 @@ import logging
 import logger
 import attributes
 
-reload(utils)
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
-moduleLogger = logging.getLogger(__name__ + ".py")
+module_logger = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # CLASSES
@@ -60,13 +59,13 @@ class ControlCurves(object):
         name="M_control_0_CON",
         match=None,
         scale=None,
-        colorIndex=17,
-        bufferGRP=True,
+        color_index=17,
+        buffer_grp=True,
         child=None,
-        translateChannel=True,
-        rotateChannel=True,
-        scaleChannel=True,
-        visibilityChannel=True,
+        translate_channel=True,
+        rotate_channel=True,
+        scale_channel=True,
+        visibility_channel=True,
     ):
         """
         Create curve method.
@@ -76,7 +75,7 @@ class ControlCurves(object):
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            colorIndex(integer): The color of the control.
+            color_index(integer): The color of the control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -84,17 +83,17 @@ class ControlCurves(object):
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
+            buffer_grp(bool): Create buffer_grp for the control.
             child(dagnode): The child of the control.
-            translateChannel(bool): Lock/Hide the translate channels.
-            rotateChannel(bool): Lock/Hide the rotate channels.
-            scaleChannel(bool): Lock/Hide the scale channels.
-            visibilityChannel(bool): Lock/Hide the visibility channels.
+            translate_channel(bool): Lock/Hide the translate channels.
+            rotate_channel(bool): Lock/Hide the rotate channels.
+            scale_channel(bool): Lock/Hide the scale channels.
+            visibility_channel(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the control curve node.
         """
         result = []
-        name = strings.string_checkup(name, moduleLogger)
+        name = strings.string_checkup(name, module_logger)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
         for shape in shapes:
@@ -104,29 +103,29 @@ class ControlCurves(object):
                 pmc.scale(shape_.cv[0:], scale[0], scale[1], scale[2])
         if match:
             pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
-        if colorIndex:
+        if color_index:
             for shape__ in shapes:
                 shape__.overrideEnabled.set(1)
-                shape__.overrideColor.set(colorIndex)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=self.control, name=name)
+                shape__.overrideColor.set(color_index)
+        if buffer_grp:
+            buffer_ = utils.create_buffer_grp(node=self.control, name=name)
             result.append(buffer_)
         if child:
             self.control.addChild(child)
-        if translateChannel is False:
-            attributes.lockAndHideAttributes(
+        if translate_channel is False:
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["tx", "ty", "tz"]
             )
-        if rotateChannel is False:
-            attributes.lockAndHideAttributes(
+        if rotate_channel is False:
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["rx", "ry", "rz"]
             )
-        if scaleChannel is False:
-            attributes.lockAndHideAttributes(
+        if scale_channel is False:
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["sx", "sy", "sz"]
             )
-        if visibilityChannel is False:
-            attributes.lockAndHideAttributes(
+        if visibility_channel is False:
+            attributes.lock_and_hide_attributes(
                 self.control, attributes=["visibility"]
             )
         result.append(self.control)
@@ -1587,11 +1586,11 @@ class RotateAxesControl:
         name="M_control_0_CON",
         match=None,
         scale=None,
-        bufferGRP=True,
-        translateChannel=True,
-        rotateChannel=True,
-        scaleChannel=True,
-        visibilityChannel=True,
+        buffer_grp=True,
+        translate_channel=True,
+        rotate_channel=True,
+        scale_channel=True,
+        visibility_channel=True,
     ):
         """
         Creates LRA Control Curve. By Default with a buffer group.
@@ -1601,11 +1600,11 @@ class RotateAxesControl:
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            bufferGRP(bool): Create bufferGRP for the control.
-            translateChannel(bool): Lock/Hide the translate channels.
-            rotateChannel(bool): Lock/Hide the rotate channels.
-            scaleChannel(bool): Lock/Hide the scale channels.
-            visibilityChannel(bool): Lock/Hide the visibility channels.
+            buffer_grp(bool): Create bufferGRP for the control.
+            translate_channel(bool): Lock/Hide the translate channels.
+            rotate_channel(bool): Lock/Hide the rotate channels.
+            scale_channel(bool): Lock/Hide the scale channels.
+            visibility_channel(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the Control Curve node.
         """
@@ -1633,23 +1632,23 @@ class RotateAxesControl:
         arrow0 = SingleArrowThinControl().create_curve(
             name=name,
             match=match,
-            bufferGRP=bufferGRP,
+            buffer_grp=buffer_grp,
             scale=scale,
-            colorIndex=13,
-            translateChannel=translateChannel,
-            rotateChannel=rotateChannel,
-            scaleChannel=scaleChannel,
-            visibilityChannel=visibilityChannel,
+            color_index=13,
+            translate_channel=translate_channel,
+            rotate_channel=rotate_channel,
+            scale_channel=scale_channel,
+            visibility_channel=visibility_channel,
         )[-1]
         arrow1 = SingleArrowThinControl().create_curve(
-            name=name, match=match, bufferGRP=False, scale=scale, colorIndex=6
+            name=name, match=match, buffer_grp=False, scale=scale, color_index=6
         )[0]
         arrow2 = SingleArrowThinControl().create_curve(
             name=name,
             match=match,
-            bufferGRP=False,
+            buffer_grp=False,
             scale=scale,
-            colorIndex=14,
+            color_index=14,
         )[0]
         for v in arrowValue0:
             arrow0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
@@ -1679,13 +1678,13 @@ class DiamondControl:
         name="M_control_0_CON",
         scale=None,
         match=None,
-        colorIndex=17,
-        localRotateAxes=True,
-        bufferGRP=True,
-        translateChannel=True,
-        rotateChannel=True,
-        scaleChannel=True,
-        visibilityChannel=True,
+        color_index=17,
+        local_rotate_axes=True,
+        buffer_grp=True,
+        translate_channel=True,
+        rotate_channel=True,
+        scale_channel=True,
+        visibility_channel=True,
     ):
         """
         Creates Diamond Control Curve. By Default with a buffer group.
@@ -1695,8 +1694,8 @@ class DiamondControl:
             warnings.
             scale(list): The scale values.
             match(dagnode): The node for transform match.
-            colorIndex(integer): The color of the control.
-            localRotateAxes(bool): Enable a LRA curve control.
+            color_index(integer): The color of the control.
+            local_rotate_axes(bool): Enable a LRA curve control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -1704,57 +1703,57 @@ class DiamondControl:
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            bufferGRP(bool): Create bufferGRP for the control.
-            translateChannel(bool): Lock/Hide the translate channels.
-            rotateChannel(bool): Lock/Hide the rotate channels.
-            scaleChannel(bool): Lock/Hide the scale channels.
-            visibilityChannel(bool): Lock/Hide the visibility channels.
+            buffer_grp(bool): Create buffer_grp for the control.
+            translate_channel(bool): Lock/Hide the translate channels.
+            rotate_channel(bool): Lock/Hide the rotate channels.
+            scale_channel(bool): Lock/Hide the scale channels.
+            visibility_channel(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the Control Curve node.
         """
 
         spear0 = SpearControl1().create_curve(
             name=name,
-            bufferGRP=bufferGRP,
+            buffer_grp=buffer_grp,
             scale=scale,
             match=match,
-            colorIndex=colorIndex,
-            translateChannel=translateChannel,
-            rotateChannel=rotateChannel,
-            scaleChannel=scaleChannel,
-            visibilityChannel=visibilityChannel,
+            color_index=color_index,
+            translate_channel=translate_channel,
+            rotate_channel=rotate_channel,
+            scale_channel=scale_channel,
+            visibility_channel=visibility_channel,
         )
         spear1 = SpearControl1().create_curve(
             name=name,
             scale=scale,
             match=match,
-            colorIndex=colorIndex,
-            bufferGRP=False,
+            color_index=color_index,
+            buffer_grp=False,
         )[0]
         spear2 = SpearControl1().create_curve(
             name=name,
             scale=scale,
             match=match,
-            colorIndex=colorIndex,
-            bufferGRP=False,
+            color_index=color_index,
+            buffer_grp=False,
         )[0]
         pmc.rotate(spear1.cv[:], 0, 45, 0)
         pmc.rotate(spear2.cv[:], 0, -45, 0)
         spear0[-1].addChild(spear1.getShape(), r=True, shape=True)
         spear0[-1].addChild(spear2.getShape(), r=True, shape=True)
         pmc.delete(spear1, spear2)
-        if localRotateAxes:
+        if local_rotate_axes:
             instance = RotateAxesControl()
-            axesName = name.replace("_CON", "_LRA_CON")
-            rotatAxesCon = instance.create_curve(
-                name=axesName,
+            axes_name = name.replace("_CON", "_LRA_CON")
+            rotate_axes_con = instance.create_curve(
+                name=axes_name,
                 scale=scale,
-                bufferGRP=False,
-                translateChannel=False,
-                scaleChannel=False,
+                buffer_grp=False,
+                translate_channel=False,
+                scale_channel=False,
             )
-            spear0[-1].addChild(rotatAxesCon)
-            rotatAxesCon.rotate.set(0, 0, 0)
+            spear0[-1].addChild(rotate_axes_con)
+            rotate_axes_con.rotate.set(0, 0, 0)
         return spear0
 
 
@@ -1762,7 +1761,7 @@ def linear_curve(
     name="M_linear_0_CRV",
     position=None,
     knots=None,
-    driverNodes=None,
+    driver_nodes=None,
     template=True,
 ):
     """
@@ -1775,7 +1774,7 @@ def linear_curve(
             warnings.
             position(tuple): The worldspace position for each cv.
             knots(tuple): The amount of the knots(cvs).
-            driverNodes(list): Driver nodes for the curve cvs.
+            driver_nodes(list): Driver nodes for the curve cvs.
             The amount of the dirveNodes in the list
             specifie the amount of the curve cvs.
             template(bool): Enable the template model
@@ -1787,22 +1786,22 @@ def linear_curve(
     data = {}
     data["degree"] = 1
     data["n"] = name
-    if driverNodes is None:
+    if driver_nodes is None:
         data["p"] = position
         data["k"] = knots
     else:
         data["p"] = []
         data["k"] = []
-        for x in range(len(driverNodes)):
+        for x in range(len(driver_nodes)):
             data["p"].append((0, 0, 0))
             data["k"].append(x)
         data["p"] = tuple(data["p"])
         data["k"] = tuple(data["k"])
     result = pmc.curve(**data)
-    attributes.lockAndHideAttributes(result)
-    for y in range(len(driverNodes)):
-        decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
-        driverNodes[y].worldMatrix[0].connect(decomp.inputMatrix)
+    attributes.lock_and_hide_attributes(result)
+    for y in range(len(driver_nodes)):
+        decomp = pmc.construct_node("decomposeMatrix", n=name + "_DEMAND")
+        driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
     if template:
         result.overrideEnabled.set(1)
@@ -1811,7 +1810,7 @@ def linear_curve(
 
 
 def cubic_curve(
-    name="M_cubic_0_CRV", position=None, driverNodes=None, template=True
+    name="M_cubic_0_CRV", position=None, driver_nodes=None, template=True
 ):
     """
     Create a cubic curve. If driverNodes specified
@@ -1822,7 +1821,7 @@ def cubic_curve(
             JoMRS naming convention. If not it will throw some
             warnings.
             position(tuple): The worldspace position for each cv.
-            driverNodes(list): Driver nodes for the curve cvs.
+            driver_nodes(list): Driver nodes for the curve cvs.
             The amount of the dirveNodes in the list
             specifie the amount of the curve cvs.
             template(bool): Enable the template model
@@ -1833,18 +1832,18 @@ def cubic_curve(
     name = strings.string_checkup(name)
     data = {}
     data["n"] = name
-    if driverNodes is None:
+    if driver_nodes is None:
         data["p"] = position
     else:
         data["p"] = []
-        for x in range(len(driverNodes)):
+        for x in range(len(driver_nodes)):
             data["p"].append((0, 0, 0))
         data["p"] = tuple(data["p"])
     result = pmc.curve(**data)
-    attributes.lockAndHideAttributes(result)
-    for y in range(len(driverNodes)):
-        decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
-        driverNodes[y].worldMatrix[0].connect(decomp.inputMatrix)
+    attributes.lock_and_hide_attributes(result)
+    for y in range(len(driver_nodes)):
+        decomp = pmc.construct_node("decomposeMatrix", n=name + "_DEMAND")
+        driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
     if template:
         result.overrideEnabled.set(1)
@@ -1853,7 +1852,7 @@ def cubic_curve(
 
 
 def mirror_curve(
-    curve=None, search="L_", replace="R_", bufferGRP=True, colorIndex=6
+    curve=None, search="L_", replace="R_", buffer_grp=True, color_index=6
 ):
     """
     Mirror a curve from + X to - X. By default it search about 'L_' in
@@ -1863,38 +1862,38 @@ def mirror_curve(
             curve(dagnode): The mirror curve.
             search(str): The string to search for.
             replace(str): The string to replace with.
-            bufferGRP(bool): Enable a buffer group for the
+            buffer_grp(bool): Enable a buffer group for the
             duplicated curve.
-            colorIndex(int): The color for the duplicated
+            color_index(int): The color for the duplicated
             curve.
     Return:
             list: The created curve and the buffer group.
     """
     result = []
     if curve.getShape().nodeType() == "nurbsCurve":
-        duplCurve = pmc.duplicate(curve, rr=True)[0]
-        children = utils.descendants(duplCurve)
+        dupl_curve = pmc.duplicate(curve, rr=True)[0]
+        children = utils.descendants(dupl_curve)
         for node in children:
             name = strings.search_and_replace(
                 string=str(node), search=search, replace=replace
             )[0]
             name = strings.string_checkup(name)
             pmc.rename(node, name)
-        mirrorGRP = pmc.createNode("transform", n="M_temp_mirror_0_GRP")
-        mirrorGRP.addChild(duplCurve)
-        mirrorGRP.scaleX.set(-1)
-        pmc.parent(duplCurve, w=True)
-        pmc.delete(mirrorGRP)
-        if bufferGRP:
-            buffer_ = utils.create_bufferGRP(node=duplCurve)
+        mirror_grp = pmc.construct_node("transform", n="M_temp_mirror_0_GRP")
+        mirror_grp.addChild(dupl_curve)
+        mirror_grp.scaleX.set(-1)
+        pmc.parent(dupl_curve, w=True)
+        pmc.delete(mirror_grp)
+        if buffer_grp:
+            buffer_ = utils.create_buffer_grp(node=dupl_curve)
             result.append(buffer_)
-        for shape in duplCurve.getShapes():
-            shape.overrideColor.set(colorIndex)
-        result.append(duplCurve)
+        for shape in dupl_curve.getShapes():
+            shape.overrideColor.set(color_index)
+        result.append(dupl_curve)
     else:
         logger.log(
             level="error",
             message="mirror only for nurbsCurves",
-            logger=moduleLogger,
+            logger=module_logger,
         )
     return result
