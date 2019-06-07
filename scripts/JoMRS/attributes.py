@@ -52,7 +52,7 @@ def undo(func_):
 def add_attr(
     node,
     name,
-    attr_type,
+    attrType,
     value=None,
     defaultValue=None,
     minValue=None,
@@ -70,7 +70,7 @@ def add_attr(
     Args:
             node(dagNode): The node to add the attribute.
             name(str): Longname of the attribute.
-            attr_type(str): The type of the attribute.
+            attrType(str): The type of the attribute.
             value(float or int): The value of the attribute.
             defaultValue(float or int): The default value of the attribute.
             minValue(float or int): The minimal value of the attribute.
@@ -97,10 +97,10 @@ def add_attr(
 
     data_dic = {}
 
-    if attr_type == "string":
-        data_dic["dataType"] = attr_type
+    if attrType == "string":
+        data_dic["dataType"] = attrType
     else:
-        data_dic["attributeType"] = attr_type
+        data_dic["attributeType"] = attrType
 
     data_dic["keyable"] = keyable
     data_dic["hidden"] = hidden

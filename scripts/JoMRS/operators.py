@@ -20,36 +20,38 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 05
+# Date:       2019 / 05 / 26
 
 """
-JoMRS main operator module. Handles the operator creation.
+JoMRS main operator module. Handles the compon
 """
 
 import pymel.core as pmc
+import strings
 import logging
 import logger
 import attributes
 import curves
 import mayautils
-import strings
-reload(curves)
 
+reload(attributes)
+reload(curves)
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+moduleLogger = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = "JOMRS_op_root"
 OPMAINTAGNAME = "JOMRS_op_main"
 OPSUBTAGNAME = "JOMRS_op_sub"
 OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
-MAINMETANODEATTRNAME = "main_operator"
+MAINMETANODENAME = "M_MAIN_op_0_METAND"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
 SUBMETANODENAME = "SUB_op_0_METAND"
-SUBMETANODEATTRNAME = "sub_operator"
+MAINMETANODEATTRNAME = "main_node"
+SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTCOMPNAME = "component"
 DEFAULTSIDE = "M"
@@ -77,24 +79,24 @@ ERRORMESSAGE = {
 
 
 class OperatorsRootNode(object):
+    def __init__(self, opRootTagName=OPROOTTAGNAME):
 
-    def __init__(self, op_root_tag_name=OPROOTTAGNAME):
         self.mainop_attr = {
-            "name": op_root_tag_name,
-            "attr_type": "bool",
+            "name": opRootTagName,
+            "attrType": "bool",
             "keyable": False,
             "defaultValue": 1,
         }
 
         self.rigname_attr = {
             "name": "rig_name",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
         }
 
         self.l_ik_rig_color_attr = {
             "name": "l_ik_rig_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 13,
             "minValue": 0,
@@ -103,7 +105,7 @@ class OperatorsRootNode(object):
 
         self.l_ik_rig_sub_color_attr = {
             "name": "l_ik_rig_sub_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 18,
             "minValue": 0,
@@ -112,7 +114,7 @@ class OperatorsRootNode(object):
 
         self.r_ik_rig_color_attr = {
             "name": "r_ik_rig_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 6,
             "minValue": 0,
@@ -121,7 +123,7 @@ class OperatorsRootNode(object):
 
         self.r_ik_rig_sub_color_attr = {
             "name": "r_ik_rig_sub_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 9,
             "minValue": 0,
@@ -130,7 +132,7 @@ class OperatorsRootNode(object):
 
         self.m_ik_rig_color_attr = {
             "name": "m_ik_rig_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 17,
             "minValue": 0,
@@ -139,7 +141,7 @@ class OperatorsRootNode(object):
 
         self.m_ik_rig_sub_color_attr = {
             "name": "m_ik_rig_sub_color",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "defaultValue": 11,
             "minValue": 0,
@@ -148,8 +150,9 @@ class OperatorsRootNode(object):
 
         self.main_op_nodes_attr = {
             "name": "main_op_nodes",
-            "attr_type": "message",
+            "attrType": "message",
             "keyable": False,
+            "channelBox": False,
         }
 
         self.param_list = [
@@ -164,146 +167,155 @@ class OperatorsRootNode(object):
             self.main_op_nodes_attr,
         ]
 
-    def create_node(self, op_root_name=OPROOTNAME):
-        self.root_node = pmc.createNode("transform", n=op_root_name)
-        attributes.lock_and_hide_attributes(node=self.root_node)
+    def create_node(
+        self, opRootName=OPROOTNAME, mainMetaNdName=MAINMETANODENAME
+    ):
+        self.rootNode = pmc.createNode("transform", n=opRootName)
+        attributes.lock_and_hide_attributes(node=self.rootNode)
         for attr_ in self.param_list:
-            attributes.add_attr(node=self.root_node, **attr_)
-        return self.root_node
+            attributes.add_attr(node=self.rootNode, **attr_)
+        self.main_op_meta_nd = pmc.createNode("network", n=mainMetaNdName)
+        self.main_op_meta_nd.message.connect(self.rootNode.main_op_nodes)
+        return self.rootNode
 
 
-class MainOperatorNode(OperatorsRootNode):
+class mainOperatorNode(OperatorsRootNode):
     def __init__(
         self,
-        op_main_tag_name=OPMAINTAGNAME,
-        op_root_tag_name=OPROOTTAGNAME,
-        sub_tag_name=OPSUBTAGNAME,
-        error_message=ERRORMESSAGE["selection1"],
+        opMainTagName=OPMAINTAGNAME,
+        opRootTagName=OPROOTTAGNAME,
+        subTagName=OPSUBTAGNAME,
+        errorMessage=ERRORMESSAGE["selection1"],
     ):
-        super(MainOperatorNode, self).__init__()
+        super(mainOperatorNode, self).__init__()
 
         self.selection = pmc.ls(sl=True, typ="transform")
 
         for node in self.selection:
             if (
-                node.hasAttr(op_root_tag_name)
-                or node.hasAttr(op_main_tag_name)
-                or node.hasAttr(sub_tag_name)
+                node.hasAttr(opRootTagName)
+                or node.hasAttr(opMainTagName)
+                or node.hasAttr(subTagName)
             ):
 
                 continue
             else:
                 logger.log(
-                    level="error", message=error_message, logger=module_logger
+                    level="error", message=errorMessage, logger=moduleLogger
                 )
 
+        self.attribute_list = []
+
         self.mainop_attr = {
-            "name": op_main_tag_name,
-            "attr_type": "bool",
+            "name": opMainTagName,
+            "attrType": "bool",
             "keyable": False,
             "defaultValue": 1,
         }
 
-        self.comp_name_attr = {
+        self.compName_attr = {
             "name": "component_name",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.comp_type_attr = {
+        self.compType_attr = {
             "name": "component_type",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.comp_side_attr = {
+        self.compSide_attr = {
             "name": "component_side",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.comp_index_attr = {
+        self.compIndex_attr = {
             "name": "component_index",
-            "attr_type": "long",
+            "attrType": "long",
             "keyable": False,
             "channelBox": False,
             "defaultValue": 0,
         }
 
-        self.sub_operators_attr = {
+        self.subOperators_attr = {
             "name": "sub_operators",
-            "attr_type": "message",
+            "attrType": "message",
             "keyable": False,
             "channelBox": False,
         }
 
         self.connector_attr = {
             "name": "connector",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.attribute_list = [
+        temp = [
             self.mainop_attr,
-            self.comp_name_attr,
-            self.comp_type_attr,
-            self.comp_side_attr,
-            self.comp_index_attr,
-            self.sub_operators_attr,
+            self.compName_attr,
+            self.compType_attr,
+            self.compSide_attr,
+            self.compIndex_attr,
+            self.subOperators_attr,
             self.connector_attr,
         ]
+        for attr_ in temp:
+            self.attribute_list.append(attr_)
 
-    def construct_node(
+    def createNode(
         self,
         color_index=18,
         name=MAINOPROOTNODENAME,
+        sub_meta_nd_name=SUBMETANODENAME,
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
-        comp_name=DEFAULTCOMPNAME,
-        sub_meta_nd_name=SUBMETANODENAME
+        errorMessage=ERRORMESSAGE,
+        compName=DEFAULTCOMPNAME,
     ):
         if not self.selection:
-            self.op_root_nd = self.create_node()
+            self.opRootND = self.create_node()
         else:
-            self.op_root_nd = self.selection[0]
-        self.main_op_curve = curves.DiamondControl()
-        self.main_op_nd = self.main_op_curve.create_curve(
-            color_index=color_index, name=name, match=self.op_root_nd
+            self.opRootND = self.selection[0]
+        self.mainOpCurve = curves.DiamondControl()
+        self.mainOpND = self.mainOpCurve.create_curve(
+            color_index=color_index, name=name, match=self.opRootND
         )
         for attr_ in self.attribute_list:
-            attributes.add_attr(node=self.main_op_nd[-1], **attr_)
-        self.op_root_nd.addChild(self.main_op_nd[0])
-        self.main_op_nd[1].component_side.set(side)
-        self.main_op_nd[1].component_index.set(index)
+            attributes.add_attr(node=self.mainOpND[-1], **attr_)
+        self.opRootND.addChild(self.mainOpND[0])
+        self.mainOpND[1].component_side.set(side)
+        self.mainOpND[1].component_index.set(index)
         self.sub_meta_nd_name = "{}_{}".format(side, sub_meta_nd_name)
         self.sub_meta_nd_name = self.sub_meta_nd_name.replace(
-            "_op_", "_op_{}_".format(comp_name)
+            "_op_", "_op_" + compName + "_"
         )
         self.sub_op_meta_node = pmc.createNode(
             "network", n=self.sub_meta_nd_name
         )
-        self.sub_op_meta_node.message.connect(self.main_op_nd[-1].sub_operators)
-        self.main_op_nd.append(self.sub_op_meta_node)
-        return self.main_op_nd
+        self.sub_op_meta_node.message.connect(self.mainOpND[-1].sub_operators)
+        self.mainOpND.append(self.sub_op_meta_node)
+        return self.mainOpND
 
 
-class create_component_operator(MainOperatorNode):
+class create_component_operator(mainOperatorNode):
     def __init__(
         self,
-        sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
-        comp_name=DEFAULTCOMPNAME,
+        subOperatorsCount=DEFAULTSUBOPERATORSCOUNT,
+        compName=DEFAULTCOMPNAME,
         side=DEFAULTSIDE,
-        main_operator_node_name=MAINOPROOTNODENAME,
-        sub_operators_node_name=SUBOPROOTNODENAME,
+        mainOperatorNodeName=MAINOPROOTNODENAME,
+        subOperatorsNodeName=SUBOPROOTNODENAME,
         axes=DEFAULTAXES,
         spaceing=DEFAULTSPACING,
-        sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
-        linear_curve_name=LINEARCURVENAME,
-        sub_tag_name=OPSUBTAGNAME,
+        subOperatorsScale=DEFAULTSUBOPERATORSSCALE,
+        linearCurveName=LINEARCURVENAME,
+        subTagName=OPSUBTAGNAME,
         sub_meta_node_attr_name=SUBMETANODEATTRNAME,
         main_meta_node_attr_name=MAINMETANODEATTRNAME,
     ):
@@ -311,56 +323,54 @@ class create_component_operator(MainOperatorNode):
 
         self.connector_attr = {
             "name": "connector",
-            "attr_type": "string",
+            "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
         self.sub_tag_attr = {
-            "name": sub_tag_name,
-            "attr_type": "bool",
+            "name": subTagName,
+            "attrType": "bool",
             "keyable": False,
             "defaultValue": 1,
         }
 
-        self.para_list = [self.sub_tag_attr, self.connector_attr]
+        temp = [self.sub_tag_attr, self.connector_attr]
 
         self.result = []
-        self.sub_operators = []
+        self.subOperators = []
         self.jointControl = curves.JointControl()
-        self.main_operator_node_name = main_operator_node_name.replace(
-            "M_", "{}_".format(side)
+        self.mainOperatorNodeName = mainOperatorNodeName.replace(
+            "M_", side + "_"
         )
-        self.main_operator_node_name = self.main_operator_node_name.replace(
-            "_op_", "_op_{}_".format(comp_name)
+        self.mainOperatorNodeName = self.mainOperatorNodeName.replace(
+            "_op_", "_op_" + compName + "_"
         )
-        self.main_operator_node = self.construct_node(
-            side=side, name=self.main_operator_node_name, comp_name=comp_name
+        self.mainOperatorNode = self.createNode(
+            side=side, name=self.mainOperatorNodeName, compName=compName
         )
-        self.result.append(self.main_operator_node[1])
-        for sub in range(sub_operators_count):
-            instance = "_op_{}_{}".format(comp_name, str(sub))
-            self.sub_op_nd_name = sub_operators_node_name.replace("M_",
-                                                               "{}_".format(
-                                                                   side))
-            self.sub_op_nd_name = self.sub_op_nd_name.replace("_op_0", instance)
-            sub_op_node = self.jointControl.create_curve(
-                name=self.sub_op_nd_name,
+        self.result.append(self.mainOperatorNode[1])
+        for sub in range(subOperatorsCount):
+            instance = "_op_{}_{}".format(compName, str(sub))
+            self.subOpNDName = subOperatorsNodeName.replace("M_", side + "_")
+            self.subOpNDName = self.subOpNDName.replace("_op_0", instance)
+            subOpNode = self.jointControl.create_curve(
+                name=self.subOpNDName,
                 match=self.result[-1],
-                scale=sub_operators_scale,
+                scale=subOperatorsScale,
                 buffer_grp=False,
                 color_index=21,
             )
             sub_attr_name = "{}_{}".format(sub_meta_node_attr_name, str(sub))
             attributes.add_attr(
-                self.main_operator_node[2], sub_attr_name, "message"
+                self.mainOperatorNode[2], sub_attr_name, "message"
             )
-            sub_op_node[0].message.connect(
-                self.main_operator_node[2].attr(sub_attr_name)
+            subOpNode[0].message.connect(
+                self.mainOperatorNode[2].attr(sub_attr_name)
             )
-            self.sub_operators.append(sub_op_node)
-            self.result[-1].addChild(sub_op_node[0])
-            for attr_ in self.para_list:
-                attributes.add_attr(node=sub_op_node[0], **attr_)
+            self.subOperators.append(subOpNode)
+            self.result[-1].addChild(subOpNode[0])
+            for attr_ in temp:
+                attributes.add_attr(node=subOpNode[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
             if axes == "-X":
@@ -369,20 +379,19 @@ class create_component_operator(MainOperatorNode):
                 axes = "Y"
             elif axes == "-Z":
                 axes = "Z"
-            sub_op_node[0].attr("translate" + axes).set(spaceing)
-            self.result.append(sub_op_node[-1])
-        self.linear_curve_name = linear_curve_name.replace("M_", "{}_".format(
-                                                                   side))
-        self.linear_curve_name = self.linear_curve_name.replace(
-            "_op_", "_op_{}_".format(comp_name)
+            subOpNode[0].attr("translate" + axes).set(spaceing)
+            self.result.append(subOpNode[-1])
+        self.linearCurveName = linearCurveName.replace("M_", side + "_")
+        self.linearCurveName = self.linearCurveName.replace(
+            "_op_", "_op_" + compName + "_"
         )
         linear_curve = curves.linear_curve(
-            driver_nodes=self.result, name=self.linear_curve_name
+            driver_nodes=self.result, name=self.linearCurveName
         )
         linear_curve.inheritsTransform.set(0)
-        self.main_operator_node[0].addChild(linear_curve)
-        self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        self.main_op_meta_nd = self.op_root_nd.main_op_nodes.get()
+        self.mainOperatorNode[0].addChild(linear_curve)
+        self.opRootND = mayautils.ancestors(self.result[-1])[-1]
+        self.main_op_meta_nd = self.opRootND.main_op_nodes.get()
         ud_attr = self.main_op_meta_nd.listAttr(ud=True)
         temp = []
         for attribute in ud_attr:
@@ -392,7 +401,7 @@ class create_component_operator(MainOperatorNode):
             main_meta_node_attr_name, str(len(temp))
         )
         attributes.add_attr(
-            node=self.main_op_meta_nd, name=attr_name, attr_type="message"
+            node=self.main_op_meta_nd, name=attr_name, attrType="message"
         )
         self.result[0].message.connect(
             self.main_op_meta_nd.attr(attr_name)
@@ -400,5 +409,5 @@ class create_component_operator(MainOperatorNode):
         # supOpDataStr = ",".join([str(x[0]) for x in self.subOperators])
         # self.result[0].sub_operators.set(supOpDataStr)
 
-    # def get_suboperators(self):
-    #     print self.main_operator_node[1].sub_operators.get()
+    def get_suboperators(self):
+        print self.mainOperatorNode[1].sub_operators.get()
