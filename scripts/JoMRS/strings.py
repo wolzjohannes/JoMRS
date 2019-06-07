@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 29
+# Date:       2019 / 06 / 05
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -172,11 +172,11 @@ def normalize_suffix(string, logger_=module_logger):
             logger=logger_,
         )
         instance = numbers.group(0)
-        string = string[0 : string.find(instance)]
+        string = string[0: string.find(instance)]
     lower_case = re.search("_[a-z]{1,}$", string)
     if lower_case:
         instance_ = lower_case.group(0)
-        string = string[0 : string.find(instance_)] + instance_.upper()
+        string = string[0: string.find(instance_)] + instance_.upper()
     return string
 
 
@@ -196,11 +196,11 @@ def normalize_numbers(string, logger_=module_logger):
     numbers = re.search("_[0-9]{1,}_", string)
     if numbers:
         instance = numbers.group(0)
-        stringEnd = string[string.find(instance) + len(instance) :].split(
+        string_end = string[string.find(instance) + len(instance) :].split(
             "_"
         )[-1]
         string = string.replace(instance, "_")
-        string = string.replace("_" + stringEnd, instance + stringEnd)
+        string = string.replace("_" + string_end, instance + string_end)
     else:
         logger.log(
             level="warning",
@@ -235,7 +235,7 @@ def valid_suffix(string, logger_=module_logger):
     return string
 
 
-def valid_stringSeparator(string, logger_=module_logger):
+def valid_string_separator(string, logger_=module_logger):
     """
     Finds valid separator in a string. If not it throw a warning message.
     Args:
@@ -266,7 +266,7 @@ def string_checkup(string, logger_=module_logger):
     Return:
             string: The passed string.
     """
-    string = valid_stringSeparator(string, logger_)
+    string = valid_string_separator(string, logger_)
     string = replace_invalid_prefix(string, logger_)
     string = valid_suffix(string, logger_)
     string = normalize_numbers(string, logger_)

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 18
+# Date:       2019 / 06 / 05
 
 """
 JoMRS maya utils module. Utilities helps
@@ -29,7 +29,7 @@ to create maya behaviours.
 ###############
 # TO DO:
 # config file for valid strings. For projects modifications
-# check if all srings follow the JoMRS string handling
+# check if all strings follow the JoMRS string handling
 # match position function.
 ###############
 
@@ -67,12 +67,12 @@ def create_buffer_grp(node, name=None):
         name = strings.string_checkup(name + "_buffer_GRP", module_logger)
     else:
         name = strings.string_checkup(str(node) + "_buffer_GRP", module_logger)
-    bufferGRP = pmc.construct_node("transform", n=name)
-    bufferGRP.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
-    bufferGRP.addChild(node)
+    buffer_grp = pmc.createNode("transform", n=name)
+    buffer_grp.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
+    buffer_grp.addChild(node)
     if parent:
-        parent.addChild(bufferGRP)
-    return bufferGRP
+        parent.addChild(buffer_grp)
+    return buffer_grp
 
 
 def space_locator_on_position(node, buffer_grp=True):
@@ -296,7 +296,7 @@ def constraint_ui_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_ui = pmc.construct_node(
+        constraint_ui = pmc.creatNode(
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
         constraint.addChild(constraint_ui)
@@ -307,16 +307,16 @@ def constraint_ui_node_(constraint=None, target=None):
                 node=constraint_ui,
                 name=long_name,
                 attr_type="float",
-                min_value=0,
-                max_value=1,
+                minValue=0,
+                maxValue=1,
                 keyable=True,
             )
             constraint_ui.attr(long_name).set(1)
             constraint_ui.attr(long_name).connect(
                 constraint.target[x].targetWeight, force=True
             )
-        for udAttr in constraint.listAttr(ud=True):
-            pmc.deleteAttr(udAttr)
+        for ud_attr in constraint.listAttr(ud=True):
+            pmc.deleteAttr(ud_attr)
     else:
         logger.log(
             level="error",
@@ -616,7 +616,7 @@ def decompose_matrix_constraint(
     Return:
             tuple: Created decompose matrix node.
     """
-    decomp = pmc.construct_node("decomposeMatrix", n=str(source) + "_0_DEMAND")
+    decomp = pmc.creatNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
     target.worldMatrix[0].connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
@@ -651,7 +651,7 @@ def matrix_constraint_ui_grp_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    ui_grp = pmc.construct_node(
+    ui_grp = pmc.creatNode(
         "transform", n=str(source) + "_matrixConstraint_UI_GRP"
     )
     attributes.add_attr(node=ui_grp, name="offset_matrix", attr_type="matrix")
@@ -671,7 +671,7 @@ def mult_matrix_setup_(source, target, maintainOffset=None):
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
-    mul_ma_nd = pmc.construct_node("multMatrix", n=str(source) + "_0_MUMAND")
+    mul_ma_nd = pmc.creatNode("multMatrix", n=str(source) + "_0_MUMAND")
     target.worldMatrix[0].connect(mul_ma_nd.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
@@ -703,7 +703,7 @@ def create_matrix_constraint(
             maintainOffste(bool): Enable/Disable the maintain_offset option.
     """
     axis = ["X", "Y", "Z"]
-    decomp_mat_nd = pmc.construct_node(
+    decomp_mat_nd = pmc.creatNode(
         "decomposeMatrix", n=str(source) + "_0_DEMAND"
     )
     mul_ma_nd = mult_matrix_setup_(
@@ -767,7 +767,7 @@ def descendants(root_node, reverse=None, typ="transform"):
     return result
 
 
-def custom_orientJoint(source, target, aim_axes=[1, 0, 0], up_axes=[0, 1, 0]):
+def custom_orient_joint(source, target, aim_axes=[1, 0, 0], up_axes=[0, 1, 0]):
     """
     Orient a joint based on aimConstraint technic.
     By default it orients the x axes
@@ -830,7 +830,7 @@ def custom_orient_joint_hierarchy(
             pmc.parent(jnt, w=True)
         for jnt_ in hierarchy:
             if len(temp) > 1:
-                custom_orientJoint(
+                custom_orient_joint(
                     temp[1], temp[0], aim_axes=aim_axes, up_axes=up_axes
                 )
                 temp[1].addChild(temp[0])
@@ -882,7 +882,7 @@ def default_orient_joint_hierarchy(root_node, aim_axes="xyz", up_axes="yup"):
     By default it orients the x axes
     with the y axes as up vector.
     Args:
-            rootJNT(dagnode): The root_node of the hierarchy.
+            root_node(dagnode): The root_node of the hierarchy.
             aim_axes(str): Valid is xyz, yzx, zxy,
             zyx, yxz, xzy, none.
             up_axes(str): Valid is xup, xdown, yup, ydown,
@@ -1018,7 +1018,7 @@ def create_motion_path(
     """
     axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, module_logger)
-    mpnd = pmc.construct_node("motionPath", n=name)
+    mpnd = pmc.creatNode("motionPath", n=name)
     mpnd.fractionMode.set(1)
     mpnd.uValue.set(position)
     curve_shape.worldSpace[0].connect(mpnd.geometryPath)

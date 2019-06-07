@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 05 / 31
+# Date:       2019 / 06 / 05
 
 """
 JoMRS logger module. Module which contains
@@ -37,7 +37,7 @@ import datetime
 ##########################################################
 
 VERSION = ["1", "0", "0"]
-DATE = ["2019", "05", "31"]
+DATE = ["2019", "06", "05"]
 
 logging.basicConfig(level=logging.INFO)
 
@@ -62,7 +62,7 @@ def get_version(version=VERSION, date=DATE):
 
 def initialize_file_handler(
     dir_path=os.path.dirname(os.path.realpath(__file__)),
-    dateTime=datetime.datetime.now(),
+    date_time=datetime.datetime.now(),
 ):
     """Initialize the filehandler to write a log file for any logger.
     Args:
@@ -70,7 +70,7 @@ def initialize_file_handler(
             datetime(int): The actual date.
     """
     file_name = "{}.log".format(
-        "-".join([str(dateTime.year), str(dateTime.month), str(dateTime.day)])
+        "-".join([str(date_time.year), str(date_time.month), str(date_time.day)])
     )
     file_handler_path = "{}/logFiles/{}".format(dir_path, file_name)
     hdlr = logging.FileHandler(file_handler_path)
@@ -90,7 +90,7 @@ def _run_time(func):
             The result of the inner function.
     """
     start_time = datetime.datetime.now()
-    result = func
+    func
     end_time = datetime.datetime.now()
     return end_time - start_time
 
@@ -204,7 +204,7 @@ def run_time_wrapper(func):
 
     def inner(*args, **kwargs):
         start_time = datetime.datetime.now()
-        result = func(*args, **kwargs)
+        func(*args, **kwargs)
         end_time = datetime.datetime.now()
         result = end_time - start_time
         log(level="info", message="RUNTIME: {}".format(result))

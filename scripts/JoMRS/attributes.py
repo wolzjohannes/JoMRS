@@ -27,8 +27,6 @@ JoMRS attributes module. Module for attributes handling.
 """
 import logging
 import pymel.core as pmc
-from typing import Dict, Union
-
 import logger
 
 ##########################################################
@@ -51,10 +49,10 @@ def undo(func_):
     return inner
 
 
-def addAttr(
+def add_attr(
     node,
     name,
-    attrType,
+    attr_type,
     value=None,
     defaultValue=None,
     minValue=None,
@@ -71,8 +69,8 @@ def addAttr(
     Add attribute to a node.
     Args:
             node(dagNode): The node to add the attribute.
-            name(str): Longname of the atribute.
-            attrType(str): The type of the attribute.
+            name(str): Longname of the attribute.
+            attr_type(str): The type of the attribute.
             value(float or int): The value of the attribute.
             defaultValue(float or int): The default value of the attribute.
             minValue(float or int): The minimal value of the attribute.
@@ -81,7 +79,7 @@ def addAttr(
             hidden(bool): Defines if the attribute is hidden.
             writable(bool): Defines if the attribute can get input connections.
             channelBox(bool): Defines if the attribute is in the channelbox.
-            lock(bool): Lock/Unlock the atttibute.
+            lock(bool): Lock/Unlock the attribute.
             input(dagNode.attribute): Connects the attribute with the input.
             output(dagNode.attribute): Connects the attribute with the output.
     Return:
@@ -108,16 +106,16 @@ def addAttr(
     data_dic["hidden"] = hidden
     data_dic["writable"] = writable
 
-    if min_value is not None:
-        data_dic["min_value"] = min_value
-    if max_value is not None:
-        data_dic["max_value"] = max_value
-    if default_value is not None:
-        data_dic["default_value"] = default_value
+    if minValue is not None:
+        data_dic["minValue"] = minValue
+    if maxValue is not None:
+        data_dic["maxValue"] = maxValue
+    if defaultValue is not None:
+        data_dic["defaultValue"] = defaultValue
 
     node.addAttr(name, **data_dic)
 
-    if not channel_box:
+    if not channelBox:
         node.attr(name).set(channelBox=False)
     if lock:
         node.attr(name).set(lock=True)
@@ -139,7 +137,7 @@ def add_array_attribute(
     keyable=True,
     hidden=False,
     writable=True,
-    channel_box=True,
+    channelBox=True,
     lock=False,
 ):
     """
@@ -152,9 +150,9 @@ def add_array_attribute(
             keyable(bool): Defines if the child attributes are keyable.
             hidden(bool): Defines if the attribute are hidden.
             writable(bool): Defines if the attribute can get input connections.
-            channel_box(bool): Defines if the child attributes are
+            channelBox(bool): Defines if the child attributes are
                               in the channelbox.
-            lock(bool): Lock/Unlock the child atttibutes.
+            lock(bool): Lock/Unlock the child attributes.
     Return:
             list: The attributes name and the names of the child attributes.
     """
@@ -189,7 +187,7 @@ def add_array_attribute(
             node.attr(plugs_name[x]).set(values[x])
     for plug_ in plugs_name:
         node.attr(plug_).set(lock=lock, keyable=keyable, channelBox=True)
-        if not channel_box:
+        if not channelBox:
             node.attr(plug_).set(lock=lock, keyable=False, channelBox=False)
 
     result = [node.attr(name)]
@@ -205,7 +203,7 @@ def add_enum_attribute(
     keyable=True,
     hidden=False,
     writable=True,
-    channel_box=True,
+    channelBox=True,
     lock=False,
 ):
     """
@@ -218,8 +216,8 @@ def add_enum_attribute(
             keyable(bool): Defines if the attribute is keyable.
             hidden(bool): Defines if the attribute are hidden.
             writable(bool): Defines if the attribute can get input connections.
-            channel_box(bool): Defines if the attribute is in the channelbox.
-            lock(bool): Lock/Unlock the atttibute.
+            channelBox(bool): Defines if the attribute is in the channelbox.
+            lock(bool): Lock/Unlock the attribute.
 
     Return:
             dic: A dic with the enum and their index.
@@ -250,7 +248,7 @@ def add_enum_attribute(
     node.attr(name).set(
         lock=lock, keyable=keyable, channelBox=True, value=value
     )
-    if not channel_box:
+    if not channelBox:
         node.attr(name).set(lock=lock, keyable=False, channelBox=False)
 
     for x in range(len(enum)):
@@ -477,7 +475,7 @@ def re_arrange_usd_attributes_by_name(
     Args:
             node(dagNode): The node the attributes belongs to.
             attribute_name(str): The name of the attribute.
-            new_index(int): new position of the attibute.
+            new_index(int): new position of the attribute.
             step_up(bool): new_index = oldIndex - 1.
             step_down(bool): new_index = oldIndex + 1.
     Return:
@@ -521,7 +519,7 @@ def move_attribute_in_channel_box(
                                 attribute in the channelBox.
             exchange_attr_name(str): The name of the attribute
                                    to exchange with.
-            new_index(int): new position of the attibute.
+            new_index(int): new position of the attribute.
             step_up(bool): new_index = oldIndex - 1.
     """
     if not attribute_name:
