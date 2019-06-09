@@ -76,6 +76,7 @@ class OperatorsRootNode(object):
     """
     Create operators root node/god node.
     """
+
     def __init__(self, op_root_tag_name=OPROOTTAGNAME):
         """
         Init the user defined attributes.
@@ -192,6 +193,7 @@ class mainOperatorNode(OperatorsRootNode):
     """
     Create a main operator node.
     """
+
     def __init__(
         self,
         op_main_tag_name=OPMAINTAGNAME,
@@ -339,6 +341,7 @@ class create_component_operator(mainOperatorNode):
     """
     Create the whole component operator.
     """
+
     def __init__(
         self,
         sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
