@@ -23,7 +23,7 @@
 # Date:       2019 / 06 / 09
 
 """
-JoMRS main operator module. Handles the operator creation.
+JoMRS main operator module. Handles the operators creation.
 """
 
 import pymel.core as pmc
@@ -66,18 +66,22 @@ ERRORMESSAGE = {
 ##########################################################
 # CLASSES
 # To Do:
-# - change use of lists.
-# - code optimization
 # - give methods. for example: give all sub nodes or
 #   all main nodes. Give all attributes.
-# - docstrinngs
 # - increase performance
 ##########################################################
 
 
 class OperatorsRootNode(object):
+    """
+    Create operators root node/god node.
+    """
     def __init__(self, op_root_tag_name=OPROOTTAGNAME):
-
+        """
+        Init the user defined attributes.
+        Args:
+                op_root_tag_name(str): Tag name.
+        """
         self.mainop_attr = {
             "name": op_root_tag_name,
             "attrType": "bool",
@@ -167,6 +171,14 @@ class OperatorsRootNode(object):
     def create_node(
         self, op_root_name=OPROOTNAME, main_meta_nd_name=MAINMETANODENAME
     ):
+        """
+        Execute the operators root/god node creation.
+        Args:
+                op_root_name(str): Tag name.
+                main_meta_nd_name(str): Meta node name.
+        Return:
+                dagnode: The created dagnode.
+        """
         self.root_node = pmc.createNode("transform", n=op_root_name)
         attributes.lock_and_hide_attributes(node=self.root_node)
         for attr_ in self.param_list:
@@ -177,6 +189,9 @@ class OperatorsRootNode(object):
 
 
 class mainOperatorNode(OperatorsRootNode):
+    """
+    Create a main operator node.
+    """
     def __init__(
         self,
         op_main_tag_name=OPMAINTAGNAME,
@@ -184,6 +199,14 @@ class mainOperatorNode(OperatorsRootNode):
         sub_tag_name=OPSUBTAGNAME,
         error_message=ERRORMESSAGE["selection1"],
     ):
+        """
+        Init the user defined attributes
+        Args:
+                op_main_tag_name(str): Tag name.
+                op_root_tag_name(str): Tag name.
+                sub_tag_name(str): Tag name.
+                error_message(str): User feedback message.
+        """
         super(mainOperatorNode, self).__init__()
 
         self.selection = pmc.ls(sl=True, typ="transform")
@@ -271,8 +294,20 @@ class mainOperatorNode(OperatorsRootNode):
         sub_meta_nd_name=SUBMETANODENAME,
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
-        comp_name=DEFAULTOPERATORNAME,
+        operator_name=DEFAULTOPERATORNAME,
     ):
+        """
+        Execute the main operator node creation.
+        Args:
+                color_index(int): Viewport color.
+                name(str): Operator name.
+                sub_meta_nd_name(str): Sub meat node name.
+                side(str): Operators side. Valid are M,L,R.
+                index(int): Operators index number.
+                operator_name(str): Operators name.
+        Return:
+                dagnode: The created main operator node.
+        """
         if not self.selection:
             self.op_root_nd = self.create_node()
         else:
@@ -288,7 +323,7 @@ class mainOperatorNode(OperatorsRootNode):
         self.main_op_nd[1].component_index.set(index)
         self.sub_meta_nd_name = "{}_{}".format(side, sub_meta_nd_name)
         self.sub_meta_nd_name = self.sub_meta_nd_name.replace(
-            "_op_", "_op_{}_".format(comp_name)
+            "_op_", "_op_{}_".format(operator_name)
         )
         self.sub_op_meta_node = pmc.createNode(
             "network", n=self.sub_meta_nd_name
@@ -301,6 +336,9 @@ class mainOperatorNode(OperatorsRootNode):
 
 
 class create_component_operator(mainOperatorNode):
+    """
+    Create the whole component operator.
+    """
     def __init__(
         self,
         sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
@@ -316,6 +354,24 @@ class create_component_operator(mainOperatorNode):
         sub_meta_node_attr_name=SUBMETANODEATTRNAME,
         main_meta_node_attr_name=MAINMETANODEATTRNAME,
     ):
+        """
+        Init the operators creation.
+        Args:
+                sub_operators_count(int): Sub operators count.
+                operator_name(str): Operators name.
+                side(str): Operators side. Valid are M,L,R
+                main_operator_node_name: Main Operators node name.
+                sub_operators_node_name: Sub Operators node name.
+                axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
+                spaceing(int): Space between main and sub op nodes
+                sub_operators_scale(int): Sub operators node scale factor.
+                linear_curve_name(str): Operators visualisation curve name.
+                sub_tag_name(str): Tag name.
+                sub_meta_node_attr_name(str): User defined message attribute
+                name.
+                main_meta_node_attr_name(str): User defined message attribute
+                name.
+        """
         super(create_component_operator, self).__init__()
 
         self.connector_attr = {
@@ -345,7 +401,7 @@ class create_component_operator(mainOperatorNode):
         self.main_operator_node = self.createNode(
             side=side,
             name=self.main_operator_node_name,
-            comp_name=operator_name,
+            operator_name=operator_name,
         )
         self.result.append(self.main_operator_node[1])
         for sub in range(sub_operators_count):
