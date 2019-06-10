@@ -467,5 +467,11 @@ class create_component_operator(mainOperatorNode):
         )
         self.result[0].message.connect(self.main_op_meta_nd.attr(attr_name))
 
-    def get_suboperators(self):
-        print self.main_operator_node[1].sub_operators.get()
+    def get_suboperators(self, main_op=None, sub_metand_attr=SUBMETANODEATTRNAME):
+        if main_op:
+            metand = main_op.sub_operators.get()
+        else:
+            metand = self.main_operator_node[1].sub_operators.get()
+        sub_node_attr = [ud for ud in metand.listAttr(ud=True) if
+                         strings.search(str(ud), sub_metand_attr)]
+        print sub_node_attr
