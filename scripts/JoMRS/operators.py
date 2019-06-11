@@ -467,11 +467,46 @@ class create_component_operator(mainOperatorNode):
         )
         self.result[0].message.connect(self.main_op_meta_nd.attr(attr_name))
 
-    def get_suboperators(self, main_op=None, sub_metand_attr=SUBMETANODEATTRNAME):
+    def get_sub_operators(self, main_op=None,
+                          sub_metand_attr=SUBMETANODEATTRNAME):
+        """
+        Get the sub operators of a main operator. Return empty list if no
+        sub operator nodes exist.
+        Args:
+                main_op(dagnode): If none will take the latest main op in
+                memory.
+                sub_metand_attr(str): Attribute name to search for meta
+                node.
+        Return:
+                List: Dagnodes of found sub operators.
+        """
         if main_op:
             metand = main_op.sub_operators.get()
         else:
             metand = self.main_operator_node[1].sub_operators.get()
         sub_node_attr = [ud for ud in metand.listAttr(ud=True) if
-                         strings.search(str(ud), sub_metand_attr)]
-        print sub_node_attr
+                         strings.search(sub_metand_attr, str(ud))]
+        result = [pmc.PyNode(attr_.get()) for attr_ in sub_node_attr]
+        return result
+
+    def get_main_operators(self, root_node=None,
+                           main_metand_attr=MAINMETANODEATTRNAME):
+        """
+              Get the main operators of a operators root node. Return empty
+              list if no main operators node exist.
+              Args:
+                      root_node(dagnode): If none will take the latest root
+                      node in memory.
+                      main_metand_attr(str): Attribute name to search for meta
+                      node.
+              Return:
+                      List: Dagnodes of found main operator nodes.
+              """
+        if root_node:
+            metand = root_node.main_op_nodes.get()
+        else:
+            metand = self.op_root_nd.main_op_nodes.get()
+        main_node_attr = [ud for ud in metand.listAttr(ud=True) if
+                          strings.search(main_metand_attr, str(ud))]
+        result = [pmc.PyNode(attr_.get()) for attr_ in main_node_attr]
+        return result
