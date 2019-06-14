@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 09
+# Date:       2019 / 06 / 14
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -225,8 +225,6 @@ class mainOperatorNode(OperatorsRootNode):
                     level="error", message=error_message, logger=module_logger
                 )
 
-        self.attribute_list = []
-
         self.mainop_attr = {
             "name": op_main_tag_name,
             "attrType": "bool",
@@ -277,7 +275,7 @@ class mainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
-        temp = [
+        self.attribute_list = [
             self.mainop_attr,
             self.comp_name_attr,
             self.comp_type_attr,
@@ -286,8 +284,6 @@ class mainOperatorNode(OperatorsRootNode):
             self.sub_operators_attr,
             self.connector_attr,
         ]
-        for attr_ in temp:
-            self.attribute_list.append(attr_)
 
     def createNode(
         self,
@@ -297,6 +293,7 @@ class mainOperatorNode(OperatorsRootNode):
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
         operator_name=DEFAULTOPERATORNAME,
+        local_rotate_axes=True
     ):
         """
         Execute the main operator node creation.
@@ -307,6 +304,7 @@ class mainOperatorNode(OperatorsRootNode):
                 side(str): Operators side. Valid are M,L,R.
                 index(int): Operators index number.
                 operator_name(str): Operators name.
+                local_rotate_axes(bool): Enabel local rotate axes.
         Return:
                 dagnode: The created main operator node.
         """
@@ -316,7 +314,8 @@ class mainOperatorNode(OperatorsRootNode):
             self.op_root_nd = self.selection[0]
         self.main_op_curve = curves.DiamondControl()
         self.main_op_nd = self.main_op_curve.create_curve(
-            color_index=color_index, name=name, match=self.op_root_nd
+            color_index=color_index, name=name, match=self.op_root_nd,
+            local_rotate_axes=local_rotate_axes
         )
         for attr_ in self.attribute_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
@@ -356,6 +355,7 @@ class create_component_operator(mainOperatorNode):
         sub_tag_name=OPSUBTAGNAME,
         sub_meta_node_attr_name=SUBMETANODEATTRNAME,
         main_meta_node_attr_name=MAINMETANODEATTRNAME,
+        local_rotate_axes=True
     ):
         """
         Init the operators creation.
@@ -374,6 +374,7 @@ class create_component_operator(mainOperatorNode):
                 name.
                 main_meta_node_attr_name(str): User defined message attribute
                 name.
+                local_rotate_axes(bool): Enabel local rotate axes.
         """
         super(create_component_operator, self).__init__()
 
@@ -405,6 +406,7 @@ class create_component_operator(mainOperatorNode):
             side=side,
             name=self.main_operator_node_name,
             operator_name=operator_name,
+            local_rotate_axes=local_rotate_axes,
         )
         self.result.append(self.main_operator_node[1])
         for sub in range(sub_operators_count):
@@ -492,16 +494,16 @@ class create_component_operator(mainOperatorNode):
     def get_main_operators(self, root_node=None,
                            main_metand_attr=MAINMETANODEATTRNAME):
         """
-              Get the main operators of a operators root node. Return empty
-              list if no main operators node exist.
-              Args:
-                      root_node(dagnode): If none will take the latest root
-                      node in memory.
-                      main_metand_attr(str): Attribute name to search for meta
-                      node.
-              Return:
-                      List: Dagnodes of found main operator nodes.
-              """
+        Get the main operators of a operators root node. Return empty
+        list if no main operators node exist.
+        Args:
+              root_node(dagnode): If none will take the latest root
+              node in memory.
+              main_metand_attr(str): Attribute name to search for meta
+              node.
+        Return:
+              List: Dagnodes of found main operator nodes.
+        """
         if root_node:
             metand = root_node.main_op_nodes.get()
         else:
@@ -509,4 +511,25 @@ class create_component_operator(mainOperatorNode):
         main_node_attr = [ud for ud in metand.listAttr(ud=True) if
                           strings.search(main_metand_attr, str(ud))]
         result = [pmc.PyNode(attr_.get()) for attr_ in main_node_attr]
+        return result
+
+    def get_root_node_attributes(self, root_node=None):
+        """
+        Get the rig attributes from operators root node.
+        Args:
+                root_node(dagnode): If none will take the latest root
+                node in memory.
+        Return:
+                List: Filled with dictonaries. Example:
+                [{'attribute':attribute;'value':value}]
+        """
+        result = []
+        if root_node is None:
+            root_node = self.op_root_nd
+        param_list = root_node.listAttr(ud=True)
+        for param in param_list:
+            dic = {}
+            dic['attribute'] = param
+            dic['value'] = param.get()
+            result.append(dic)
         return result
