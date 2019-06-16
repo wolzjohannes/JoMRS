@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 14
+# Date:       2019 / 06 / 16
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -61,6 +61,7 @@ ERRORMESSAGE = {
     "selection": "More then one parent not allowed",
     "selection1": "Parent of main operator is no JoMRS"
     " operator main/sub node or operators root node",
+    "get_attr": "attribute from main param list not on node.",
 }
 
 ##########################################################
@@ -157,7 +158,7 @@ class OperatorsRootNode(object):
             "channelBox": False,
         }
 
-        self.param_list = [
+        self.root_node_param_list = [
             self.mainop_attr,
             self.rigname_attr,
             self.l_ik_rig_color_attr,
@@ -182,7 +183,7 @@ class OperatorsRootNode(object):
         """
         self.root_node = pmc.createNode("transform", n=op_root_name)
         attributes.lock_and_hide_attributes(node=self.root_node)
-        for attr_ in self.param_list:
+        for attr_ in self.root_node_param_list:
             attributes.add_attr(node=self.root_node, **attr_)
         self.main_op_meta_nd = pmc.createNode("network", n=main_meta_nd_name)
         self.main_op_meta_nd.message.connect(self.root_node.main_op_nodes)
@@ -275,7 +276,7 @@ class mainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
-        self.attribute_list = [
+        self.main_node_param_list = [
             self.mainop_attr,
             self.comp_name_attr,
             self.comp_type_attr,
@@ -285,7 +286,7 @@ class mainOperatorNode(OperatorsRootNode):
             self.connector_attr,
         ]
 
-    def createNode(
+    def construct_node(
         self,
         color_index=18,
         name=MAINOPROOTNODENAME,
@@ -293,7 +294,7 @@ class mainOperatorNode(OperatorsRootNode):
         side=DEFAULTSIDE,
         index=DEFAULTINDEX,
         operator_name=DEFAULTOPERATORNAME,
-        local_rotate_axes=True
+        local_rotate_axes=True,
     ):
         """
         Execute the main operator node creation.
@@ -314,10 +315,12 @@ class mainOperatorNode(OperatorsRootNode):
             self.op_root_nd = self.selection[0]
         self.main_op_curve = curves.DiamondControl()
         self.main_op_nd = self.main_op_curve.create_curve(
-            color_index=color_index, name=name, match=self.op_root_nd,
-            local_rotate_axes=local_rotate_axes
+            color_index=color_index,
+            name=name,
+            match=self.op_root_nd,
+            local_rotate_axes=local_rotate_axes,
         )
-        for attr_ in self.attribute_list:
+        for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
         self.main_op_nd[1].component_side.set(side)
@@ -339,43 +342,11 @@ class mainOperatorNode(OperatorsRootNode):
 class create_component_operator(mainOperatorNode):
     """
     Create the whole component operator.
+    Args:
+            sub_tag_name(str): Tag name.
     """
 
-    def __init__(
-        self,
-        sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
-        operator_name=DEFAULTOPERATORNAME,
-        side=DEFAULTSIDE,
-        main_operator_node_name=MAINOPROOTNODENAME,
-        sub_operators_node_name=SUBOPROOTNODENAME,
-        axes=DEFAULTAXES,
-        spaceing=DEFAULTSPACING,
-        sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
-        linear_curve_name=LINEARCURVENAME,
-        sub_tag_name=OPSUBTAGNAME,
-        sub_meta_node_attr_name=SUBMETANODEATTRNAME,
-        main_meta_node_attr_name=MAINMETANODEATTRNAME,
-        local_rotate_axes=True
-    ):
-        """
-        Init the operators creation.
-        Args:
-                sub_operators_count(int): Sub operators count.
-                operator_name(str): Operators name.
-                side(str): Operators side. Valid are M,L,R
-                main_operator_node_name: Main Operators node name.
-                sub_operators_node_name: Sub Operators node name.
-                axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
-                spaceing(int): Space between main and sub op nodes
-                sub_operators_scale(int): Sub operators node scale factor.
-                linear_curve_name(str): Operators visualisation curve name.
-                sub_tag_name(str): Tag name.
-                sub_meta_node_attr_name(str): User defined message attribute
-                name.
-                main_meta_node_attr_name(str): User defined message attribute
-                name.
-                local_rotate_axes(bool): Enabel local rotate axes.
-        """
+    def __init__(self, sub_tag_name=OPSUBTAGNAME):
         super(create_component_operator, self).__init__()
 
         self.connector_attr = {
@@ -391,8 +362,41 @@ class create_component_operator(mainOperatorNode):
             "defaultValue": 1,
         }
 
-        temp = [self.sub_tag_attr, self.connector_attr]
+        self.sub_node_param_list = [self.sub_tag_attr, self.connector_attr]
 
+    def build_node(
+        self,
+        sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
+        operator_name=DEFAULTOPERATORNAME,
+        side=DEFAULTSIDE,
+        main_operator_node_name=MAINOPROOTNODENAME,
+        sub_operators_node_name=SUBOPROOTNODENAME,
+        axes=DEFAULTAXES,
+        spaceing=DEFAULTSPACING,
+        sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
+        linear_curve_name=LINEARCURVENAME,
+        sub_meta_node_attr_name=SUBMETANODEATTRNAME,
+        main_meta_node_attr_name=MAINMETANODEATTRNAME,
+        local_rotate_axes=True,
+    ):
+        """
+        Init the operators creation.
+        Args:
+                sub_operators_count(int): Sub operators count.
+                operator_name(str): Operators name.
+                side(str): Operators side. Valid are M,L,R
+                main_operator_node_name: Main Operators node name.
+                sub_operators_node_name: Sub Operators node name.
+                axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
+                spaceing(int): Space between main and sub op nodes
+                sub_operators_scale(int): Sub operators node scale factor.
+                linear_curve_name(str): Operators visualisation curve name.
+                sub_meta_node_attr_name(str): User defined message attribute
+                name.
+                main_meta_node_attr_name(str): User defined message attribute
+                name.
+                local_rotate_axes(bool): Enabel local rotate axes.
+        """
         self.result = []
         self.sub_operators = []
         self.joint_control = curves.JointControl()
@@ -402,7 +406,7 @@ class create_component_operator(mainOperatorNode):
         self.main_operator_node_name = self.main_operator_node_name.replace(
             "_op_", "_op_{}_".format(operator_name)
         )
-        self.main_operator_node = self.createNode(
+        self.main_operator_node = self.construct_node(
             side=side,
             name=self.main_operator_node_name,
             operator_name=operator_name,
@@ -433,7 +437,7 @@ class create_component_operator(mainOperatorNode):
             )
             self.sub_operators.append(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
-            for attr_ in temp:
+            for attr_ in self.sub_node_param_list:
                 attributes.add_attr(node=sub_op_node[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
@@ -469,8 +473,9 @@ class create_component_operator(mainOperatorNode):
         )
         self.result[0].message.connect(self.main_op_meta_nd.attr(attr_name))
 
-    def get_sub_operators(self, main_op=None,
-                          sub_metand_attr=SUBMETANODEATTRNAME):
+    def get_sub_operators(
+        self, main_op=None, sub_metand_attr=SUBMETANODEATTRNAME
+    ):
         """
         Get the sub operators of a main operator. Return empty list if no
         sub operator nodes exist.
@@ -486,13 +491,17 @@ class create_component_operator(mainOperatorNode):
             metand = main_op.sub_operators.get()
         else:
             metand = self.main_operator_node[1].sub_operators.get()
-        sub_node_attr = [ud for ud in metand.listAttr(ud=True) if
-                         strings.search(sub_metand_attr, str(ud))]
+        sub_node_attr = [
+            ud
+            for ud in metand.listAttr(ud=True)
+            if strings.search(sub_metand_attr, str(ud))
+        ]
         result = [pmc.PyNode(attr_.get()) for attr_ in sub_node_attr]
         return result
 
-    def get_main_operators(self, root_node=None,
-                           main_metand_attr=MAINMETANODEATTRNAME):
+    def get_main_operators(
+        self, root_node=None, main_metand_attr=MAINMETANODEATTRNAME
+    ):
         """
         Get the main operators of a operators root node. Return empty
         list if no main operators node exist.
@@ -508,12 +517,17 @@ class create_component_operator(mainOperatorNode):
             metand = root_node.main_op_nodes.get()
         else:
             metand = self.op_root_nd.main_op_nodes.get()
-        main_node_attr = [ud for ud in metand.listAttr(ud=True) if
-                          strings.search(main_metand_attr, str(ud))]
+        main_node_attr = [
+            ud
+            for ud in metand.listAttr(ud=True)
+            if strings.search(main_metand_attr, str(ud))
+        ]
         result = [pmc.PyNode(attr_.get()) for attr_ in main_node_attr]
         return result
 
-    def get_root_node_attributes(self, root_node=None):
+    def get_root_node_attributes(
+        self, root_node=None, error_message=ERRORMESSAGE["get_attr"]
+    ):
         """
         Get the rig attributes from operators root node.
         Args:
@@ -526,10 +540,45 @@ class create_component_operator(mainOperatorNode):
         result = []
         if root_node is None:
             root_node = self.op_root_nd
-        param_list = root_node.listAttr(ud=True)
+        param_list = self.root_node_param_list
+        for param in param_list:
+            try:
+                dic = {}
+                dic["attribute"] = root_node.attr(param["name"])
+                dic["value"] = root_node.attr(param["name"]).get()
+                result.append(dic)
+            except:
+                logger.log(
+                    level="error",
+                    message="{} {}".format(param["name"], error_message),
+                )
+        return result
+
+    def get_main_node_attributes(
+        self, main_node=None, error_message=ERRORMESSAGE["get_attr"]
+    ):
+        """
+        Get the rig attributes from operators root node.
+        Args:
+                main_node(dagnode): If none will take the latest main
+                node in memory.
+        Return:
+                List: Filled with dictonaries. Example:
+                [{'attribute':attribute;'value':value}]
+        """
+        result = []
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        param_list = self.main_node_param_list
         for param in param_list:
             dic = {}
-            dic['attribute'] = param
-            dic['value'] = param.get()
-            result.append(dic)
+            try:
+                dic["attribute"] = main_node.attr(param["name"])
+                dic["value"] = main_node.attr(param["name"]).get()
+                result.append(dic)
+            except:
+                logger.log(
+                    level="error",
+                    message="{} {}".format(param["name"], error_message),
+                )
         return result
