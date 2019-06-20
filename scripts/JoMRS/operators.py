@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 16
+# Date:       2019 / 06 / 20
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -62,6 +62,7 @@ ERRORMESSAGE = {
     "selection1": "Parent of main operator is no JoMRS"
     " operator main/sub node or operators root node",
     "get_attr": "attribute from main param list not on node.",
+    "get_comp_side": "Registered component side not valid",
 }
 
 ##########################################################
@@ -582,3 +583,113 @@ class create_component_operator(mainOperatorNode):
                     message="{} {}".format(param["name"], error_message),
                 )
         return result
+
+    def get_rig_name(self, root_node=None):
+        """
+        Get the rig name from root_node.
+        Args:
+                root_node(dagnode): The operators root node.
+        Return:
+                string: The rig name / if empty None.
+        """
+        if root_node is None:
+            root_node = self.op_root_nd
+        return root_node.attr(self.rigname_attr["name"]).get()
+
+    def get_op_root_tag(self, root_node=None):
+        """
+        Get the rig name from root_node.
+        Args:
+                root_node(dagnode): The operators root node.
+        Return:
+                True or False.
+        """
+        if root_node is None:
+            root_node = self.op_root_nd
+        return root_node.attr(self.mainop_attr["name"]).get()
+
+    def get_rig_control_colors(self, root_node=None):
+        """
+        Get the rig name from root_node.
+        Args:
+                root_node(dagnode): The operators root node.
+        Return:
+                list: Filled with dictonaries.
+                [{'attribute':attribute;'value':value}]
+        """
+        result = []
+        temp = [
+            self.l_ik_rig_color_attr,
+            self.l_ik_rig_sub_color_attr,
+            self.r_ik_rig_color_attr,
+            self.r_ik_rig_sub_color_attr,
+            self.m_ik_rig_color_attr,
+            self.m_ik_rig_sub_color_attr,
+        ]
+        if root_node is None:
+            root_node = self.op_root_nd
+        for attr_ in temp:
+            dic = {}
+            dic["name"] = attr_["name"]
+            dic["value"] = root_node.attr(attr_["name"]).get()
+            result.append(dic)
+        return result
+
+    def get_op_main_tag(self, main_node=None):
+        """
+        Get the op main tag value.
+        Args:
+                main_node(dagnode): Operators main node.
+        Return:
+                True or False.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        return main_node.attr(self.mainop_attr["name"]).get()
+
+    def get_component_name(self, main_node=None):
+        """
+        Get component name.
+        Args:
+                main_node(dagnode): Operators main node.
+        Return:
+                String or None
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        return main_node.attr(self.comp_name_attr["name"]).get()
+
+    def get_component_type(self, main_node=None):
+        """
+        Get component type.
+        Args:
+                main_node(dagnode): Operators main node.
+        Return:
+                String or None
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        return main_node.attr(self.comp_type_attr["name"]).get()
+
+    def get_component_side(
+        self, main_node=None, error_message=ERRORMESSAGE["get_comp_side"]
+    ):
+        """
+        Get component side.
+        Args:
+                main_node(dagnode): Operators main node.
+                error_message(str): Error if entry is not valid.
+        Return:
+                String or None
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        value = main_node.attr(self.comp_side_attr["name"]).get()
+        valid = ["L", "R", "M"]
+        if value in valid:
+            return value
+        else:
+            logger.log(
+                level="error", message=error_message, logger=module_logger
+            )
+            return
