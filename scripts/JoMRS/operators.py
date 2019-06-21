@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 20
+# Date:       2019 / 06 / 21
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -475,21 +475,21 @@ class create_component_operator(mainOperatorNode):
         self.result[0].message.connect(self.main_op_meta_nd.attr(attr_name))
 
     def get_sub_operators(
-        self, main_op=None, sub_metand_attr=SUBMETANODEATTRNAME
+        self, main_node=None, sub_metand_attr=SUBMETANODEATTRNAME
     ):
         """
         Get the sub operators of a main operator. Return empty list if no
         sub operator nodes exist.
         Args:
-                main_op(dagnode): If none will take the latest main op in
+                main_node(dagnode): If none will take the latest main op in
                 memory.
                 sub_metand_attr(str): Attribute name to search for meta
                 node.
         Return:
                 List: Dagnodes of found sub operators.
         """
-        if main_op:
-            metand = main_op.sub_operators.get()
+        if main_node:
+            metand = main_node.sub_operators.get()
         else:
             metand = self.main_operator_node[1].sub_operators.get()
         sub_node_attr = [
@@ -653,7 +653,7 @@ class create_component_operator(mainOperatorNode):
         Args:
                 main_node(dagnode): Operators main node.
         Return:
-                String or None
+                String or None.
         """
         if main_node is None:
             main_node = self.main_operator_node[1]
@@ -665,7 +665,7 @@ class create_component_operator(mainOperatorNode):
         Args:
                 main_node(dagnode): Operators main node.
         Return:
-                String or None
+                String or None.
         """
         if main_node is None:
             main_node = self.main_operator_node[1]
@@ -680,7 +680,7 @@ class create_component_operator(mainOperatorNode):
                 main_node(dagnode): Operators main node.
                 error_message(str): Error if entry is not valid.
         Return:
-                String or None
+                String or None.
         """
         if main_node is None:
             main_node = self.main_operator_node[1]
@@ -693,3 +693,49 @@ class create_component_operator(mainOperatorNode):
                 level="error", message=error_message, logger=module_logger
             )
             return
+
+    def get_component_index(self, main_node=None):
+        """
+        Get component index.
+        Args:
+                main_node(dagnode): Operators main node.
+        Return:
+                Integer.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        return int(main_node.attr(self.comp_index_attr["name"]).get())
+
+    def get_connector(self, main_node=None):
+        """
+        Get component index.
+        Args:
+                main_node(dagnode): Operators main node.
+        Return:
+                String or None.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        return main_node.attr(self.connector_attr["name"]).get()
+
+    def get_sub_operators_connector(self, main_node=None, sub_operators=None):
+        """
+        Get the rig name from root_node.
+        Args:
+                main_node(dagnode): Operators main node.
+                sub_operators(list): Filled with dagnodes.
+        Return:
+                list: Filled with dictonaries.
+                [{'dagnode':suboperator;'connector':string or none}]
+        """
+        result = []
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        if sub_operators is None:
+            sub_operators = self.get_sub_operators(main_node=main_node)
+        for sub in sub_operators:
+            dic = {}
+            dic["dagnode"] = sub
+            dic["connector"] = sub.attr(self.connector_attr['name']).get()
+            result.append(dic)
+        return result
