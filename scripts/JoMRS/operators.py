@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 21
+# Date:       2019 / 06 / 22
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -68,8 +68,6 @@ ERRORMESSAGE = {
 ##########################################################
 # CLASSES
 # To Do:
-# - give methods. for example: give all sub nodes or
-#   all main nodes. Give all attributes.
 # - increase performance
 ##########################################################
 
@@ -85,7 +83,7 @@ class OperatorsRootNode(object):
         Args:
                 op_root_tag_name(str): Tag name.
         """
-        self.mainop_attr = {
+        self.root_op_attr = {
             "name": op_root_tag_name,
             "attrType": "bool",
             "keyable": False,
@@ -160,7 +158,7 @@ class OperatorsRootNode(object):
         }
 
         self.root_node_param_list = [
-            self.mainop_attr,
+            self.root_op_attr,
             self.rigname_attr,
             self.l_ik_rig_color_attr,
             self.l_ik_rig_sub_color_attr,
@@ -227,7 +225,7 @@ class mainOperatorNode(OperatorsRootNode):
                     level="error", message=error_message, logger=module_logger
                 )
 
-        self.mainop_attr = {
+        self.main_op_attr = {
             "name": op_main_tag_name,
             "attrType": "bool",
             "keyable": False,
@@ -278,7 +276,7 @@ class mainOperatorNode(OperatorsRootNode):
         }
 
         self.main_node_param_list = [
-            self.mainop_attr,
+            self.main_op_attr,
             self.comp_name_attr,
             self.comp_type_attr,
             self.comp_side_attr,
@@ -606,7 +604,7 @@ class create_component_operator(mainOperatorNode):
         """
         if root_node is None:
             root_node = self.op_root_nd
-        return root_node.attr(self.mainop_attr["name"]).get()
+        return root_node.attr(self.root_op_attr["name"]).get()
 
     def get_rig_control_colors(self, root_node=None):
         """
@@ -645,7 +643,7 @@ class create_component_operator(mainOperatorNode):
         """
         if main_node is None:
             main_node = self.main_operator_node[1]
-        return main_node.attr(self.mainop_attr["name"]).get()
+        return main_node.attr(self.main_op_attr["name"]).get()
 
     def get_component_name(self, main_node=None):
         """
@@ -736,6 +734,77 @@ class create_component_operator(mainOperatorNode):
         for sub in sub_operators:
             dic = {}
             dic["dagnode"] = sub
-            dic["connector"] = sub.attr(self.connector_attr['name']).get()
+            dic["connector"] = sub.attr(self.connector_attr["name"]).get()
             result.append(dic)
         return result
+
+    def set_rig_name(self, name, root_node=None):
+        """
+        Get the rig name from root_node.
+        Args:
+                name(str): The rig name.
+                root_node(dagnode): The operators root node.
+        """
+        if root_node is None:
+            root_node = self.op_root_nd
+        root_node.attr(self.rigname_attr["name"]).set(name)
+
+    def set_op_root_tag(self, value, root_node=None):
+        """
+        Enabel / Disable op root tag..
+        Args:
+                value(bool): Enable / Disable.
+                root_node(dagnode): The operators root node.
+        """
+        if root_node is None:
+            root_node = self.op_root_nd
+        root_node.attr(self.root_op_attr["name"]).set(value)
+
+    def set_rig_control_colors(
+        self,
+        l_ik_rig,
+        l_ik_rig_sub,
+        r_ik_rig,
+        r_ik_rig_sub,
+        m_ik_rig,
+        m_ik_rig_sub,
+        root_node=None,
+    ):
+        """
+        Set rig control colors.
+        Valid is:
+        0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
+        6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
+        11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
+        16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
+        21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
+        25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
+        Args:
+                l_ik_rig(int): Value.
+                l_ik_rig_sub(int): Value.
+                r_ik_rig(int): Value.
+                r_ik_rig_sub(int): Value.
+                m_ik_rig(int): Value.
+                m_ik_rig_sub(int): Value.
+                root_node(dagnode): The operators root node.
+        """
+        if root_node is None:
+            root_node = self.op_root_nd
+        if l_ik_rig:
+            root_node.attr(self.l_ik_rig_color_attr["name"]).set(l_ik_rig)
+        if l_ik_rig_sub:
+            root_node.attr(self.l_ik_rig_sub_color_attr["name"]).set(
+                l_ik_rig_sub
+            )
+        if r_ik_rig:
+            root_node.attr(self.r_ik_rig_color_attr["name"]).set(r_ik_rig)
+        if r_ik_rig_sub:
+            root_node.attr(self.r_ik_rig_sub_color_attr["name"]).set(
+                r_ik_rig_sub
+            )
+        if m_ik_rig:
+            root_node.attr(self.m_ik_rig_color_attr["name"]).set(m_ik_rig)
+        if m_ik_rig_sub:
+            root_node.attr(self.m_ik_rig_sub_color_attr["name"]).set(
+                m_ik_rig_sub
+            )
