@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 22
+# Date:       2019 / 06 / 23
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -63,12 +63,17 @@ ERRORMESSAGE = {
     " operator main/sub node or operators root node",
     "get_attr": "attribute from main param list not on node.",
     "get_comp_side": "Registered component side not valid",
+    "set_comp_side": "Selected side not valid",
 }
 
 ##########################################################
 # CLASSES
 # To Do:
-# - increase performance
+# - Increase performance
+# - Refactor to make it more pythonic
+# - Lock all rotate of LRA control. Except rotateX.
+# - Add input / output attr and spaces attribute.
+# - Define connections type attribute.
 ##########################################################
 
 
@@ -268,8 +273,8 @@ class mainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
-        self.connector_attr = {
-            "name": "connector",
+        self.connection_type_attr = {
+            "name": "connection_type",
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
@@ -282,7 +287,7 @@ class mainOperatorNode(OperatorsRootNode):
             self.comp_side_attr,
             self.comp_index_attr,
             self.sub_operators_attr,
-            self.connector_attr,
+            self.connection_type_attr,
         ]
 
     def construct_node(
@@ -348,8 +353,8 @@ class create_component_operator(mainOperatorNode):
     def __init__(self, sub_tag_name=OPSUBTAGNAME):
         super(create_component_operator, self).__init__()
 
-        self.connector_attr = {
-            "name": "connector",
+        self.connection_type_attr = {
+            "name": "connection_type",
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
@@ -361,7 +366,7 @@ class create_component_operator(mainOperatorNode):
             "defaultValue": 1,
         }
 
-        self.sub_node_param_list = [self.sub_tag_attr, self.connector_attr]
+        self.sub_node_param_list = [self.sub_tag_attr, self.connection_type_attr]
 
     def build_node(
         self,
@@ -704,7 +709,7 @@ class create_component_operator(mainOperatorNode):
             main_node = self.main_operator_node[1]
         return int(main_node.attr(self.comp_index_attr["name"]).get())
 
-    def get_connector(self, main_node=None):
+    def get_connection_type(self, main_node=None):
         """
         Get component index.
         Args:
@@ -714,11 +719,12 @@ class create_component_operator(mainOperatorNode):
         """
         if main_node is None:
             main_node = self.main_operator_node[1]
-        return main_node.attr(self.connector_attr["name"]).get()
+        return main_node.attr(self.connection_type_attr["name"]).get()
 
-    def get_sub_operators_connector(self, main_node=None, sub_operators=None):
+    def get_sub_operators_connection_type(self, main_node=None,
+                                      sub_operators=None):
         """
-        Get the rig name from root_node.
+        Get connection type form sub operators.
         Args:
                 main_node(dagnode): Operators main node.
                 sub_operators(list): Filled with dagnodes.
@@ -734,7 +740,7 @@ class create_component_operator(mainOperatorNode):
         for sub in sub_operators:
             dic = {}
             dic["dagnode"] = sub
-            dic["connector"] = sub.attr(self.connector_attr["name"]).get()
+            dic["connector"] = sub.attr(self.connection_type_attr["name"]).get()
             result.append(dic)
         return result
 
@@ -751,7 +757,7 @@ class create_component_operator(mainOperatorNode):
 
     def set_op_root_tag(self, value, root_node=None):
         """
-        Enabel / Disable op root tag..
+        Enabel / Disable op root tag.
         Args:
                 value(bool): Enable / Disable.
                 root_node(dagnode): The operators root node.
@@ -762,12 +768,12 @@ class create_component_operator(mainOperatorNode):
 
     def set_rig_control_colors(
         self,
-        l_ik_rig,
-        l_ik_rig_sub,
-        r_ik_rig,
-        r_ik_rig_sub,
-        m_ik_rig,
-        m_ik_rig_sub,
+        l_ik_rig=None,
+        l_ik_rig_sub=None,
+        r_ik_rig=None,
+        r_ik_rig_sub=None,
+        m_ik_rig=None,
+        m_ik_rig_sub=None,
         root_node=None,
     ):
         """
@@ -808,3 +814,89 @@ class create_component_operator(mainOperatorNode):
             root_node.attr(self.m_ik_rig_sub_color_attr["name"]).set(
                 m_ik_rig_sub
             )
+
+    def set_op_main_tag(self, value, main_node=None):
+        """
+        Disable / Enable the op main tag.
+        Args:
+                value(bool): Enable/Disable.
+                main_node(dagnode): Operators main node.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        main_node.attr(self.main_op_attr["name"]).set(value)
+
+    def set_component_name(self, name, main_node=None):
+        """
+        Set component name.
+        Args:
+                name(str): Component name.
+                main_node(dagnode): Operators main node.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        main_node.attr(self.comp_name_attr["name"]).set(name)
+
+    def set_component_type(self, type, main_node=None):
+        """
+        Set component type.
+        Args:
+                type(str): Specifie the component.
+                main_node(dagnode): Operators main node.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        main_node.attr(self.comp_type_attr["name"]).set(type)
+
+    def set_component_side(
+        self, side, main_node=None, error_message=ERRORMESSAGE["set_comp_side"]
+    ):
+        """
+        Set component side.
+        Args:
+                side(str): Valid is L,R,M.
+                main_node(dagnode): Operators main node.
+                error_message(str): Error if side is not valid.
+        """
+        valid = ["L", "R", "M"]
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        if side in valid:
+            main_node.attr(self.comp_side_attr["name"]).set(side)
+        else:
+            logger.log(
+                level="error", message=error_message, logger=module_logger
+            )
+            return
+
+    def set_component_index(self, index, main_node=None):
+        """
+        Set component index.
+        Args:
+                index(int): The index.
+                main_node(dagnode): Operators main node.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        main_node.attr(self.comp_index_attr["name"]).set(index)
+
+    def set_connection_type(self, type, main_node=None):
+        """
+        Set component index.
+        Args:
+                type(str): Connection type.
+                main_node(dagnode): Operators main node.
+        """
+        if main_node is None:
+            main_node = self.main_operator_node[1]
+        main_node.attr(self.connection_type_attr["name"]).set(type)
+
+    def set_sub_operators_connection_type(self, type, sub_operators=None):
+        """
+        Set connection type for sub operator.
+        Args:
+                type(str): The connection type for the sub_operators.
+                sub_operators(list): Sub operators dagnode list.
+        """
+        for sub in sub_operators:
+            sub.attr(self.connection_type_attr["name"]).set(type)
