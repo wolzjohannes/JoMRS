@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 23
+# Date:       2019 / 06 / 25
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -57,6 +57,7 @@ DEFAULTSUBOPERATORSCOUNT = 1
 DEFAULTAXES = "X"
 DEFAULTSPACING = 10
 DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
+CONNECTIONTYPES = ('translate','rotate','scale')
 ERRORMESSAGE = {
     "selection": "More then one parent not allowed",
     "selection1": "Parent of main operator is no JoMRS"
@@ -69,10 +70,8 @@ ERRORMESSAGE = {
 ##########################################################
 # CLASSES
 # To Do:
-# - Increase performance
-# - Refactor to make it more pythonic
+# - Refactor to make it more pythonic.
 # - Lock all rotate of LRA control. Except rotateX.
-# - Add input / output attr and spaces attribute.
 # - Define connections type attribute.
 ##########################################################
 
@@ -280,6 +279,34 @@ class mainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
+        # self.connection_type_attr = {
+        #     "name": "connection_type",
+        #     "enum": CONNECTIONTYPES
+        #     "keyable": False,
+        #     "channelBox": False,
+        # }
+
+        self.ik_spaces_ref_attr = {
+            "name": "ik_spaces_ref",
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False
+        }
+
+        self.fk_spaces_ref_attr = {
+            "name": "fk_spaces_ref",
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False
+        }
+
+        self.ik_pvec_spaces_ref_attr = {
+            "name": "ik_pvec_spaces_ref",
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False
+        }
+
         self.main_node_param_list = [
             self.main_op_attr,
             self.comp_name_attr,
@@ -288,6 +315,9 @@ class mainOperatorNode(OperatorsRootNode):
             self.comp_index_attr,
             self.sub_operators_attr,
             self.connection_type_attr,
+            self.ik_spaces_ref_attr,
+            self.fk_spaces_ref_attr,
+            self.ik_pvec_spaces_ref_attr,
         ]
 
     def construct_node(
@@ -326,6 +356,7 @@ class mainOperatorNode(OperatorsRootNode):
         )
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
+        # attributes.add_enum_attribute(**self.connection_type_attr)
         self.op_root_nd.addChild(self.main_op_nd[0])
         self.main_op_nd[1].component_side.set(side)
         self.main_op_nd[1].component_index.set(index)
@@ -359,6 +390,7 @@ class create_component_operator(mainOperatorNode):
             "keyable": False,
             "channelBox": False,
         }
+
         self.sub_tag_attr = {
             "name": sub_tag_name,
             "attrType": "bool",
