@@ -741,7 +741,7 @@ class create_component_operator(mainOperatorNode):
             main_node = self.main_operator_node[1]
         return int(main_node.attr(self.comp_index_attr["name"]).get())
 
-    def get_connection_type(self, main_node=None):
+    def get_main_operator_connection_type(self, main_node=None):
         """
         Get component index.
         Args:
