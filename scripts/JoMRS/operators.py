@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 25
+# Date:       2019 / 06 / 26
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -57,7 +57,7 @@ DEFAULTSUBOPERATORSCOUNT = 1
 DEFAULTAXES = "X"
 DEFAULTSPACING = 10
 DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
-CONNECTIONTYPES = ('translate','rotate','scale')
+DEFAULTCONNECTIONTYPES = "translate;rotate;scale"
 ERRORMESSAGE = {
     "selection": "More then one parent not allowed",
     "selection1": "Parent of main operator is no JoMRS"
@@ -72,7 +72,6 @@ ERRORMESSAGE = {
 # To Do:
 # - Refactor to make it more pythonic.
 # - Lock all rotate of LRA control. Except rotateX.
-# - Define connections type attribute.
 ##########################################################
 
 
@@ -174,7 +173,7 @@ class OperatorsRootNode(object):
         ]
 
     def create_node(
-        self, op_root_name=OPROOTNAME, main_meta_nd_name=MAINMETANODENAME
+        self, op_root_name=OPROOTNAME, main_meta_nd_name=MAINMETANODENAME,
     ):
         """
         Execute the operators root/god node creation.
@@ -204,6 +203,7 @@ class mainOperatorNode(OperatorsRootNode):
         op_root_tag_name=OPROOTTAGNAME,
         sub_tag_name=OPSUBTAGNAME,
         error_message=ERRORMESSAGE["selection1"],
+        connection_types=DEFAULTCONNECTIONTYPES,
     ):
         """
         Init the user defined attributes
@@ -212,6 +212,7 @@ class mainOperatorNode(OperatorsRootNode):
                 op_root_tag_name(str): Tag name.
                 sub_tag_name(str): Tag name.
                 error_message(str): User feedback message.
+                connection_types(str): Connection type attr default value.
         """
         super(mainOperatorNode, self).__init__()
 
@@ -277,14 +278,8 @@ class mainOperatorNode(OperatorsRootNode):
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
+            "value": connection_types
         }
-
-        # self.connection_type_attr = {
-        #     "name": "connection_type",
-        #     "enum": CONNECTIONTYPES
-        #     "keyable": False,
-        #     "channelBox": False,
-        # }
 
         self.ik_spaces_ref_attr = {
             "name": "ik_spaces_ref",
@@ -356,7 +351,6 @@ class mainOperatorNode(OperatorsRootNode):
         )
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
-        # attributes.add_enum_attribute(**self.connection_type_attr)
         self.op_root_nd.addChild(self.main_op_nd[0])
         self.main_op_nd[1].component_side.set(side)
         self.main_op_nd[1].component_index.set(index)
@@ -379,9 +373,11 @@ class create_component_operator(mainOperatorNode):
     Create the whole component operator.
     Args:
             sub_tag_name(str): Tag name.
+            connection_types(str): Connection type attr default value.
     """
 
-    def __init__(self, sub_tag_name=OPSUBTAGNAME):
+    def __init__(self, sub_tag_name=OPSUBTAGNAME,
+                 connection_types=DEFAULTCONNECTIONTYPES):
         super(create_component_operator, self).__init__()
 
         self.connection_type_attr = {
@@ -389,6 +385,7 @@ class create_component_operator(mainOperatorNode):
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
+            "value": connection_types
         }
 
         self.sub_tag_attr = {
