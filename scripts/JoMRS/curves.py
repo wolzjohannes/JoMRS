@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 05
+# Date:       2019 / 06 / 26
 
 """
 JoMRS nurbsCurve modification module.
@@ -62,10 +62,10 @@ class ControlCurves(object):
         color_index=17,
         buffer_grp=True,
         child=None,
-        translate_channel=True,
-        rotate_channel=True,
-        scale_channel=True,
-        visibility_channel=True,
+        lock_translate=False,
+        lock_rotate=False,
+        lock_scale=False,
+        lock_visibility=False,
     ):
         """
         Create curve method.
@@ -85,10 +85,10 @@ class ControlCurves(object):
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
             buffer_grp(bool): Create buffer_grp for the control.
             child(dagnode): The child of the control.
-            translate_channel(bool): Lock/Hide the translate channels.
-            rotate_channel(bool): Lock/Hide the rotate channels.
-            scale_channel(bool): Lock/Hide the scale channels.
-            visibility_channel(bool): Lock/Hide the visibility channels.
+            lock_translate(list): Valid is ['tx','ty','tz']
+            lock_rotate(list): Valid is ['rx,'ry','rz']
+            lock_scale(list): Valid is ['sx','sy','sz']
+            lock_visibility(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the control curve node.
         """
@@ -112,21 +112,21 @@ class ControlCurves(object):
             result.append(buffer_)
         if child:
             self.control.addChild(child)
-        if translate_channel is False:
+        if lock_translate:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=["tx", "ty", "tz"]
+                self.control, attributes=lock_translate
             )
-        if rotate_channel is False:
+        if lock_rotate:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=["rx", "ry", "rz"]
+                self.control, attributes=lock_rotate
             )
-        if scale_channel is False:
+        if lock_scale:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=["sx", "sy", "sz"]
+                self.control, attributes=lock_scale
             )
-        if visibility_channel is False:
+        if lock_visibility:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=["visibility"]
+                self.control, attributes='visibility'
             )
         result.append(self.control)
         return result
@@ -1587,10 +1587,10 @@ class RotateAxesControl:
         match=None,
         scale=None,
         buffer_grp=True,
-        translate_channel=True,
-        rotate_channel=True,
-        scale_channel=True,
-        visibility_channel=True,
+        lock_translate=False,
+        lock_rotate=False,
+        lock_scale=False,
+        lock_visibility=False,
     ):
         """
         Creates LRA Control Curve. By Default with a buffer group.
@@ -1601,10 +1601,10 @@ class RotateAxesControl:
             match(dagnode): The node for transform match.
             scale(list): The scale values.
             buffer_grp(bool): Create bufferGRP for the control.
-            translate_channel(bool): Lock/Hide the translate channels.
-            rotate_channel(bool): Lock/Hide the rotate channels.
-            scale_channel(bool): Lock/Hide the scale channels.
-            visibility_channel(bool): Lock/Hide the visibility channels.
+            lock_translate(list): Valid is ['tx','ty','tz']
+            lock_rotate(list): Valid is ['rx,'ry','rz']
+            lock_scale(list): Valid is ['sx','sy','sz']
+            lock_visibility(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the Control Curve node.
         """
@@ -1635,11 +1635,11 @@ class RotateAxesControl:
             buffer_grp=buffer_grp,
             scale=scale,
             color_index=13,
-            translate_channel=translate_channel,
-            rotate_channel=rotate_channel,
-            scale_channel=scale_channel,
-            visibility_channel=visibility_channel,
-        )[-1]
+            lock_translate=lock_translate,
+            lock_rotate=lock_rotate,
+            lock_scale=lock_scale,
+            lock_visibility=lock_visibility,
+        )
         arrow1 = SingleArrowThinControl().create_curve(
             name=name, match=match, buffer_grp=False, scale=scale, color_index=6
         )[0]
@@ -1651,9 +1651,12 @@ class RotateAxesControl:
             color_index=14,
         )[0]
         for v in arrowValue0:
-            arrow0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
-            arrow0.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
-            arrow0.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
+            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(v[
+                                                                      "value"][0])
+            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(v[
+                                                                      "value"][1])
+            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(v[
+                                                                      "value"][2])
         for v in arrowValue1:
             arrow1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
             arrow1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
@@ -1662,8 +1665,8 @@ class RotateAxesControl:
             arrow2.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
             arrow2.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
             arrow2.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
-        pmc.parent(arrow1.getShape(), arrow0, r=True, shape=True)
-        pmc.parent(arrow2.getShape(), arrow0, r=True, shape=True)
+        pmc.parent(arrow1.getShape(), arrow0[-1], r=True, shape=True)
+        pmc.parent(arrow2.getShape(), arrow0[-1], r=True, shape=True)
         pmc.delete(arrow1, arrow2)
         return arrow0
 
@@ -1681,10 +1684,10 @@ class DiamondControl:
         color_index=17,
         local_rotate_axes=True,
         buffer_grp=True,
-        translate_channel=True,
-        rotate_channel=True,
-        scale_channel=True,
-        visibility_channel=True,
+        lock_translate=False,
+        lock_rotate=False,
+        lock_scale=False,
+        lock_visibility=False,
     ):
         """
         Creates Diamond Control Curve. By Default with a buffer group.
@@ -1704,10 +1707,10 @@ class DiamondControl:
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
             buffer_grp(bool): Create buffer_grp for the control.
-            translate_channel(bool): Lock/Hide the translate channels.
-            rotate_channel(bool): Lock/Hide the rotate channels.
-            scale_channel(bool): Lock/Hide the scale channels.
-            visibility_channel(bool): Lock/Hide the visibility channels.
+            lock_translate(list): Valid is ['tx','ty','tz']
+            lock_rotate(list): Valid is ['rx,'ry','rz']
+            lock_scale(list): Valid is ['sx','sy','sz']
+            lock_visibility(bool): Lock/Hide the visibility channels.
         Return:
                 list: The buffer group, the Control Curve node.
         """
@@ -1718,10 +1721,10 @@ class DiamondControl:
             scale=scale,
             match=match,
             color_index=color_index,
-            translate_channel=translate_channel,
-            rotate_channel=rotate_channel,
-            scale_channel=scale_channel,
-            visibility_channel=visibility_channel,
+            lock_translate=lock_translate,
+            lock_rotate=lock_rotate,
+            lock_scale=lock_scale,
+            lock_visibility=lock_visibility,
         )
         spear1 = SpearControl1().create_curve(
             name=name,
@@ -1748,12 +1751,13 @@ class DiamondControl:
             rotate_axes_con = instance.create_curve(
                 name=axes_name,
                 scale=scale,
-                buffer_grp=False,
-                translate_channel=False,
-                scale_channel=False,
+                buffer_grp=True,
+                lock_translate=['tx','ty','tz'],
+                lock_scale=['sx','sy','sz'],
+                lock_rotate=['ry','rz']
             )
-            spear0[-1].addChild(rotate_axes_con)
-            rotate_axes_con.rotate.set(0, 0, 0)
+            spear0[-1].addChild(rotate_axes_con[0])
+            rotate_axes_con[0].rotate.set(0, 0, 0)
         return spear0
 
 

@@ -33,7 +33,7 @@ import logger
 import attributes
 import curves
 import mayautils
-
+reload(curves)
 ##########################################################
 # GLOBALS
 ##########################################################
