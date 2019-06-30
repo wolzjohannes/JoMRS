@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 01
+# Date:       2019 / 06 / 26
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -120,7 +120,7 @@ def add_attr(
     if lock:
         node.attr(name).set(lock=True)
     if value:
-        node.attr(value).set(value)
+        node.attr(name).set(value)
     if input:
         pmc.PyNode(input).connect(node.attr(name))
     if output:
