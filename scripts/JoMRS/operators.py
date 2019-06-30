@@ -70,7 +70,7 @@ ERRORMESSAGE = {
 # CLASSES
 # To Do:
 # - Refactor to make it more pythonic.
-# - Lock all rotate of LRA control. Except rotateX.
+# - Add aim constraint to LRA control.
 ##########################################################
 
 
