@@ -28,8 +28,9 @@ Meta creation module.
 ##########################################################
 # GLOBALS
 #########################################################
-TAG = 'node_type'
 NODEID = 'meta_node'
+TYPE = 'meta_name'
+BASETYPE = 'meta_class'
 ##########################################################
 # CLASSES
 ##########################################################
@@ -39,44 +40,55 @@ import pymel.core as pmc
 from pymel.internal.factories import virtualClasses
 
 class MetaClass(pmc.nt.Network):
-    """ this is an example of how to create your own subdivisions of existing nodes. """
+    """
+    Creates a network node which works as MetaClass node.
+    """
     @classmethod
     def list(cls,*args,**kwargs):
-        """ Returns all instances the node in the scene """
+        """
+        Returns all instances of the meta class notes in the scene.
+        """
 
         kwargs['type'] = cls.__melnode__
         return [ node for node in pmc.ls(*args,**kwargs) if isinstance(node,
                                                                        cls)]
     @classmethod
-    def _isVirtual( cls, obj, name, tag=TAG, tag_string=NODEID):
-        """PyMEL code should not be used inside the callback, only API and maya.cmds. """
+    def _isVirtual( cls, obj, name, tag=NODEID):
+        """"
+        This actual creates the node. If a specific tag is found.
+        If not it will create a default node.
+        PyMEL code should not be used inside the callback,
+        only API and maya.cmds.
+        """
         fn = pmc.api.MFnDependencyNode(obj)
         try:
             if fn.hasAttribute(tag):
                 plug = fn.findPlug(tag)
-                if plug.asString() == tag_string:
+                if plug.asBool() == 1:
                     return True
-                return False
+                return True
         except:
             pass
         return False
 
     @classmethod
     def _preCreateVirtual(cls, **kwargs):
-        """This is called before creation. python allowed."""
+        """
+        This is called before creation. Python allowed.
+        """
         return kwargs
 
     @classmethod
-    def _postCreateVirtual(cls, newNode, tag=TAG, tag_string=NODEID):
-        """ This is called before creation, pymel/cmds allowed."""
-        newNode.addAttr('myName', dt='string')
-
-        newNode.addAttr(tag, dt='string')
-        newNode.attr(tag).set(tag_string)
-
-        newNode.addAttr('myFloat', at='float')
-        newNode.myFloat.set(.125)
-
-        newNode.addAttr('myConnection', at='message')
+    def _postCreateVirtual(cls, newNode, tag=NODEID,
+                           type=TYPE, type_name=BASETYPE):
+        """
+        This is called after creation, pymel/cmds allowed.
+        It will create a set of attributes. And the important check up tag for
+        the meta node.
+        """
+        newNode.addAttr(tag, at='bool')
+        newNode.attr(tag).set(1)
+        newNode.addAttr(type, dt='string')
+        newNode.attr(type).set(type_name)
 
 virtualClasses.register( MetaClass, nameRequired=False )
