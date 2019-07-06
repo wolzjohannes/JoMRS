@@ -25,19 +25,22 @@
 """
 Meta creation module.
 """
+import pymel.core as pmc
+import strings
+from pymel.internal.factories import virtualClasses
+import logging
+
 ##########################################################
 # GLOBALS
 #########################################################
+module_logger = logging.getLogger(__name__ + ".py")
 NODEID = 'meta_node'
 TYPE = 'meta_name'
 BASETYPE = 'meta_class'
+TYPEA = 'god_operator_meta_class'
 ##########################################################
 # CLASSES
 ##########################################################
-
-
-import pymel.core as pmc
-from pymel.internal.factories import virtualClasses
 
 class MetaClass(pmc.nt.Network):
     """
@@ -86,9 +89,56 @@ class MetaClass(pmc.nt.Network):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         """
+        name = strings.string_checkup(newNode.name() + '_METAND',
+                                      logger_=module_logger)
+        newNode.rename(name)
         newNode.addAttr(tag, at='bool')
         newNode.attr(tag).set(1)
         newNode.addAttr(type, dt='string')
         newNode.attr(type).set(type_name)
 
+class GodOpMetaNode(MetaClass):
+    """
+    Creates a network node which works as MetaClass node.
+    """
+    @classmethod
+    def list(cls,*args,**kwargs):
+        """
+        Returns all instances of the meta class notes in the scene.
+        """
+
+        kwargs['type'] = cls.__melnode__
+        return [ node for node in pmc.ls(*args,**kwargs) if isinstance(node,
+                                                                       cls)]
+    @classmethod
+    def _isVirtual( cls, obj, name, tag=NODEID, type=TYPE ,
+                    class_type=TYPEA):
+        """"
+        This actual creates the node. If a specific tag is found.
+        If not it will create a default node.
+        PyMEL code should not be used inside the callback,
+        only API and maya.cmds.
+        """
+        fn = pmc.api.MFnDependencyNode(obj)
+        try:
+            if fn.hasAttribute(tag):
+                plug = fn.findPlug(tag)
+                if plug.asBool() == 1:
+                    if fn.hasAttribute(type):
+                        plug1 = fn.findPlug(type)
+                        if plug1.asString() == class_type:
+                            return True
+                return True
+        except:
+            pass
+        return False
+
+    @classmethod
+    def _postCreateVirtual(cls, newNode, type=TYPE, class_type=TYPEA ):
+        """ This is called before creation, pymel/cmds allowed."""
+        MetaClass._postCreateVirtual(newNode)
+        newNode.attr(type).set(class_type)
+
+
 virtualClasses.register( MetaClass, nameRequired=False )
+virtualClasses.register( GodOpMetaNode, nameRequired=False)
