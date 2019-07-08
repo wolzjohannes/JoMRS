@@ -27,6 +27,7 @@ Meta creation module.
 """
 import pymel.all as pm
 import logging
+import attributes
 
 ##########################################################
 # GLOBALS
@@ -94,7 +95,7 @@ class MetaNode(pm.nt.Network):
 
 class GodOpMetaNode(MetaNode):
     """
-    Creates a network node which works as MetaNode node.
+    Creates a Meta Node as God Meta Node for all operators meta nodes.
     """
     SUBNODE_TYPE = TYPEA
 
@@ -133,6 +134,88 @@ class GodOpMetaNode(MetaNode):
         """ This is called before creation, pymel/cmds allowed."""
         MetaNode._postCreateVirtual(newNode)
         newNode.attr(type).set(cls.SUBNODE_TYPE)
+
+        rigname_attr = {
+            "name": "rig_name",
+            "attrType": "string",
+            "keyable": False,
+        }
+
+        l_ik_rig_color_attr = {
+            "name": "l_ik_rig_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 13,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        l_ik_rig_sub_color_attr = {
+            "name": "l_ik_rig_sub_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 18,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        r_ik_rig_color_attr = {
+            "name": "r_ik_rig_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 6,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        r_ik_rig_sub_color_attr = {
+            "name": "r_ik_rig_sub_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 9,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        m_ik_rig_color_attr = {
+            "name": "m_ik_rig_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 17,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        m_ik_rig_sub_color_attr = {
+            "name": "m_ik_rig_sub_color",
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 11,
+            "minValue": 0,
+            "maxValue": 31,
+        }
+
+        main_op_nodes_attr = {
+            "name": "main_op_nodes",
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        root_node_param_list = [
+            rigname_attr,
+            l_ik_rig_color_attr,
+            l_ik_rig_sub_color_attr,
+            r_ik_rig_color_attr,
+            r_ik_rig_sub_color_attr,
+            m_ik_rig_color_attr,
+            m_ik_rig_sub_color_attr,
+            main_op_nodes_attr,
+        ]
+        for attr_ in root_node_param_list:
+            attributes.add_attr(node=newNode, **attr_)
+
+
 
 pm.factories.registerVirtualClass( MetaNode, nameRequired=False )
 pm.factories.registerVirtualClass( GodOpMetaNode, nameRequired=False )
