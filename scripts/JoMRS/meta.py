@@ -25,9 +25,10 @@
 """
 Meta creation module.
 """
-import pymel.all as pm
+import pymel.all as pmc
 import logging
 import attributes
+import re
 
 ##########################################################
 # GLOBALS
@@ -36,13 +37,14 @@ module_logger = logging.getLogger(__name__ + ".py")
 NODEID = 'meta_node'
 TYPE = 'meta_name'
 BASETYPE = 'meta_class'
+GODTYPE = 'god_meta_class'
 TYPEA = 'god_operator_meta_class'
 ##########################################################
 # CLASSES
 ##########################################################
 
 
-class MetaNode(pm.nt.Network):
+class MetaNode(pmc.nt.Network):
     """
     Creates a network node which works as MetaNode node.
     """
@@ -52,7 +54,7 @@ class MetaNode(pm.nt.Network):
         """ Returns all instances the node in the scene """
 
         kwargs['type'] = cls.__melnode__
-        return [node for node in pm.ls(*args, **kwargs) if
+        return [node for node in pmc.ls(*args, **kwargs) if
                 isinstance(node, cls)]
 
     @classmethod
@@ -63,7 +65,7 @@ class MetaNode(pm.nt.Network):
         PyMEL code should not be used inside the callback,
         only API and maya.cmds.
         """
-        fn = pm.api.MFnDependencyNode(obj)
+        fn = pmc.api.MFnDependencyNode(obj)
         try:
             if fn.hasAttribute(tag):
                 plug = fn.findPlug(tag)
@@ -92,19 +94,19 @@ class MetaNode(pm.nt.Network):
         newNode.addAttr(type, dt='string')
         newNode.attr(type).set(class_type)
 
-
-class GodOpMetaNode(MetaNode):
+class GodMetaNode(MetaNode):
     """
     Creates a Meta Node as God Meta Node for all operators meta nodes.
     """
-    SUBNODE_TYPE = TYPEA
+    SUBNODE_TYPE = GODTYPE
+    METAND = []
 
     @classmethod
     def list(cls, *args, **kwargs):
         """ Returns all instances of all characters in the scene """
 
         kwargs['type'] = cls.__melnode__
-        return [node for node in pm.ls(*args, **kwargs) if
+        return [node for node in pmc.ls(*args, **kwargs) if
                 isinstance(node, cls)]
 
     @classmethod
@@ -115,7 +117,7 @@ class GodOpMetaNode(MetaNode):
         PyMEL code should not be used inside the callback,
         only API and maya.cmds.
         """
-        fn = pm.api.MFnDependencyNode(obj)
+        fn = pmc.api.MFnDependencyNode(obj)
         try:
             if fn.hasAttribute(tag):
                 plug = fn.findPlug(tag)
@@ -130,10 +132,73 @@ class GodOpMetaNode(MetaNode):
         return False
 
     @classmethod
-    def _postCreateVirtual(cls, newNode, type=TYPE):
+    def _postCreateVirtual(cls, newNode, type=TYPE, name='god_meta_0_METAND'):
         """ This is called before creation, pymel/cmds allowed."""
         MetaNode._postCreateVirtual(newNode)
         newNode.attr(type).set(cls.SUBNODE_TYPE)
+        newNode.rename(name)
+        cls.METAND.append(newNode)
+
+    def add_meta_node(self, node, metand=METAND, plug='meta_node'):
+        new_attribute = {}
+        ud_attr = metand[0].listAttr(ud=True)
+        meta_plug = [str(attr_) for attr_ in ud_attr if re.search(str(attr_),
+                                                                plug)]
+        if not meta_plug:
+            new_attribute["name"] = "{}_0".format(plug)
+            new_attribute["attrType"] = "message"
+            new_attribute["keyable"] = False
+            new_attribute["channelBox"] = False
+            new_attribute["input"] = node.message
+        attributes.add_attr(node=metand[0], **new_attribute)
+
+
+class GodOpMetaNode(MetaNode):
+    """
+    Creates a Meta Node as God Meta Node for all operators meta nodes.
+    """
+    SUBNODE_TYPE = TYPEA
+
+    @classmethod
+    def list(cls, *args, **kwargs):
+        """ Returns all instances of all characters in the scene """
+
+        kwargs['type'] = cls.__melnode__
+        return [node for node in pmc.ls(*args, **kwargs) if
+                isinstance(node, cls)]
+
+    @classmethod
+    def _isVirtual(cls, obj, name, tag=NODEID, type=TYPE):
+        """"
+        This actual creates the node. If a specific tag is found.
+        If not it will create a default node.
+        PyMEL code should not be used inside the callback,
+        only API and maya.cmds.
+        """
+        fn = pmc.api.MFnDependencyNode(obj)
+        try:
+            if fn.hasAttribute(tag):
+                plug = fn.findPlug(tag)
+                if plug.asBool() == 1:
+                    if fn.hasAttribute(type):
+                        plug = fn.findPlug(type)
+                        if plug.asString() == cls.SUBNODE_TYPE:
+                            return True
+                    return False
+        except:
+            pass
+        return False
+
+    @classmethod
+    def _postCreateVirtual(cls, newNode, type=TYPE, name='god_meta_0_METAND'):
+        """ This is called before creation, pymel/cmds allowed."""
+        MetaNode._postCreateVirtual(newNode)
+        try:
+            god_mata_nd = pmc.PyNode(name)
+        except:
+            god_mata_nd = GodMetaNode()
+        newNode.attr(type).set(cls.SUBNODE_TYPE)
+        god_mata_nd.add_meta_node(node=newNode)
 
         rigname_attr = {
             "name": "rig_name",
@@ -217,5 +282,6 @@ class GodOpMetaNode(MetaNode):
 
 
 
-pm.factories.registerVirtualClass( MetaNode, nameRequired=False )
-pm.factories.registerVirtualClass( GodOpMetaNode, nameRequired=False )
+pmc.factories.registerVirtualClass( MetaNode, nameRequired=False )
+pmc.factories.registerVirtualClass( GodMetaNode, nameRequired=False )
+pmc.factories.registerVirtualClass( GodOpMetaNode, nameRequired=False )
