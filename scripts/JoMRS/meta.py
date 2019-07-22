@@ -99,7 +99,6 @@ class GodMetaNode(MetaNode):
     Creates a Meta Node as God Meta Node for all operators meta nodes.
     """
     SUBNODE_TYPE = GODTYPE
-    METAND = []
 
     @classmethod
     def list(cls, *args, **kwargs):
@@ -137,20 +136,21 @@ class GodMetaNode(MetaNode):
         MetaNode._postCreateVirtual(newNode)
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         newNode.rename(name)
-        cls.METAND.append(newNode)
 
-    def add_meta_node(self, node, metand=METAND, plug='meta_node'):
+    def add_meta_node(self, node, metand, plug='meta_nd'):
         new_attribute = {}
-        ud_attr = metand[0].listAttr(ud=True)
-        meta_plug = [str(attr_) for attr_ in ud_attr if re.search(str(attr_),
-                                                                plug)]
+        print metand
+        ud_attr = metand.listAttr(ud=True)
+        ud_attr = [str(attr_).split('.')[1] for attr_ in ud_attr]
+        meta_plug = [attr_ for attr_ in ud_attr if re.search(attr_, plug)]
+        print ud_attr, meta_plug
         if not meta_plug:
             new_attribute["name"] = "{}_0".format(plug)
-            new_attribute["attrType"] = "message"
-            new_attribute["keyable"] = False
-            new_attribute["channelBox"] = False
-            new_attribute["input"] = node.message
-        attributes.add_attr(node=metand[0], **new_attribute)
+        new_attribute["attrType"] = "message"
+        new_attribute["keyable"] = False
+        new_attribute["channelBox"] = False
+        new_attribute["input"] = node.message
+        attributes.add_attr(node=metand, **new_attribute)
 
 
 class GodOpMetaNode(MetaNode):
@@ -198,7 +198,7 @@ class GodOpMetaNode(MetaNode):
         except:
             god_mata_nd = GodMetaNode()
         newNode.attr(type).set(cls.SUBNODE_TYPE)
-        god_mata_nd.add_meta_node(node=newNode)
+        god_mata_nd.add_meta_node(newNode, god_mata_nd)
 
         rigname_attr = {
             "name": "rig_name",
@@ -260,13 +260,6 @@ class GodOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        main_op_nodes_attr = {
-            "name": "main_op_nodes",
-            "attrType": "message",
-            "keyable": False,
-            "channelBox": False,
-        }
-
         root_node_param_list = [
             rigname_attr,
             l_ik_rig_color_attr,
@@ -275,7 +268,6 @@ class GodOpMetaNode(MetaNode):
             r_ik_rig_sub_color_attr,
             m_ik_rig_color_attr,
             m_ik_rig_sub_color_attr,
-            main_op_nodes_attr,
         ]
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
