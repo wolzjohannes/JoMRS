@@ -169,7 +169,7 @@ class GodMetaNode(MetaNode):
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         newNode.rename(name)
 
-    def add_meta_node(self, node, metand, plug="meta_nd"):
+    def add_meta_node(self, node, plug="meta_nd"):
         """
         Add a meta node to the god meta node as message attr connection.
         Args:
@@ -178,7 +178,7 @@ class GodMetaNode(MetaNode):
                 plug(str): The attributes name for message connection.
         """
         new_attribute = {}
-        ud_attr = metand.listAttr(ud=True)
+        ud_attr = self.listAttr(ud=True)
         ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
         meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, attr_)]
         if not meta_plug:
@@ -190,7 +190,13 @@ class GodMetaNode(MetaNode):
         new_attribute["keyable"] = False
         new_attribute["channelBox"] = False
         new_attribute["input"] = node.message
-        attributes.add_attr(node=metand, **new_attribute)
+        attributes.add_attr(node=self, **new_attribute)
+
+    def list_meta_nodes(self, plug="meta_nd"):
+        ud_attr = self.listAttr(ud=True)
+        meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, str(attr_))]
+        if meta_plug:
+            return [node.get() for node in meta_plug]
 
 
 class RootOpMetaNode(MetaNode):
@@ -256,7 +262,7 @@ class RootOpMetaNode(MetaNode):
         except:
             god_mata_nd = GodMetaNode()
         newNode.attr(type).set(cls.SUBNODE_TYPE)
-        god_mata_nd.add_meta_node(newNode, god_mata_nd)
+        god_mata_nd.add_meta_node(newNode)
 
         rigname_attr = {
             "name": "rig_name",
