@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 07 / 28
+# Date:       2019 / 07 / 29
 
 """
 Meta node creation module.
@@ -35,8 +35,8 @@ import re
 #########################################################
 module_logger = logging.getLogger(__name__ + ".py")
 NODEID = "meta_node"
-TYPE = "meta_name"
-BASETYPE = "meta_class"
+TYPE = "meta_class"
+BASETYPE = "meta_node_class"
 GODTYPE = "god_meta_class"
 TYPEA = "root_operators_meta_class"
 ##########################################################
@@ -174,7 +174,6 @@ class GodMetaNode(MetaNode):
         Add a meta node to the god meta node as message attr connection.
         Args:
                 node(dagnode): The node to add.
-                metand(dagnode): The god meta node.
                 plug(str): The attributes name for message connection.
         """
         new_attribute = {}
@@ -192,11 +191,27 @@ class GodMetaNode(MetaNode):
         new_attribute["input"] = node.message
         attributes.add_attr(node=self, **new_attribute)
 
-    def list_meta_nodes(self, plug="meta_nd"):
+    def list_meta_nodes(self, plug="meta_nd", class_filter=None, type=TYPE):
+        """
+        List all meta nodes in the scene.
+        Args:
+                plug(str): The attributes name for message connection.
+                class_filter(str): Filters a class type to return.
+                If none it returns all classes found in the scene.
+        Return:
+                list: All found meta nodes in the scene.
+        """
+        result = None
         ud_attr = self.listAttr(ud=True)
         meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, str(attr_))]
         if meta_plug:
-            return [node.get() for node in meta_plug]
+            result = [node.get() for node in meta_plug]
+        if class_filter:
+            result = [node for node in result if node.attr(type).get() ==
+                      class_filter]
+        return result
+        
+
 
 
 class RootOpMetaNode(MetaNode):
