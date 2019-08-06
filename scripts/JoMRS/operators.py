@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 04
+# Date:       2019 / 08 / 06
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -33,6 +33,7 @@ import logger
 import attributes
 import curves
 import mayautils
+import meta
 ##########################################################
 # GLOBALS
 ##########################################################
@@ -44,9 +45,11 @@ OPSUBTAGNAME = "JOMRS_op_sub"
 OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
-SUBMETANODENAME = "SUB_op_0_METAND"
-MAINMETANODEATTRNAME = "main_node"
-SUBMETANODEATTRNAME = "sub_node"
+ROOTOPMETANODENAME = "M_ROOT_op_0"
+ROOTOPMETANDATTRNAME = 'root_op_meta_nd'
+# SUBMETANODENAME = "SUB_op_0_METAND"
+# MAINMETANODEATTRNAME = "main_node"
+# SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTOPERATORNAME = "component"
 DEFAULTSIDE = "M"
@@ -78,7 +81,8 @@ class OperatorsRootNode(object):
     Create operators root node/god node.
     """
 
-    def __init__(self, op_root_tag_name=OPROOTTAGNAME):
+    def __init__(self, op_root_tag_name = OPROOTTAGNAME,
+                 root_op_meta_nd_attr_name = ROOTOPMETANDATTRNAME):
         """
         Init the user defined attributes.
         Args:
@@ -91,8 +95,8 @@ class OperatorsRootNode(object):
             "defaultValue": 1,
         }
 
-        self.root_op_meta_nd= {
-            "name": 'root_op_meta_nd',
+        self.root_op_meta_nd = {
+            "name": root_op_meta_nd_attr_name,
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
@@ -105,6 +109,8 @@ class OperatorsRootNode(object):
 
     def create_node(
         self, op_root_name=OPROOTNAME,
+        root_op_meta_nd_attr_name = ROOTOPMETANDATTRNAME,
+        root_op_meta_nd_name = ROOTOPMETANODENAME
     ):
         """
         Execute the operators root/god node creation.
@@ -117,6 +123,9 @@ class OperatorsRootNode(object):
         attributes.lock_and_hide_attributes(node=self.root_node)
         for attr_ in self.root_node_param_list:
             attributes.add_attr(node=self.root_node, **attr_)
+        self.meta_nd = meta.RootOpMetaNode(n=root_op_meta_nd_name)
+        self.meta_nd.message.connect(self.root_node.attr(
+            root_op_meta_nd_attr_name))
         return self.root_node
 
 
@@ -129,7 +138,7 @@ class mainOperatorNode(OperatorsRootNode):
         self,
         op_main_tag_name=OPMAINTAGNAME,
         op_root_tag_name=OPROOTTAGNAME,
-        sub_tag_name=OPSUBTAGNAME,
+        op_sub_tag_name=OPSUBTAGNAME,
         error_message=ERRORMESSAGE["selection1"],
     ):
         """
@@ -137,7 +146,7 @@ class mainOperatorNode(OperatorsRootNode):
         Args:
                 op_main_tag_name(str): Tag name.
                 op_root_tag_name(str): Tag name.
-                sub_tag_name(str): Tag name.
+                op_sub_tag_name(str): Tag name.
                 error_message(str): User feedback message.
         """
         super(mainOperatorNode, self).__init__()
@@ -148,7 +157,7 @@ class mainOperatorNode(OperatorsRootNode):
             if (
                 node.hasAttr(op_root_tag_name)
                 or node.hasAttr(op_main_tag_name)
-                or node.hasAttr(sub_tag_name)
+                or node.hasAttr(op_sub_tag_name)
             ):
                 continue
             else:
@@ -179,9 +188,8 @@ class mainOperatorNode(OperatorsRootNode):
         self,
         color_index=18,
         name=MAINOPROOTNODENAME,
-        side=DEFAULTSIDE,
-        index=DEFAULTINDEX,
         local_rotate_axes=True,
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME
     ):
         """
         Execute the main operator node creation.
@@ -208,18 +216,18 @@ class mainOperatorNode(OperatorsRootNode):
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
-        self.main_op_nd[1].component_side.set(side)
-        self.main_op_nd[1].component_index.set(index)
-        self.main_op_nd.append(self.sub_op_meta_node)
+        meta_name = name.replace('_CON','')
+        self.main_meat_nd = meta.MainOpMetaNode(n=meta_name)
+        self.main_meat_nd.message.connect(self.main_op_nd[1].main_op_meta_nd)
+        self.root_meta_nd = self.op_root_nd.attr(
+            root_op_meta_nd_attr_name).get()
+        self.root_meta_nd.add_main_meta_node(node=self.main_meat_nd)
         return self.main_op_nd
 
 
 class create_component_operator(mainOperatorNode):
     """
     Create the whole component operator.
-    Args:
-            sub_tag_name(str): Tag name.
-            connection_types(str): Connection type attr default value.
     """
 
     def __init__(self):
@@ -236,9 +244,8 @@ class create_component_operator(mainOperatorNode):
         spaceing=DEFAULTSPACING,
         sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
         linear_curve_name=LINEARCURVENAME,
-        sub_meta_node_attr_name=SUBMETANODEATTRNAME,
-        main_meta_node_attr_name=MAINMETANODEATTRNAME,
         local_rotate_axes=True,
+        op_sub_tag_name=OPSUBTAGNAME,
     ):
         """
         Init the operators creation.
@@ -252,11 +259,8 @@ class create_component_operator(mainOperatorNode):
                 spaceing(int): Space between main and sub op nodes
                 sub_operators_scale(int): Sub operators node scale factor.
                 linear_curve_name(str): Operators visualisation curve name.
-                sub_meta_node_attr_name(str): User defined message attribute
-                name.
-                main_meta_node_attr_name(str): User defined message attribute
-                name.
                 local_rotate_axes(bool): Enabel local rotate axes.
+                op_sub_tag_name(str): Tag name.
         """
         self.result = []
         self.sub_operators = []
@@ -268,9 +272,7 @@ class create_component_operator(mainOperatorNode):
             "_op_", "_op_{}_".format(operator_name)
         )
         self.main_operator_node = self.construct_node(
-            side=side,
             name=self.main_operator_node_name,
-            operator_name=operator_name,
             local_rotate_axes=local_rotate_axes,
         )
         self.result.append(self.main_operator_node[1])
@@ -289,17 +291,13 @@ class create_component_operator(mainOperatorNode):
                 buffer_grp=False,
                 color_index=21,
             )
-            sub_attr_name = "{}_{}".format(sub_meta_node_attr_name, str(sub))
-            attributes.add_attr(
-                self.main_operator_node[2], sub_attr_name, "message"
-            )
-            sub_op_node[0].message.connect(
-                self.main_operator_node[2].attr(sub_attr_name)
-            )
+            attributes.add_attr(node=sub_op_node[0], name=op_sub_tag_name,
+                                attrType='bool',
+                                keyable=False,
+                                channelBox=False,
+                                defaultValue=1)
             self.sub_operators.append(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
-            for attr_ in self.sub_node_param_list:
-                attributes.add_attr(node=sub_op_node[0], **attr_)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spaceing = spaceing * -1
             if axes == "-X":
@@ -322,438 +320,3 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        self.main_op_meta_nd = self.op_root_nd.main_op_nodes.get()
-        ud_attr = self.main_op_meta_nd.listAttr(ud=True)
-        temp = []
-        for attribute in ud_attr:
-            if strings.search(main_meta_node_attr_name, str(attribute)):
-                temp.append(attribute)
-        attr_name = "{}_{}".format(main_meta_node_attr_name, str(len(temp)))
-        attributes.add_attr(
-            node=self.main_op_meta_nd, name=attr_name, attrType="message"
-        )
-        self.result[0].message.connect(self.main_op_meta_nd.attr(attr_name))
-
-    # def get_sub_operators(
-    #     self, main_node=None, sub_metand_attr=SUBMETANODEATTRNAME
-    # ):
-    #     """
-    #     Get the sub operators of a main operator. Return empty list if no
-    #     sub operator nodes exist.
-    #     Args:
-    #             main_node(dagnode): If none will take the latest main op in
-    #             memory.
-    #             sub_metand_attr(str): Attribute name to search for meta
-    #             node.
-    #     Return:
-    #             List: Dagnodes of found sub operators.
-    #     """
-    #     if main_node:
-    #         metand = main_node.sub_operators.get()
-    #     else:
-    #         metand = self.main_operator_node[1].sub_operators.get()
-    #     sub_node_attr = [
-    #         ud
-    #         for ud in metand.listAttr(ud=True)
-    #         if strings.search(sub_metand_attr, str(ud))
-    #     ]
-    #     result = [pmc.PyNode(attr_.get()) for attr_ in sub_node_attr]
-    #     return result
-    #
-    # def get_main_operators(
-    #     self, root_node=None, main_metand_attr=MAINMETANODEATTRNAME
-    # ):
-    #     """
-    #     Get the main operators of a operators root node. Return empty
-    #     list if no main operators node exist.
-    #     Args:
-    #           root_node(dagnode): If none will take the latest root
-    #           node in memory.
-    #           main_metand_attr(str): Attribute name to search for meta
-    #           node.
-    #     Return:
-    #           List: Dagnodes of found main operator nodes.
-    #     """
-    #     if root_node:
-    #         metand = root_node.main_op_nodes.get()
-    #     else:
-    #         metand = self.op_root_nd.main_op_nodes.get()
-    #     main_node_attr = [
-    #         ud
-    #         for ud in metand.listAttr(ud=True)
-    #         if strings.search(main_metand_attr, str(ud))
-    #     ]
-    #     result = [pmc.PyNode(attr_.get()) for attr_ in main_node_attr]
-    #     return result
-    #
-    # def get_root_node_attributes(
-    #     self, root_node=None, error_message=ERRORMESSAGE["get_attr"]
-    # ):
-    #     """
-    #     Get the rig attributes from operators root node.
-    #     Args:
-    #             root_node(dagnode): If none will take the latest root
-    #             node in memory.
-    #     Return:
-    #             List: Filled with dictonaries. Example:
-    #             [{'attribute':attribute;'value':value}]
-    #     """
-    #     result = []
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     param_list = self.root_node_param_list
-    #     for param in param_list:
-    #         try:
-    #             dic = {}
-    #             dic["attribute"] = root_node.attr(param["name"])
-    #             dic["value"] = root_node.attr(param["name"]).get()
-    #             result.append(dic)
-    #         except:
-    #             logger.log(
-    #                 level="error",
-    #                 message="{} {}".format(param["name"], error_message),
-    #             )
-    #     return result
-    #
-    # def get_main_node_attributes(
-    #     self, main_node=None, error_message=ERRORMESSAGE["get_attr"]
-    # ):
-    #     """
-    #     Get the rig attributes from operators root node.
-    #     Args:
-    #             main_node(dagnode): If none will take the latest main
-    #             node in memory.
-    #     Return:
-    #             List: Filled with dictonaries. Example:
-    #             [{'attribute':attribute;'value':value}]
-    #     """
-    #     result = []
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     param_list = self.main_node_param_list
-    #     for param in param_list:
-    #         dic = {}
-    #         try:
-    #             dic["attribute"] = main_node.attr(param["name"])
-    #             dic["value"] = main_node.attr(param["name"]).get()
-    #             result.append(dic)
-    #         except:
-    #             logger.log(
-    #                 level="error",
-    #                 message="{} {}".format(param["name"], error_message),
-    #             )
-    #     return result
-    #
-    # def get_rig_name(self, root_node=None):
-    #     """
-    #     Get the rig name from root_node.
-    #     Args:
-    #             root_node(dagnode): The operators root node.
-    #     Return:
-    #             string: The rig name / if empty None.
-    #     """
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     return root_node.attr(self.rigname_attr["name"]).get()
-    #
-    # def get_op_root_tag(self, root_node=None):
-    #     """
-    #     Get the rig name from root_node.
-    #     Args:
-    #             root_node(dagnode): The operators root node.
-    #     Return:
-    #             True or False.
-    #     """
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     return root_node.attr(self.root_op_attr["name"]).get()
-    #
-    # def get_rig_control_colors(self, root_node=None):
-    #     """
-    #     Get the rig name from root_node.
-    #     Args:
-    #             root_node(dagnode): The operators root node.
-    #     Return:
-    #             list: Filled with dictonaries.
-    #             [{'attribute':attribute;'value':value}]
-    #     """
-    #     result = []
-    #     temp = [
-    #         self.l_ik_rig_color_attr,
-    #         self.l_ik_rig_sub_color_attr,
-    #         self.r_ik_rig_color_attr,
-    #         self.r_ik_rig_sub_color_attr,
-    #         self.m_ik_rig_color_attr,
-    #         self.m_ik_rig_sub_color_attr,
-    #     ]
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     for attr_ in temp:
-    #         dic = {}
-    #         dic["name"] = attr_["name"]
-    #         dic["value"] = root_node.attr(attr_["name"]).get()
-    #         result.append(dic)
-    #     return result
-    #
-    # def get_op_main_tag(self, main_node=None):
-    #     """
-    #     Get the op main tag value.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #     Return:
-    #             True or False.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     return main_node.attr(self.main_op_attr["name"]).get()
-    #
-    # def get_component_name(self, main_node=None):
-    #     """
-    #     Get component name.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #     Return:
-    #             String or None.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     return main_node.attr(self.comp_name_attr["name"]).get()
-    #
-    # def get_component_type(self, main_node=None):
-    #     """
-    #     Get component type.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #     Return:
-    #             String or None.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     return main_node.attr(self.comp_type_attr["name"]).get()
-    #
-    # def get_component_side(
-    #     self, main_node=None, error_message=ERRORMESSAGE["get_comp_side"]
-    # ):
-    #     """
-    #     Get component side.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #             error_message(str): Error if entry is not valid.
-    #     Return:
-    #             String or None.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     value = main_node.attr(self.comp_side_attr["name"]).get()
-    #     valid = ["L", "R", "M"]
-    #     if value in valid:
-    #         return value
-    #     else:
-    #         logger.log(
-    #             level="error", message=error_message, logger=module_logger
-    #         )
-    #         return
-    #
-    # def get_component_index(self, main_node=None):
-    #     """
-    #     Get component index.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #     Return:
-    #             Integer.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     return int(main_node.attr(self.comp_index_attr["name"]).get())
-    #
-    # def get_main_operator_connection_type(self, main_node=None):
-    #     """
-    #     Get component index.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #     Return:
-    #             String or None.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     return main_node.attr(self.connection_type_attr["name"]).get()
-    #
-    # def get_sub_operators_connection_type(self, main_node=None,
-    #                                   sub_operators=None):
-    #     """
-    #     Get connection type form sub operators.
-    #     Args:
-    #             main_node(dagnode): Operators main node.
-    #             sub_operators(list): Filled with dagnodes.
-    #     Return:
-    #             list: Filled with dictonaries.
-    #             [{'dagnode':suboperator;'connector':string or none}]
-    #     """
-    #     result = []
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     if sub_operators is None:
-    #         sub_operators = self.get_sub_operators(main_node=main_node)
-    #     for sub in sub_operators:
-    #         dic = {}
-    #         dic["dagnode"] = sub
-    #         dic["connector"] = sub.attr(self.connection_type_attr["name"]).get()
-    #         result.append(dic)
-    #     return result
-    #
-    # def set_rig_name(self, name, root_node=None):
-    #     """
-    #     Get the rig name from root_node.
-    #     Args:
-    #             name(str): The rig name.
-    #             root_node(dagnode): The operators root node.
-    #     """
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     root_node.attr(self.rigname_attr["name"]).set(name)
-    #
-    # def set_op_root_tag(self, value, root_node=None):
-    #     """
-    #     Enabel / Disable op root tag.
-    #     Args:
-    #             value(bool): Enable / Disable.
-    #             root_node(dagnode): The operators root node.
-    #     """
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     root_node.attr(self.root_op_attr["name"]).set(value)
-    #
-    # def set_rig_control_colors(
-    #     self,
-    #     l_ik_rig=None,
-    #     l_ik_rig_sub=None,
-    #     r_ik_rig=None,
-    #     r_ik_rig_sub=None,
-    #     m_ik_rig=None,
-    #     m_ik_rig_sub=None,
-    #     root_node=None,
-    # ):
-    #     """
-    #     Set rig control colors.
-    #     Valid is:
-    #     0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
-    #     6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
-    #     11:BROWN,12:DIRTRED,13:BRIGHTRED,14:BRIGHTGREEN,15:BLUE,
-    #     16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
-    #     21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
-    #     25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-    #     Args:
-    #             l_ik_rig(int): Value.
-    #             l_ik_rig_sub(int): Value.
-    #             r_ik_rig(int): Value.
-    #             r_ik_rig_sub(int): Value.
-    #             m_ik_rig(int): Value.
-    #             m_ik_rig_sub(int): Value.
-    #             root_node(dagnode): The operators root node.
-    #     """
-    #     if root_node is None:
-    #         root_node = self.op_root_nd
-    #     if l_ik_rig:
-    #         root_node.attr(self.l_ik_rig_color_attr["name"]).set(l_ik_rig)
-    #     if l_ik_rig_sub:
-    #         root_node.attr(self.l_ik_rig_sub_color_attr["name"]).set(
-    #             l_ik_rig_sub
-    #         )
-    #     if r_ik_rig:
-    #         root_node.attr(self.r_ik_rig_color_attr["name"]).set(r_ik_rig)
-    #     if r_ik_rig_sub:
-    #         root_node.attr(self.r_ik_rig_sub_color_attr["name"]).set(
-    #             r_ik_rig_sub
-    #         )
-    #     if m_ik_rig:
-    #         root_node.attr(self.m_ik_rig_color_attr["name"]).set(m_ik_rig)
-    #     if m_ik_rig_sub:
-    #         root_node.attr(self.m_ik_rig_sub_color_attr["name"]).set(
-    #             m_ik_rig_sub
-    #         )
-    #
-    # def set_op_main_tag(self, value, main_node=None):
-    #     """
-    #     Disable / Enable the op main tag.
-    #     Args:
-    #             value(bool): Enable/Disable.
-    #             main_node(dagnode): Operators main node.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     main_node.attr(self.main_op_attr["name"]).set(value)
-    #
-    # def set_component_name(self, name, main_node=None):
-    #     """
-    #     Set component name.
-    #     Args:
-    #             name(str): Component name.
-    #             main_node(dagnode): Operators main node.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     main_node.attr(self.comp_name_attr["name"]).set(name)
-    #
-    # def set_component_type(self, type, main_node=None):
-    #     """
-    #     Set component type.
-    #     Args:
-    #             type(str): Specifie the component.
-    #             main_node(dagnode): Operators main node.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     main_node.attr(self.comp_type_attr["name"]).set(type)
-    #
-    # def set_component_side(
-    #     self, side, main_node=None, error_message=ERRORMESSAGE["set_comp_side"]
-    # ):
-    #     """
-    #     Set component side.
-    #     Args:
-    #             side(str): Valid is L,R,M.
-    #             main_node(dagnode): Operators main node.
-    #             error_message(str): Error if side is not valid.
-    #     """
-    #     valid = ["L", "R", "M"]
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     if side in valid:
-    #         main_node.attr(self.comp_side_attr["name"]).set(side)
-    #     else:
-    #         logger.log(
-    #             level="error", message=error_message, logger=module_logger
-    #         )
-    #         return
-    #
-    # def set_component_index(self, index, main_node=None):
-    #     """
-    #     Set component index.
-    #     Args:
-    #             index(int): The index.
-    #             main_node(dagnode): Operators main node.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     main_node.attr(self.comp_index_attr["name"]).set(index)
-    #
-    # def set_connection_type(self, type, main_node=None):
-    #     """
-    #     Set component index.
-    #     Args:
-    #             type(str): Connection type.
-    #             main_node(dagnode): Operators main node.
-    #     """
-    #     if main_node is None:
-    #         main_node = self.main_operator_node[1]
-    #     main_node.attr(self.connection_type_attr["name"]).set(type)
-    #
-    # def set_sub_operators_connection_type(self, type, sub_operators=None):
-    #     """
-    #     Set connection type for sub operator.
-    #     Args:
-    #             type(str): The connection type for the sub_operators.
-    #             sub_operators(list): Sub operators dagnode list.
-    #     """
-    #     for sub in sub_operators:
-    #         sub.attr(self.connection_type_attr["name"]).set(type)

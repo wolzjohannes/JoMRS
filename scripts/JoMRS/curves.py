@@ -1758,6 +1758,8 @@ class DiamondControl:
             )
             spear0[-1].addChild(rotate_axes_con[0])
             rotate_axes_con[0].rotate.set(0, 0, 0)
+            rotate_axes_con[0].translate.set(0, 0, 0)
+            rotate_axes_con[0].scale.set(1, 1, 1)
         return spear0
 
 
