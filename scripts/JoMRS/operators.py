@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 06
+# Date:       2019 / 08 / 07
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -34,6 +34,7 @@ import attributes
 import curves
 import mayautils
 import meta
+
 ##########################################################
 # GLOBALS
 ##########################################################
@@ -46,7 +47,9 @@ OPROOTNAME = "M_MAIN_operators_0_GRP"
 MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
 SUBOPROOTNODENAME = "M_SUB_op_0_CON"
 ROOTOPMETANODENAME = "M_ROOT_op_0"
-ROOTOPMETANDATTRNAME = 'root_op_meta_nd'
+ROOTOPMETANDATTRNAME = "root_op_meta_nd"
+MAINOPMETANDATTRNAME = "main_op_meta_nd"
+SUBOPMETANDATTRNAME = "sub_op_meta_nd"
 # SUBMETANODENAME = "SUB_op_0_METAND"
 # MAINMETANODEATTRNAME = "main_node"
 # SUBMETANODEATTRNAME = "sub_node"
@@ -81,8 +84,11 @@ class OperatorsRootNode(object):
     Create operators root node/god node.
     """
 
-    def __init__(self, op_root_tag_name = OPROOTTAGNAME,
-                 root_op_meta_nd_attr_name = ROOTOPMETANDATTRNAME):
+    def __init__(
+        self,
+        op_root_tag_name=OPROOTTAGNAME,
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+    ):
         """
         Init the user defined attributes.
         Args:
@@ -102,15 +108,13 @@ class OperatorsRootNode(object):
             "channelBox": False,
         }
 
-        self.root_node_param_list = [
-            self.root_op_attr,
-            self.root_op_meta_nd,
-        ]
+        self.root_node_param_list = [self.root_op_attr, self.root_op_meta_nd]
 
     def create_node(
-        self, op_root_name=OPROOTNAME,
-        root_op_meta_nd_attr_name = ROOTOPMETANDATTRNAME,
-        root_op_meta_nd_name = ROOTOPMETANODENAME
+        self,
+        op_root_name=OPROOTNAME,
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+        root_op_meta_nd_name=ROOTOPMETANODENAME,
     ):
         """
         Execute the operators root/god node creation.
@@ -124,8 +128,9 @@ class OperatorsRootNode(object):
         for attr_ in self.root_node_param_list:
             attributes.add_attr(node=self.root_node, **attr_)
         self.meta_nd = meta.RootOpMetaNode(n=root_op_meta_nd_name)
-        self.meta_nd.message.connect(self.root_node.attr(
-            root_op_meta_nd_attr_name))
+        self.meta_nd.message.connect(
+            self.root_node.attr(root_op_meta_nd_attr_name)
+        )
         return self.root_node
 
 
@@ -140,6 +145,8 @@ class mainOperatorNode(OperatorsRootNode):
         op_root_tag_name=OPROOTTAGNAME,
         op_sub_tag_name=OPSUBTAGNAME,
         error_message=ERRORMESSAGE["selection1"],
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+        main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
     ):
         """
         Init the user defined attributes
@@ -173,7 +180,14 @@ class mainOperatorNode(OperatorsRootNode):
         }
 
         self.main_op_meta_nd = {
-            "name": 'main_op_meta_nd',
+            "name": main_op_meta_nd_attr_name,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        self.root_op_meta_nd = {
+            "name": root_op_meta_nd_attr_name,
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
@@ -182,6 +196,7 @@ class mainOperatorNode(OperatorsRootNode):
         self.main_node_param_list = [
             self.main_op_attr,
             self.main_op_meta_nd,
+            self.root_op_meta_nd,
         ]
 
     def construct_node(
@@ -189,7 +204,7 @@ class mainOperatorNode(OperatorsRootNode):
         color_index=18,
         name=MAINOPROOTNODENAME,
         local_rotate_axes=True,
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
     ):
         """
         Execute the main operator node creation.
@@ -216,11 +231,15 @@ class mainOperatorNode(OperatorsRootNode):
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
-        meta_name = name.replace('_CON','')
+        meta_name = name.replace("_CON", "")
         self.main_meat_nd = meta.MainOpMetaNode(n=meta_name)
         self.main_meat_nd.message.connect(self.main_op_nd[1].main_op_meta_nd)
         self.root_meta_nd = self.op_root_nd.attr(
-            root_op_meta_nd_attr_name).get()
+            root_op_meta_nd_attr_name
+        ).get()
+        self.root_meta_nd.message.connect(
+            self.main_op_nd[1].attr(root_op_meta_nd_attr_name)
+        )
         self.root_meta_nd.add_main_meta_node(node=self.main_meat_nd)
         return self.main_op_nd
 
@@ -246,6 +265,9 @@ class create_component_operator(mainOperatorNode):
         linear_curve_name=LINEARCURVENAME,
         local_rotate_axes=True,
         op_sub_tag_name=OPSUBTAGNAME,
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+        sub_op_meta_nd_attr_name=SUBOPMETANDATTRNAME,
+        main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
     ):
         """
         Init the operators creation.
@@ -276,6 +298,12 @@ class create_component_operator(mainOperatorNode):
             local_rotate_axes=local_rotate_axes,
         )
         self.result.append(self.main_operator_node[1])
+        self.root_meta_nd = self.main_operator_node[1].attr(
+            root_op_meta_nd_attr_name
+        ).get()
+        self.main_meta_nd = self.main_operator_node[1].attr(
+            main_op_meta_nd_attr_name
+        ).get()
         for sub in range(sub_operators_count):
             instance = "_op_{}_{}".format(operator_name, str(sub))
             self.sub_op_nd_name = sub_operators_node_name.replace(
@@ -284,6 +312,9 @@ class create_component_operator(mainOperatorNode):
             self.sub_op_nd_name = self.sub_op_nd_name.replace(
                 "_op_0", instance
             )
+            self.sub_meta_nd = meta.SubOpMetaNode(
+                n=self.sub_op_nd_name.replace('_CON',''))
+            self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
             sub_op_node = self.joint_control.create_curve(
                 name=self.sub_op_nd_name,
                 match=self.result[-1],
@@ -291,11 +322,34 @@ class create_component_operator(mainOperatorNode):
                 buffer_grp=False,
                 color_index=21,
             )
-            attributes.add_attr(node=sub_op_node[0], name=op_sub_tag_name,
-                                attrType='bool',
-                                keyable=False,
-                                channelBox=False,
-                                defaultValue=1)
+
+            attributes.add_attr(
+                node=sub_op_node[0],
+                name=op_sub_tag_name,
+                attrType="bool",
+                keyable=False,
+                channelBox=False,
+                defaultValue=1,
+            )
+
+            attributes.add_attr(
+                node=sub_op_node[0],
+                name=sub_op_meta_nd_attr_name,
+                attrType="message",
+                keyable=False,
+                channelBox=False,
+                input=self.sub_meta_nd.message
+            )
+
+            attributes.add_attr(
+                node=sub_op_node[0],
+                name=root_op_meta_nd_attr_name,
+                attrType="message",
+                keyable=False,
+                channelBox=False,
+                input=self.root_meta_nd.message
+            )
+
             self.sub_operators.append(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
