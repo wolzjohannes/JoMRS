@@ -20,14 +20,13 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 07
+# Date:       2019 / 08 / 08
 
 """
 JoMRS main operator module. Handles the operators creation.
 """
 
 import pymel.core as pmc
-import strings
 import logging
 import logger
 import attributes
@@ -50,9 +49,6 @@ ROOTOPMETANODENAME = "M_ROOT_op_0"
 ROOTOPMETANDATTRNAME = "root_op_meta_nd"
 MAINOPMETANDATTRNAME = "main_op_meta_nd"
 SUBOPMETANDATTRNAME = "sub_op_meta_nd"
-# SUBMETANODENAME = "SUB_op_0_METAND"
-# MAINMETANODEATTRNAME = "main_node"
-# SUBMETANODEATTRNAME = "sub_node"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTOPERATORNAME = "component"
 DEFAULTSIDE = "M"
@@ -74,7 +70,6 @@ ERRORMESSAGE = {
 ##########################################################
 # CLASSES
 # To Do:
-# - Refactor to make it more pythonic.
 # - Add aim constraint to LRA control.
 ##########################################################
 
@@ -93,6 +88,7 @@ class OperatorsRootNode(object):
         Init the user defined attributes.
         Args:
                 op_root_tag_name(str): Tag name.
+                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
         """
         self.root_op_attr = {
             "name": op_root_tag_name,
@@ -120,6 +116,8 @@ class OperatorsRootNode(object):
         Execute the operators root/god node creation.
         Args:
                 op_root_name(str): Tag name.
+                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+                root_op_meta_nd_name(str): Root meta node name.
         Return:
                 dagnode: The created dagnode.
         """
@@ -155,6 +153,8 @@ class mainOperatorNode(OperatorsRootNode):
                 op_root_tag_name(str): Tag name.
                 op_sub_tag_name(str): Tag name.
                 error_message(str): User feedback message.
+                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+                main_op_meta_nd_attr_name(str): Message attr to main op nd.
         """
         super(mainOperatorNode, self).__init__()
 
@@ -214,6 +214,7 @@ class mainOperatorNode(OperatorsRootNode):
                 side(str): Operators side. Valid are M,L,R.
                 index(int): Operators index number.
                 local_rotate_axes(bool): Enabel local rotate axes.
+                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
         Return:
                 dagnode: The created main operator node.
         """
@@ -283,6 +284,9 @@ class create_component_operator(mainOperatorNode):
                 linear_curve_name(str): Operators visualisation curve name.
                 local_rotate_axes(bool): Enabel local rotate axes.
                 op_sub_tag_name(str): Tag name.
+                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+                sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
+                main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
         """
         self.result = []
         self.sub_operators = []
@@ -374,3 +378,4 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
+        return self.op_root_nd
