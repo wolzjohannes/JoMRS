@@ -302,12 +302,12 @@ class create_component_operator(mainOperatorNode):
             local_rotate_axes=local_rotate_axes,
         )
         self.result.append(self.main_operator_node[1])
-        self.root_meta_nd = self.main_operator_node[1].attr(
-            root_op_meta_nd_attr_name
-        ).get()
-        self.main_meta_nd = self.main_operator_node[1].attr(
-            main_op_meta_nd_attr_name
-        ).get()
+        self.root_meta_nd = (
+            self.main_operator_node[1].attr(root_op_meta_nd_attr_name).get()
+        )
+        self.main_meta_nd = (
+            self.main_operator_node[1].attr(main_op_meta_nd_attr_name).get()
+        )
         for sub in range(sub_operators_count):
             instance = "_op_{}_{}".format(operator_name, str(sub))
             self.sub_op_nd_name = sub_operators_node_name.replace(
@@ -317,7 +317,8 @@ class create_component_operator(mainOperatorNode):
                 "_op_0", instance
             )
             self.sub_meta_nd = meta.SubOpMetaNode(
-                n=self.sub_op_nd_name.replace('_CON',''))
+                n=self.sub_op_nd_name.replace("_CON", "")
+            )
             self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
             sub_op_node = self.joint_control.create_curve(
                 name=self.sub_op_nd_name,
@@ -342,7 +343,7 @@ class create_component_operator(mainOperatorNode):
                 attrType="message",
                 keyable=False,
                 channelBox=False,
-                input=self.sub_meta_nd.message
+                input=self.sub_meta_nd.message,
             )
 
             attributes.add_attr(
@@ -351,7 +352,7 @@ class create_component_operator(mainOperatorNode):
                 attrType="message",
                 keyable=False,
                 channelBox=False,
-                input=self.root_meta_nd.message
+                input=self.root_meta_nd.message,
             )
 
             self.sub_operators.append(sub_op_node)
