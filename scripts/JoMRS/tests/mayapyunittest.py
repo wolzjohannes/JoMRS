@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 10
+# Date:       2019 / 08 / 11
 
 """
 Module for python unittest via mayapy
@@ -28,22 +28,26 @@ Module for python unittest via mayapy
 
 import os
 import platform
+import argparse
+import subprocess
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
 DIRPATH = os.path.dirname(os.path.realpath(__file__))
-
+JOMRS = os.environ['JoMRS']
 ##########################################################
 # FUNCTIONS
 ##########################################################
 
 def get_maya_location(maya_version):
-    """Get the location where Maya is installed.
-
-    @param maya_version The maya version number.
-    @return The path to where Maya is installed.
+    """
+    Get the location where Maya is installed.
+    Args:
+        maya_version(str:) The maya version number.
+    Return:
+        The path to where Maya is installed.
     """
     if 'MAYA_LOCATION' in os.environ.keys():
         return os.environ['MAYA_LOCATION']
@@ -53,7 +57,56 @@ def get_maya_location(maya_version):
         return '/Applications/Autodesk/maya{0}/Maya.app/Contents'.format(maya_version)
     else:
         location = '/usr/autodesk/maya{0}'.format(maya_version)
-        if maya_version < 2016:
-            # Starting Maya 2016, the default install directory name changed.
+        if maya_version < 2018:
+            # Starting Maya 2018, the default install directory name changed.
             location += '-x64'
         return location
+
+def mayapy(maya_version):
+    """Get the mayapy executable path.
+
+    @param maya_version The maya version number.
+    @return: The mayapy executable path.
+    """
+    python_exe = '{0}/bin/mayapy'.format(get_maya_location(maya_version))
+    if platform.system() == 'Windows':
+        python_exe += '.exe'
+    return python_exe
+
+def main(default=2018):
+    parser = argparse.ArgumentParser(description='Runs unit tests for a Maya module')
+    parser.add_argument('-m', '--maya',
+                        help='Maya version',
+                        type=int,
+                        default=default)
+    pargs = parser.parse_args()
+    print pargs.maya
+    cmd = [mayapy(pargs.maya)]
+    print cmd
+    if not os.path.exists(cmd[0]):
+        raise RuntimeError('Maya {0} is not installed on this system.'.format(pargs.maya))
+    subprocess.check_call(cmd)
+    # try:
+    #     subprocess.check_call(cmd)
+    # except subprocess.CalledProcessError:
+    #     pass
+    # finally:
+    #     shutil.rmtree(maya_app_dir)
+    # parser.add_argument('-mad', '--maya-app-dir',
+    #                     help='Just create a clean MAYA_APP_DIR and exit')
+    # mayaunittest = os.path.join(CMT_ROOT_DIR, 'scripts', 'cmt', 'test', 'mayaunittest.py')
+
+    # app_directory = pargs.maya_app_dir
+    # maya_app_dir = create_clean_maya_app_dir(app_directory)
+    # if app_directory:
+    #     return
+    # Create clean prefs
+    # os.environ['MAYA_APP_DIR'] = maya_app_dir
+    # Clear out any MAYA_SCRIPT_PATH value so we know we're in a clean env.
+    # os.environ['MAYA_SCRIPT_PATH'] = ''
+    # Run the tests in this module.
+    # os.environ['MAYA_MODULE_PATH'] = CMT_ROOT_DIR
+
+if __name__ == '__main__':
+    print JOMRS
+    main()
