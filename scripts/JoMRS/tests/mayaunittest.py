@@ -25,6 +25,28 @@
 """
 Module for python unittest for maya.
 """
+import os
+import logging
+import logger
+
+##########################################################
+# GLOBALS
+##########################################################
+
+module_logger = logging.getLogger(__name__ + ".py")
+
+##########################################################
+# FUNCTIONS
+##########################################################
+
+def get_dir_module_tests():
+    """Generator function to iterate over all the Maya module tests directories."""
+    p = "{0}/scripts/JoMRS/tests".format(os.environ["JoMRS"])
+    if os.path.exists(p):
+            return p
+    else:
+        logger.log(level='error', message="Directory for unittest not "
+                                          "exist", logger=module_logger)
 
 def run_tests_from_commandline():
     """Runs the tests in Maya standalone mode.
@@ -34,6 +56,7 @@ def run_tests_from_commandline():
     import maya.standalone
 
     maya.standalone.initialize()
+
 
 if __name__ == "__main__":
     run_tests_from_commandline()
