@@ -30,12 +30,17 @@ import logging
 import logger
 import unittest
 import sys
+import uuid
+import tempfile
+import shutil
+import maya.cmds as cmds
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
 module_logger = logging.getLogger(__name__ + ".py")
+JoMRS_TESTING_VAR = "JoMRS_UNITTEST"
 
 ##########################################################
 # FUNCTIONS
@@ -95,6 +100,21 @@ def add_to_syspath(path):
         return True
     return False
 
+def run_tests(directories=None, test=None, test_suite=None):
+    """Run all the tests in the given paths.
+
+    @param directories: A generator or list of paths containing tests to run.
+    @param test: Optional name of a specific test to run.
+    @param test_suite: Optional TestSuite to run.  If omitted, a TestSuite will be generated.
+    """
+    if test_suite is None:
+        test_suite = get_tests(directories, test)
+
+    runner = unittest.TextTestRunner(verbosity=2, resultclass=TestResult)
+    runner.failfast = False
+    runner.buffer = Settings.buffer_output
+    runner.run(test_suite)
+
 def run_tests_from_commandline():
     """Runs the tests in Maya standalone mode.
 
@@ -104,6 +124,116 @@ def run_tests_from_commandline():
 
     maya.standalone.initialize()
 
+class Settings(object):
+    """Contains options for running tests."""
+
+    # Specifies where files generated during tests should be stored
+    # Use a uuid subdirectory so tests that are running concurrently such as on a build server
+    # do not conflict with each other.
+    temp_dir = os.path.join(tempfile.gettempdir(), "mayaunittest", str(uuid.uuid4()))
+
+    # Controls whether temp files should be deleted after running all tests in the test case
+    delete_files = True
+
+    # Specifies whether the standard output and standard error streams are buffered during the test run.
+    # Output during a passing test is discarded. Output is echoed normally on test fail or error and is
+    # added to the failure messages.
+    buffer_output = True
+
+    # Controls whether we should do a file new between each test case
+    file_new = True
+
+class TestResult(unittest.TextTestResult):
+    """Customize the test result so we can do things like do a file new between each test and suppress script
+    editor output.
+    """
+
+    def __init__(self, stream, descriptions, verbosity):
+        super(TestResult, self).__init__(stream, descriptions, verbosity)
+        self.successes = []
+
+    def startTestRun(self):
+        """Called before any tests are run."""
+        super(TestResult, self).startTestRun()
+        # Create an environment variable that specifies tests are being run through the custom runner.
+        os.environ[JoMRS_TESTING_VAR] = "1"
+
+        ScriptEditorState.suppress_output()
+        if Settings.buffer_output:
+            # Disable any logging while running tests. By disabling critical, we are disabling logging
+            # at all levels below critical as well
+            logging.disable(logging.CRITICAL)
+
+    def stopTestRun(self):
+        """Called after all tests are run."""
+        if Settings.buffer_output:
+            # Restore logging state
+            logging.disable(logging.NOTSET)
+        ScriptEditorState.restore_output()
+        if Settings.delete_files and os.path.exists(Settings.temp_dir):
+            shutil.rmtree(Settings.temp_dir)
+
+        del os.environ[JoMRS_TESTING_VAR]
+
+        super(TestResult, self).stopTestRun()
+
+    def stopTest(self, test):
+        """Called after an individual test is run.
+
+        @param test: TestCase that just ran."""
+        super(TestResult, self).stopTest(test)
+        if Settings.file_new:
+            cmds.file(f=True, new=True)
+
+    def addSuccess(self, test):
+        """Override the base addSuccess method so we can store a list of the successful tests.
+
+        @param test: TestCase that successfully ran."""
+        super(TestResult, self).addSuccess(test)
+        self.successes.append(test)
+
+
+class ScriptEditorState(object):
+    """Provides methods to suppress and restore script editor output."""
+
+    # Used to restore logging states in the script editor
+    suppress_results = None
+    suppress_errors = None
+    suppress_warnings = None
+    suppress_info = None
+
+    @classmethod
+    def suppress_output(cls):
+        """Hides all script editor output."""
+        if Settings.buffer_output:
+            cls.suppress_results = cmds.scriptEditorInfo(q=True, suppressResults=True)
+            cls.suppress_errors = cmds.scriptEditorInfo(q=True, suppressErrors=True)
+            cls.suppress_warnings = cmds.scriptEditorInfo(q=True, suppressWarnings=True)
+            cls.suppress_info = cmds.scriptEditorInfo(q=True, suppressInfo=True)
+            cmds.scriptEditorInfo(
+                e=True,
+                suppressResults=True,
+                suppressInfo=True,
+                suppressWarnings=True,
+                suppressErrors=True,
+            )
+
+    @classmethod
+    def restore_output(cls):
+        """Restores the script editor output settings to their original values."""
+        if None not in {
+            cls.suppress_results,
+            cls.suppress_errors,
+            cls.suppress_warnings,
+            cls.suppress_info,
+        }:
+            cmds.scriptEditorInfo(
+                e=True,
+                suppressResults=cls.suppress_results,
+                suppressInfo=cls.suppress_info,
+                suppressWarnings=cls.suppress_warnings,
+                suppressErrors=cls.suppress_errors,
+            )
 
 if __name__ == "__main__":
     run_tests_from_commandline()
