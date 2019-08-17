@@ -126,7 +126,7 @@ def run_tests_from_commandline():
             sys.path.insert(0, p)
     print os.environ['MAYA_SCRIPT_PATH']
 
-    # run_tests()
+    run_tests()
 
     # Starting Maya 2016, we have to call uninitialize
     if float(cmds.about(v=True)) >= 2016.0:

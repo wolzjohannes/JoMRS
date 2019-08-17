@@ -23,7 +23,7 @@
 # Date:       2019 / 08 / 14
 
 """
-Module for python unittest via mayapy
+Module for python unittest via mayapy. Has to be executed from commandline.
 """
 
 import os

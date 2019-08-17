@@ -20,7 +20,7 @@
 # SOFTWARE.
 # Base code from Chad Vernon cmt_master.
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 12
+# Date:       2019 / 08 / 17
 
 """
 Module for python unittest for maya.
@@ -46,6 +46,7 @@ JoMRS_TESTING_VAR = "JoMRS_UNITTEST"
 # FUNCTIONS
 ##########################################################
 
+
 def get_module_tests_path():
     """
     Generator function to get the unittest directory path
@@ -54,12 +55,26 @@ def get_module_tests_path():
     """
     path = "{0}/scripts/JoMRS/tests".format(os.environ["JoMRS"])
     if os.path.exists(path):
-            return path
+        return path
     else:
-        logger.log(level='error', message="Directory for unittest not "
-                                          "exist", logger=module_logger)
+        logger.log(
+            level="error",
+            message="Directory for unittest not " "exist",
+            logger=module_logger,
+        )
+
 
 def get_tests(directory=None, test=None, test_suite=None):
+    """
+    Get all unittests in a directory. By default it finds all test in the
+    directory of this file.
+    Args:
+            directory(str): Optional directory to find a tes.
+            test(str): The name of the unittest.
+            test_suite(PyObject): The test suite.
+    Return:
+            The found tests as new test_suite.
+    """
 
     if directory is None:
         directory = get_module_tests_path()
@@ -86,6 +101,7 @@ def get_tests(directory=None, test=None, test_suite=None):
 
     return test_suite
 
+
 def add_to_syspath(path):
     """
     Add the specified path to the system path.
@@ -100,12 +116,16 @@ def add_to_syspath(path):
         return True
     return False
 
-def run_tests(directories=None, test=None, test_suite=None):
-    """Run all the tests in the given paths.
 
-    @param directories: A generator or list of paths containing tests to run.
-    @param test: Optional name of a specific test to run.
-    @param test_suite: Optional TestSuite to run.  If omitted, a TestSuite will be generated.
+def run_tests(directories=None, test=None, test_suite=None):
+    """
+    Run all the tests in the given paths.
+    Args:
+            directories(gen or list): A generator or list of paths containing
+            tests to run.
+            test(str): Optional name of a specific test to run.
+            test_suite(PyObject): Optional TestSuite to run. If omitted,
+            a TestSuite will be generated.
     """
     if test_suite is None:
         test_suite = get_tests(directories, test)
@@ -115,36 +135,50 @@ def run_tests(directories=None, test=None, test_suite=None):
     runner.buffer = Settings.buffer_output
     runner.run(test_suite)
 
-def run_tests_from_commandline():
-    """Runs the tests in Maya standalone mode.
 
-    This is called when running cmt/bin/runmayatests.py from the commandline.
+def run_tests_from_commandline():
+    """
+    Runs the tests in Mayapy standalone mode.
+
+    This is called when running tests/mayapyunittest.py from the commandline.
     """
     import maya.standalone
-
     maya.standalone.initialize()
+    run_tests()
+
 
 class Settings(object):
-    """Contains options for running tests."""
+    """
+    Contains options for running tests.
+    """
 
     # Specifies where files generated during tests should be stored
-    # Use a uuid subdirectory so tests that are running concurrently such as on a build server
+    # Use a uuid subdirectory so tests that are running concurrently
+    # such as on a build server
     # do not conflict with each other.
-    temp_dir = os.path.join(tempfile.gettempdir(), "mayaunittest", str(uuid.uuid4()))
+    temp_dir = os.path.join(
+        tempfile.gettempdir(), "mayaunittest", str(uuid.uuid4())
+    )
 
-    # Controls whether temp files should be deleted after running all tests in the test case
+    # Controls whether temp files should be deleted after running all
+    # tests in the test case
     delete_files = True
 
-    # Specifies whether the standard output and standard error streams are buffered during the test run.
-    # Output during a passing test is discarded. Output is echoed normally on test fail or error and is
+    # Specifies whether the standard output and standard error streams
+    # are buffered during the test run.
+    # Output during a passing test is discarded. Output is echoed normally
+    # on test fail or error and is
     # added to the failure messages.
     buffer_output = True
 
     # Controls whether we should do a file new between each test case
     file_new = True
 
+
 class TestResult(unittest.TextTestResult):
-    """Customize the test result so we can do things like do a file new between each test and suppress script
+    """
+    Customize the test result so we can do things like do a file new
+    between each test and suppress script
     editor output.
     """
 
@@ -155,12 +189,14 @@ class TestResult(unittest.TextTestResult):
     def startTestRun(self):
         """Called before any tests are run."""
         super(TestResult, self).startTestRun()
-        # Create an environment variable that specifies tests are being run through the custom runner.
+        # Create an environment variable that specifies tests are
+        # being run through the custom runner.
         os.environ[JoMRS_TESTING_VAR] = "1"
 
         ScriptEditorState.suppress_output()
         if Settings.buffer_output:
-            # Disable any logging while running tests. By disabling critical, we are disabling logging
+            # Disable any logging while running tests. By disabling
+            # critical, we are disabling logging
             # at all levels below critical as well
             logging.disable(logging.CRITICAL)
 
@@ -179,22 +215,25 @@ class TestResult(unittest.TextTestResult):
 
     def stopTest(self, test):
         """Called after an individual test is run.
-
-        @param test: TestCase that just ran."""
+        Args:
+                test: TestCase that just ran."""
         super(TestResult, self).stopTest(test)
         if Settings.file_new:
             cmds.file(f=True, new=True)
 
     def addSuccess(self, test):
-        """Override the base addSuccess method so we can store a list of the successful tests.
-
-        @param test: TestCase that successfully ran."""
+        """Override the base addSuccess method so we can store a list of the
+        successful tests.
+        Args:
+                test: TestCase that successfully ran."""
         super(TestResult, self).addSuccess(test)
         self.successes.append(test)
 
 
 class ScriptEditorState(object):
-    """Provides methods to suppress and restore script editor output."""
+    """
+    Provides methods to suppress and restore script editor output.
+    """
 
     # Used to restore logging states in the script editor
     suppress_results = None
@@ -206,10 +245,18 @@ class ScriptEditorState(object):
     def suppress_output(cls):
         """Hides all script editor output."""
         if Settings.buffer_output:
-            cls.suppress_results = cmds.scriptEditorInfo(q=True, suppressResults=True)
-            cls.suppress_errors = cmds.scriptEditorInfo(q=True, suppressErrors=True)
-            cls.suppress_warnings = cmds.scriptEditorInfo(q=True, suppressWarnings=True)
-            cls.suppress_info = cmds.scriptEditorInfo(q=True, suppressInfo=True)
+            cls.suppress_results = cmds.scriptEditorInfo(
+                q=True, suppressResults=True
+            )
+            cls.suppress_errors = cmds.scriptEditorInfo(
+                q=True, suppressErrors=True
+            )
+            cls.suppress_warnings = cmds.scriptEditorInfo(
+                q=True, suppressWarnings=True
+            )
+            cls.suppress_info = cmds.scriptEditorInfo(
+                q=True, suppressInfo=True
+            )
             cmds.scriptEditorInfo(
                 e=True,
                 suppressResults=True,
@@ -220,7 +267,8 @@ class ScriptEditorState(object):
 
     @classmethod
     def restore_output(cls):
-        """Restores the script editor output settings to their original values."""
+        """Restores the script editor output settings to
+        their original values."""
         if None not in {
             cls.suppress_results,
             cls.suppress_errors,
@@ -234,6 +282,7 @@ class ScriptEditorState(object):
                 suppressWarnings=cls.suppress_warnings,
                 suppressErrors=cls.suppress_errors,
             )
+
 
 if __name__ == "__main__":
     run_tests_from_commandline()
