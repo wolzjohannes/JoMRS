@@ -20,7 +20,7 @@
 # SOFTWARE.
 # Base code from Chad Vernon cmt_master.
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 14
+# Date:       2019 / 08 / 17
 
 """
 Module for python unittest via mayapy. Has to be executed from commandline.
@@ -162,7 +162,7 @@ def main(default_maya_version=2018):
     maya_app_dir = create_clean_maya_app_dir(app_directory)
     if app_directory:
         return
-    # Create clean prefs
+    # Create clean prefs and env
     os.environ["MAYA_APP_DIR"] = maya_app_dir
     os.environ["MAYA_SCRIPT_PATH"] = os.path.join(JOMRS, "scripts", "JoMRS")
     os.environ["MAYA_MODULE_PATH"] = ""

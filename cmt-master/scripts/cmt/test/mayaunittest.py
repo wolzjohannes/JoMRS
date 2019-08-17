@@ -124,7 +124,6 @@ def run_tests_from_commandline():
         p = os.path.realpath(p)  # Make sure symbolic links are resolved
         if p not in realsyspath:
             sys.path.insert(0, p)
-    print os.environ['MAYA_SCRIPT_PATH']
 
     run_tests()
 
