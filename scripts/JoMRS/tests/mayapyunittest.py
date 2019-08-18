@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # Base code from Chad Vernon cmt_master.
+# https://github.com/chadmv/cmt
 # Author:     Johannes Wolz / Rigging TD
 # Date:       2019 / 08 / 17
 

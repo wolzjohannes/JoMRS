@@ -19,6 +19,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 # Base code from Chad Vernon cmt_master.
+# https://github.com/chadmv/cmt
 # Author:     Johannes Wolz / Rigging TD
 # Date:       2019 / 08 / 17
 
@@ -399,6 +400,36 @@ class ScriptEditorState(object):
                 suppressErrors=cls.suppress_errors,
             )
 
+def set_temp_dir(directory):
+    """Set where files generated from tests should be stored.
+
+    @param directory: A directory path.
+    """
+    if os.path.exists(directory):
+        Settings.temp_dir = directory
+    else:
+        raise RuntimeError("{0} does not exist.".format(directory))
+
+def set_delete_files(value):
+    """Set whether temp files should be deleted after running all tests in a test case.
+
+    @param value: True to delete files registered with a TestCase.
+    """
+    Settings.delete_files = value
+
+def set_buffer_output(value):
+    """Set whether the standard output and standard error streams are buffered during the test run.
+
+    @param value: True or False
+    """
+    Settings.buffer_output = value
+
+def set_file_new(value):
+    """Set whether a new file should be created after each test.
+
+    @param value: True or False
+    """
+    Settings.file_new = value
 
 if __name__ == "__main__":
     run_tests_from_commandline()
