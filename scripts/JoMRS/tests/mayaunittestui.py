@@ -45,14 +45,15 @@ from tests.ui.qt.QtGui import *
 from tests.ui.qt.QtWidgets import *
 import tests.mayaunittest as mayaunittest
 import tests.ui.shortcuts as shortcuts
-reload(mayaunittest)
 
 logger = logging.getLogger(__name__)
 
-ICON_DIR = os.path.join(os.environ["JoMRS"], "scripts", "JoMRS", "tests",
-                        "ui", "icons")
+ICON_DIR = os.path.join(
+    os.environ["JoMRS"], "scripts", "JoMRS", "tests", "ui", "icons"
+)
 
 _win = None
+
 
 def show():
     """Shows the browser window."""
@@ -72,7 +73,7 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
     def __init__(self, *args, **kwargs):
         super(MayaTestRunnerDialog, self).__init__(*args, **kwargs)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowTitle("cmt Unit Test Runner")
+        self.setWindowTitle("CMT Unit Test Runner")
         self.resize(1000, 600)
         self.rollback_importer = RollbackImporter()
 
@@ -94,13 +95,17 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
 
         toolbar = self.addToolBar("Tools")
         action = toolbar.addAction("Run All Tests")
-        action.setIcon(QIcon(QPixmap(os.path.join(ICON_DIR, "cmt_run_all_tests.png"))))
+        action.setIcon(
+            QIcon(QPixmap(os.path.join(ICON_DIR, "cmt_run_all_tests.png")))
+        )
         action.triggered.connect(self.run_all_tests)
         action.setToolTip("Run all tests.")
 
         action = toolbar.addAction("Run Selected Tests")
         action.setIcon(
-            QIcon(QPixmap(os.path.join(ICON_DIR, "cmt_run_selected_tests.png")))
+            QIcon(
+                QPixmap(os.path.join(ICON_DIR, "cmt_run_selected_tests.png"))
+            )
         )
         action.setToolTip("Run all selected tests.")
         action.triggered.connect(self.run_selected_tests)
@@ -143,10 +148,14 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
         self.expand_tree(root_node)
 
     def expand_tree(self, root_node):
-        """Expands all the collapsed elements in a tree starting at the root_node"""
+        """
+        Expands all the collapsed elements in a tree starting at the root_node
+        """
         parent = root_node.parent()
         parent_idx = (
-            self.model.createIndex(parent.row(), 0, parent) if parent else QModelIndex()
+            self.model.createIndex(parent.row(), 0, parent)
+            if parent
+            else QModelIndex()
         )
         index = self.model.index(root_node.row(), 0, parent_idx)
         self.test_view.setExpanded(index, True)
@@ -154,7 +163,9 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
             self.expand_tree(child)
 
     def run_all_tests(self):
-        """Callback method to run all the tests found in MAYA_MODULE_PATH."""
+        """
+        Callback method to run all the tests found in MAYA_MODULE_PATH.
+        """
         self.reset_rollback_importer()
         test_suite = unittest.TestSuite()
         mayaunittest.get_tests(test_suite=test_suite)
@@ -162,7 +173,9 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
         self.model.run_tests(self.stream, test_suite)
 
     def run_selected_tests(self):
-        """Callback method to run the selected tests in the UI."""
+        """
+        Callback method to run the selected tests in the UI.
+        """
         self.reset_rollback_importer()
         test_suite = unittest.TestSuite()
 
@@ -170,7 +183,8 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
         if not indices:
             return
 
-        # Remove any child nodes if parent nodes are in the list.  This will prevent duplicate
+        # Remove any child nodes if parent nodes are in the list.
+        # This will prevent duplicate
         # tests from being run.
         paths = [index.internalPointer().path() for index in indices]
         test_paths = []
@@ -191,21 +205,26 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
         self.model.run_tests(self.stream, test_suite)
 
     def run_failed_tests(self):
-        """Callback method to run all the tests with fail or error statuses."""
+        """
+        Callback method to run all the tests with fail or error statuses.
+        """
         self.reset_rollback_importer()
         test_suite = unittest.TestSuite()
         for node in self.model.node_lookup.values():
-            if isinstance(node.test, unittest.TestCase) and node.get_status() in {
-                TestStatus.fail,
-                TestStatus.error,
-            }:
-                mayaunittest.get_tests(test=node.path(), test_suite=test_suite)
+            if isinstance(
+                node.test, unittest.TestCase
+            ) and node.get_status() in {TestStatus.fail, TestStatus.error}:
+                mayaunittest.get_tests(
+                    test=node.path(), test_suite=test_suite
+                )
         self.output_console.clear()
         self.model.run_tests(self.stream, test_suite)
 
     def reset_rollback_importer(self):
-        """Resets the RollbackImporter which allows the test runner to pick up code
-        updates without having to reload anything."""
+        """
+        Resets the RollbackImporter which allows the test runner
+        to pick up code updates without having to reload anything.
+        """
         if self.rollback_importer:
             self.rollback_importer.uninstall()
         # Create a new rollback importer to pick up any code updates
@@ -220,8 +239,9 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
 
 
 class TestCaptureStream(object):
-    """Allows the output of the tests to be displayed in a QTextEdit."""
-
+    """
+    Allows the output of the tests to be displayed in a QTextEdit.
+    """
     success_color = QColor(92, 184, 92)
     fail_color = QColor(240, 173, 78)
     error_color = QColor(217, 83, 79)
@@ -251,8 +271,9 @@ class TestCaptureStream(object):
 
 
 class TestStatus:
-    """The possible status values of a test."""
-
+    """
+    The possible status values of a test
+    ."""
     not_run = 0
     success = 1
     fail = 2
@@ -261,8 +282,10 @@ class TestStatus:
 
 
 class TestNode(shortcuts.BaseTreeNode):
-    """A node representing a Test, TestCase, or TestSuite for display in a QTreeView."""
-
+    """
+    A node representing a Test, TestCase, or TestSuite
+    for display in a QTreeView.
+    """
     success_icon = QPixmap(os.path.join(ICON_DIR, "cmt_test_success.png"))
     fail_icon = QPixmap(os.path.join(ICON_DIR, "cmt_test_fail.png"))
     error_icon = QPixmap(os.path.join(ICON_DIR, "cmt_test_error.png"))
@@ -275,7 +298,10 @@ class TestNode(shortcuts.BaseTreeNode):
         self.status = TestStatus.not_run
         if isinstance(self.test, unittest.TestSuite):
             for test_ in self.test:
-                if isinstance(test_, unittest.TestCase) or test_.countTestCases():
+                if (
+                    isinstance(test_, unittest.TestCase)
+                    or test_.countTestCases()
+                ):
                     self.add_child(TestNode(test_, self))
         if "ModuleImportFailure" == self.test.__class__.__name__:
             try:
@@ -285,7 +311,9 @@ class TestNode(shortcuts.BaseTreeNode):
                 logger.warning(self.tool_tip)
 
     def name(self):
-        """Get the name to print in the view."""
+        """
+        Get the name to print in the view.
+        """
         if isinstance(self.test, unittest.TestCase):
             return self.test._testMethodName
         elif isinstance(self.child(0).test, unittest.TestCase):
@@ -294,21 +322,27 @@ class TestNode(shortcuts.BaseTreeNode):
             return self.child(0).child(0).test.__class__.__module__
 
     def path(self):
-        """Gets the import path of the test.  Used for finding the test by name."""
+        """
+        Gets the import path of the test.  Used for finding the test by name.
+        """
         if self.parent() and self.parent().parent():
             return "{0}.{1}".format(self.parent().path(), self.name())
         else:
             return self.name()
 
     def get_status(self):
-        """Get the status of the TestNode.
-
-        Nodes with children like the TestSuites, will get their status based on the
-        status of the leaf nodes (the TestCases).
-
-        :return: A status value from TestStatus.
         """
-        if "ModuleImportFailure" in [self.name(), self.test.__class__.__name__]:
+        Get the status of the TestNode.
+        Nodes with children like the TestSuites,
+        will get their status based on the
+        status of the leaf nodes (the TestCases).
+        Return:
+                A status value from TestStatus.
+        """
+        if "ModuleImportFailure" in [
+            self.name(),
+            self.test.__class__.__name__,
+        ]:
             return TestStatus.error
         if not self.children:
             return self.status
@@ -316,18 +350,27 @@ class TestNode(shortcuts.BaseTreeNode):
         for child in self.children:
             child_status = child.get_status()
             if child_status == TestStatus.error:
-                # Error status has highest priority so propagate that up to the parent
+                # Error status has highest priority
+                # so propagate that up to the parent
                 return child_status
             elif child_status == TestStatus.fail:
                 result = child_status
-            elif child_status == TestStatus.success and result != TestStatus.fail:
+            elif (
+                child_status == TestStatus.success
+                and result != TestStatus.fail
+            ):
                 result = child_status
-            elif child_status == TestStatus.skipped and result != TestStatus.fail:
+            elif (
+                child_status == TestStatus.skipped
+                and result != TestStatus.fail
+            ):
                 result = child_status
         return result
 
     def get_icon(self):
-        """Get the status icon to display with the Test."""
+        """
+        Get the status icon to display with the Test.
+        """
         status = self.get_status()
         return [
             None,
@@ -339,27 +382,33 @@ class TestNode(shortcuts.BaseTreeNode):
 
 
 class TestTreeModel(QAbstractItemModel):
-    """The model used to populate the test tree view."""
-
+    """
+    The model used to populate the test tree view.
+    """
     def __init__(self, root, parent=None):
         super(TestTreeModel, self).__init__(parent)
         self._root_node = root
         self.node_lookup = {}
-        # Create a lookup so we can find the TestNode given a TestCase or TestSuite
+        # Create a lookup so we can find the TestNode given
+        # a TestCase or TestSuite
         self.create_node_lookup(self._root_node)
 
     def create_node_lookup(self, node):
-        """Create a lookup so we can find the TestNode given a TestCase or TestSuite.  The lookup will be used to set
+        """
+        Create a lookup so we can find the TestNode given a
+        TestCase or TestSuite.  The lookup will be used to set
         test statuses and tool tips after a test run.
-
-        :param node: Node to add to the map.
+        Args:
+                node: Node to add to the map.
         """
         self.node_lookup[str(node.test)] = node
         for child in node.children:
             self.create_node_lookup(child)
 
     def rowCount(self, parent):
-        """Return the number of rows with this parent."""
+        """
+        Return the number of rows with this parent.
+        """
         if not parent.isValid():
             parent_node = self._root_node
         else:
@@ -383,9 +432,9 @@ class TestTreeModel(QAbstractItemModel):
     def setData(self, index, value, role=Qt.EditRole):
         node = index.internalPointer()
         data_changed_kwargs = (
-            [index, index] if tests.ui.__binding__ == "PySide" else [index,
-                                                                   index,
-                                                               []]
+            [index, index]
+            if tests.ui.__binding__ == "PySide"
+            else [index, index, []]
         )
         if role == Qt.EditRole:
             self.dataChanged.emit(*data_changed_kwargs)
@@ -426,13 +475,17 @@ class TestTreeModel(QAbstractItemModel):
     def get_index_of_node(self, node):
         if node is self._root_node:
             return QModelIndex()
-        return self.index(node.row(), 0, self.get_index_of_node(node.parent()))
+        return self.index(
+            node.row(), 0, self.get_index_of_node(node.parent())
+        )
 
     def run_tests(self, stream, test_suite):
-        """Runs the given TestSuite.
-
-        :param stream: A stream object with write functionality to capture the test output.
-        :param test_suite: The TestSuite to run.
+        """
+        Runs the given TestSuite.
+        Args:
+                stream: A stream object with write functionality
+                to capture the test output.
+                test_suite: The TestSuite to run.
         """
         runner = unittest.TextTestRunner(
             stream=stream, verbosity=2, resultclass=mayaunittest.TestResult
@@ -452,10 +505,12 @@ class TestTreeModel(QAbstractItemModel):
             self.setData(index, TestStatus.success, Qt.DecorationRole)
 
     def _set_test_result_data(self, test_list, status):
-        """Store the test result data in model.
-
-        :param test_list: A list of tuples of test results.
-        :param status: A TestStatus value."""
+        """
+        Store the test result data in model.
+        Args:
+                test_list: A list of tuples of test results.
+                status: A TestStatus value.
+        """
         for test, reason in test_list:
             node = self.node_lookup[str(test)]
             index = self.get_index_of_node(node)
@@ -464,11 +519,10 @@ class TestTreeModel(QAbstractItemModel):
 
 
 class RollbackImporter(object):
-    """Used to remove imported modules from the module list.
-
+    """
+    Used to remove imported modules from the module list.
     This allows tests to be rerun after code updates without doing any reloads.
     Original idea from: http://pyunit.sourceforge.net/notes/reloading.html
-
     Usage:
     def run_tests(self):
         if self.rollback_importer:
@@ -476,7 +530,6 @@ class RollbackImporter(object):
         self.rollback_importer = RollbackImporter()
         self.load_and_execute_tests()
     """
-
     def __init__(self):
         """Creates an instance and installs as the global importer."""
         self.previous_modules = set(sys.modules.keys())
@@ -485,5 +538,4 @@ class RollbackImporter(object):
         for modname in sys.modules.keys():
             if modname not in self.previous_modules:
                 # Force reload when modname next imported
-                del (sys.modules[modname])
-
+                del sys.modules[modname]
