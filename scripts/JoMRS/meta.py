@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 03
+# Date:       2019 / 08 / 21
 
 """
 Meta node creation module.
@@ -519,6 +519,13 @@ class MainOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        main_operator_connection = {
+            "name": "main_operator_nd",
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -528,6 +535,7 @@ class MainOpMetaNode(MetaNode):
             ik_spaces_ref_attr,
             fk_spaces_ref_attr,
             ik_pvec_spaces_ref_attr,
+            main_operator_connection,
         ]
         for attr_ in main_node_param_list:
             attributes.add_attr(node=newNode, **attr_)

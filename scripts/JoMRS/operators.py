@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 08
+# Date:       2019 / 08 / 21
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -233,15 +233,16 @@ class mainOperatorNode(OperatorsRootNode):
             attributes.add_attr(node=self.main_op_nd[-1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
         meta_name = name.replace("_CON", "")
-        self.main_meat_nd = meta.MainOpMetaNode(n=meta_name)
-        self.main_meat_nd.message.connect(self.main_op_nd[1].main_op_meta_nd)
+        self.main_meta_nd = meta.MainOpMetaNode(n=meta_name)
+        self.main_meta_nd.message.connect(self.main_op_nd[1].main_op_meta_nd)
+        self.main_op_nd[1].message.connect(self.main_meta_nd.main_operator_nd)
         self.root_meta_nd = self.op_root_nd.attr(
             root_op_meta_nd_attr_name
         ).get()
         self.root_meta_nd.message.connect(
             self.main_op_nd[1].attr(root_op_meta_nd_attr_name)
         )
-        self.root_meta_nd.add_main_meta_node(node=self.main_meat_nd)
+        self.root_meta_nd.add_main_meta_node(node=self.main_meta_nd)
         return self.main_op_nd
 
 
@@ -355,6 +356,7 @@ class create_component_operator(mainOperatorNode):
                 input=self.root_meta_nd.message,
             )
 
+            sub_op_node[0].message.connect(self.sub_meta_nd.sub_operator_nd)
             self.sub_operators.append(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
