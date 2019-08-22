@@ -75,9 +75,22 @@ class TestOperators(TestCase):
         self.arm_main_meta_nd.component_type.set('arm_component')
         self.arm_main_meta_nd.component_side.set('L')
 
-    def test_spine_operator_object(self):
+    def test_spine_operator(self):
         world_space = self.spine_main_op.getTranslation(space='world')
         self.assertEqual(world_space, dt.Vector([0.0, 15.0, 0.0]))
+        self.assertEqual(self.spine_main_meta_nd.component_name.get(),
+                         'spine')
+        self.assertEqual(self.spine_main_meta_nd.component_type.get(),
+                         'spine_component')
+        self.assertEqual(self.spine_main_meta_nd.component_side.get(),
+                         'M')
         self.assertEqual(
             self.spine_main_op, pmc.PyNode("M_MAIN_op_spine_0_CON")
         )
+
+    def test_clavicle_operator(self):
+        world_space = self.clavicle_main_op.getTranslation(space='world')
+        self.assertEqual(world_space, dt.Vector([2.000000000000002, 25.0,
+                                                  0.0]))
+        object_space = self.clavicle_main_op.getTranslation(space='object')
+        self.assertEqual(object_space, dt.Vector([0.0, -2.0, 0.0]))
