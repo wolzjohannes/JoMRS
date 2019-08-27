@@ -103,6 +103,8 @@ class TestOperators(TestCase):
         self.assertEqual(
             self.spine_main_op, pmc.PyNode("M_MAIN_op_spine_0_CON")
         )
+        self.assertEqual(self.spine_sub_op.main_operator_nd.get(),
+                         pmc.PyNode("M_MAIN_op_spine_0_CON"))
 
     def test_clavicle_operator(self):
         """

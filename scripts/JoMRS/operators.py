@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 21
+# Date:       2019 / 08 / 26
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -49,6 +49,7 @@ ROOTOPMETANODENAME = "M_ROOT_op_0"
 ROOTOPMETANDATTRNAME = "root_op_meta_nd"
 MAINOPMETANDATTRNAME = "main_op_meta_nd"
 SUBOPMETANDATTRNAME = "sub_op_meta_nd"
+MAINOPMESSAGEATTRNAME = "main_operator_nd"
 LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTOPERATORNAME = "component"
 DEFAULTSIDE = "M"
@@ -270,6 +271,7 @@ class create_component_operator(mainOperatorNode):
         root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
         sub_op_meta_nd_attr_name=SUBOPMETANDATTRNAME,
         main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
+        main_op_message_attr_name=MAINOPMESSAGEATTRNAME
     ):
         """
         Init the operators creation.
@@ -354,6 +356,15 @@ class create_component_operator(mainOperatorNode):
                 keyable=False,
                 channelBox=False,
                 input=self.root_meta_nd.message,
+            )
+
+            attributes.add_attr(
+                node=sub_op_node[0],
+                name=main_op_message_attr_name,
+                attrType="message",
+                keyable=False,
+                channelBox=False,
+                input=self.main_operator_node[1].message,
             )
 
             sub_op_node[0].message.connect(self.sub_meta_nd.sub_operator_nd)
