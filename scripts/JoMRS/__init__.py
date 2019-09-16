@@ -24,3 +24,10 @@
 """
 JoMRS init module
 """
+
+import meta
+import operators
+import attributes
+import curves
+import mayautils
+import strings
