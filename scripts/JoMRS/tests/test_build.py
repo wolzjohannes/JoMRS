@@ -16,9 +16,11 @@ class TestBuild(TestCase):
         """
         Setup variables for all other tests.
         """
-        self.rig_operators = test_operators.TestOperators()
-        self.set_up = self.rig_operators.setUp()
-        self.build_main = build.main()
+        self.rig_operators = test_operators.TestOperators
+        self.set_up = self.rig_operators.setUp
+        self.build_main = build.Main()
 
     def test_build_rig_data(self):
-        self.build_steps = self.build_main.steps()
+        self.assertIsNotNone(self.build_main.root_op_meta_nd)
+        self.overall_rig_data = self.build_main.get_overall_rig_data
+        self.assertIsNotNone(self.overall_rig_data)

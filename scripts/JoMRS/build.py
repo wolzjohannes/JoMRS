@@ -31,6 +31,7 @@ import pymel.core as pmc
 import logger
 import logging
 import operators
+import strings
 
 ##########################################################
 # GLOBALS
@@ -68,5 +69,31 @@ class Main(object):
                       'create_rig_elements', 'connect_rig_elements',
                       'build_bind_skeleton']
 
-        self.root_op_meta_nd = [meta_nd.root_op_meta_nd_attr_name.get() for
-                                meta_nd in self.root_operator_nd]
+        self.root_op_meta_nd = [meta_nd.attr(root_op_meta_nd_attr_name).get(
+
+        ) for meta_nd in self.root_operator_nd]
+        self.main_operators = []
+
+        self.rig_overall_data = []
+
+    def get_overall_rig_data(self):
+
+        overall_rig_parameters = ['rig_name', 'l_ik_rig_color',
+                                  'l_ik_rig_sub_color', 'r_ik_rig_color',
+                                  'r_ik_rig_sub_color', 'm_ik_rig_color',
+                                  'm_ik_rig_sub_color']
+
+        for meta_nd in self.root_op_meta_nd:
+            data = {}
+            for param in overall_rig_parameters:
+                data[param] = meta_nd.attr(param).get()
+            self.rig_overall_data.append(data)
+
+        logger.log(level='info', message=self.steps[0], logger=module_logger)
+        return self.rig_overall_data
+
+    def get_main_operators(self, plug="main_meta_nd"):
+
+        for main_nd in self.root_op_meta_nd:
+            ud_attr = main_nd.listAttr(ud=True)
+            ud_attr = [attr_ for attr_ in ud_attr if strings]
