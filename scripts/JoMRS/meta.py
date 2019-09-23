@@ -43,6 +43,11 @@ TYPEA = "root_operators_meta_class"
 TYPEB = "main_operator_meta_class"
 TYPEC = "sub_operator_meta_class"
 DEFAULTCONNECTIONTYPES = "translate;rotate;scale"
+ROOTOPMETAPARAMS = ['rig_name', 'l_rig_color',
+                    'l_rig_sub_color', 'r_rig_color',
+                    'r_rig_sub_color', 'm_rig_color',
+                    'm_rig_sub_color']
+MAINMETANDPLUG = 'main_meta_nd'
 
 ##########################################################
 # CLASSES
@@ -269,7 +274,8 @@ class RootOpMetaNode(MetaNode):
 
     @classmethod
     def _postCreateVirtual(
-        cls, newNode, type=TYPE, god_meta_name="god_meta_0_METAND"
+        cls, newNode, type=TYPE, god_meta_name="god_meta_0_METAND",
+        root_op_meta_nd_params=ROOTOPMETAPARAMS
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -293,13 +299,13 @@ class RootOpMetaNode(MetaNode):
         newNode.rename(name)
 
         rigname_attr = {
-            "name": "rig_name",
+            "name": root_op_meta_nd_params[0],
             "attrType": "string",
             "keyable": False,
         }
 
-        l_ik_rig_color_attr = {
-            "name": "l_ik_rig_color",
+        l_rig_color_attr = {
+            "name": root_op_meta_nd_params[1],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 13,
@@ -307,8 +313,8 @@ class RootOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        l_ik_rig_sub_color_attr = {
-            "name": "l_ik_rig_sub_color",
+        l_rig_sub_color_attr = {
+            "name": root_op_meta_nd_params[2],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 18,
@@ -316,8 +322,8 @@ class RootOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        r_ik_rig_color_attr = {
-            "name": "r_ik_rig_color",
+        r_rig_color_attr = {
+            "name": root_op_meta_nd_params[3],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 6,
@@ -325,8 +331,8 @@ class RootOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        r_ik_rig_sub_color_attr = {
-            "name": "r_ik_rig_sub_color",
+        r_rig_sub_color_attr = {
+            "name": root_op_meta_nd_params[4],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 9,
@@ -334,8 +340,8 @@ class RootOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        m_ik_rig_color_attr = {
-            "name": "m_ik_rig_color",
+        m_rig_color_attr = {
+            "name": root_op_meta_nd_params[5],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 17,
@@ -343,8 +349,8 @@ class RootOpMetaNode(MetaNode):
             "maxValue": 31,
         }
 
-        m_ik_rig_sub_color_attr = {
-            "name": "m_ik_rig_sub_color",
+        m_rig_sub_color_attr = {
+            "name": root_op_meta_nd_params[6],
             "attrType": "long",
             "keyable": False,
             "defaultValue": 11,
@@ -354,17 +360,17 @@ class RootOpMetaNode(MetaNode):
 
         root_node_param_list = [
             rigname_attr,
-            l_ik_rig_color_attr,
-            l_ik_rig_sub_color_attr,
-            r_ik_rig_color_attr,
-            r_ik_rig_sub_color_attr,
-            m_ik_rig_color_attr,
-            m_ik_rig_sub_color_attr,
+            l_rig_color_attr,
+            l_rig_sub_color_attr,
+            r_rig_color_attr,
+            r_rig_sub_color_attr,
+            m_rig_color_attr,
+            m_rig_sub_color_attr,
         ]
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
-    def add_main_meta_node(self, node, plug="main_meta_nd"):
+    def add_main_meta_node(self, node, plug=MAINMETANDPLUG):
         """
         Add a main meta node to the root meta node as message attr connection.
         Args:

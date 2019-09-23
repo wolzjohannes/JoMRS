@@ -32,6 +32,7 @@ import logger
 import logging
 import operators
 import strings
+import meta
 
 ##########################################################
 # GLOBALS
@@ -40,6 +41,12 @@ import strings
 module_logger = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = operators.OPROOTTAGNAME
 ROOTOPMETANDATTRNAME = operators.ROOTOPMETANDATTRNAME
+STEPS = ['collect_overall_rig_data', 'collect_main_operators',
+         'create_main_ops_dic', 'create_init_hierarchy',
+         'create_rig_elements', 'connect_rig_elemets',
+         'build_bind_skeleton']
+OVERALLRIGPARAMS = meta.ROOTOPMETAPARAMS
+MAINMETANDPLUG = meta.MAINMETANDPLUG
 
 ##########################################################
 # CLASSES
@@ -50,7 +57,8 @@ class Main(object):
     Main class for execute the rig build.
     """
     def __init__(self, op_root_tag_name=OPROOTTAGNAME,
-                 root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME):
+                 root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+                 steps=STEPS):
         """
         Args:
                 op_root_tag_name(str):Tag name.
@@ -64,24 +72,16 @@ class Main(object):
                                  node.hasAttr(op_root_tag_name) and
                                  node.attr(op_root_tag_name).get() is True]
 
-        self.steps = ['collect_overall_rig_data', 'collect_main_operators',
-                      'create_main_ops_dic', 'create_init_hierarchy',
-                      'create_rig_elements', 'connect_rig_elements',
-                      'build_bind_skeleton']
-
+        self.steps = steps
         self.root_op_meta_nd = [meta_nd.attr(root_op_meta_nd_attr_name).get(
 
         ) for meta_nd in self.root_operator_nd]
         self.main_operators = []
-
         self.rig_overall_data = []
 
-    def get_overall_rig_data(self):
+    def get_overall_rig_data(self, overall_rig_parameters=):
 
-        overall_rig_parameters = ['rig_name', 'l_ik_rig_color',
-                                  'l_ik_rig_sub_color', 'r_ik_rig_color',
-                                  'r_ik_rig_sub_color', 'm_ik_rig_color',
-                                  'm_ik_rig_sub_color']
+        overall_rig_parameters = overall_rig_parameters
 
         for meta_nd in self.root_op_meta_nd:
             data = {}
@@ -92,7 +92,7 @@ class Main(object):
         logger.log(level='info', message=self.steps[0], logger=module_logger)
         return self.rig_overall_data
 
-    def get_main_operators(self, plug="main_meta_nd"):
+    def get_main_operators(self, plug=MAINMETANDPLUG):
 
         for main_nd in self.root_op_meta_nd:
             ud_attr = main_nd.listAttr(ud=True)
