@@ -24,3 +24,4 @@ class TestBuild(TestCase):
         self.assertIsNotNone(self.build_main.root_op_meta_nd)
         self.overall_rig_data = self.build_main.get_overall_rig_data
         self.assertIsNotNone(self.overall_rig_data)
+        self.assertIsNotNone(self.build_main.rig_overall_data)

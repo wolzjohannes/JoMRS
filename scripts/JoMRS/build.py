@@ -40,11 +40,18 @@ import meta
 
 module_logger = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = operators.OPROOTTAGNAME
+OPMAINTAGNAME = operators.OPMAINTAGNAME
+OPSUBTAGNAME = operators.OPSUBTAGNAME
 ROOTOPMETANDATTRNAME = operators.ROOTOPMETANDATTRNAME
-STEPS = ['collect_overall_rig_data', 'collect_main_operators',
-         'create_main_ops_dic', 'create_init_hierarchy',
-         'create_rig_elements', 'connect_rig_elemets',
-         'build_bind_skeleton']
+STEPS = [
+    "collect_overall_rig_data",
+    "collect_main_operators",
+    "create_main_ops_dic",
+    "create_init_hierarchy",
+    "create_rig_elements",
+    "connect_rig_elements",
+    "build_bind_skeleton",
+]
 OVERALLRIGPARAMS = meta.ROOTOPMETAPARAMS
 MAINMETANDPLUG = meta.MAINMETANDPLUG
 
@@ -52,34 +59,45 @@ MAINMETANDPLUG = meta.MAINMETANDPLUG
 # CLASSES
 ##########################################################
 
+
 class Main(object):
     """
     Main class for execute the rig build.
     """
-    def __init__(self, op_root_tag_name=OPROOTTAGNAME,
-                 root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-                 steps=STEPS):
+
+    def __init__(
+        self,
+        op_root_tag_name=OPROOTTAGNAME,
+        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
+        steps=STEPS,
+    ):
         """
         Args:
                 op_root_tag_name(str):Tag name.
                 root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+                steps(list of strings): The build steps.
         """
 
         self.selection = pmc.ls(sl=True)
         if not self.selection:
-            self.selection = pmc.ls(typ='transform')
-        self.root_operator_nd = [node for node in self.selection if
-                                 node.hasAttr(op_root_tag_name) and
-                                 node.attr(op_root_tag_name).get() is True]
+            self.selection = pmc.ls(typ="transform")
+        self.root_operator_nd = [
+            node
+            for node in self.selection
+            if node.hasAttr(op_root_tag_name)
+            and node.attr(op_root_tag_name).get() is True
+        ]
 
         self.steps = steps
-        self.root_op_meta_nd = [meta_nd.attr(root_op_meta_nd_attr_name).get(
-
-        ) for meta_nd in self.root_operator_nd]
+        self.root_op_meta_nd = [
+            meta_nd.attr(root_op_meta_nd_attr_name).get()
+            for meta_nd in self.root_operator_nd
+        ]
         self.main_operators = []
         self.rig_overall_data = []
+        self.build_data = []
 
-    def get_overall_rig_data(self, overall_rig_parameters=):
+    def get_overall_rig_data(self, overall_rig_parameters=OVERALLRIGPARAMS):
 
         overall_rig_parameters = overall_rig_parameters
 
@@ -89,11 +107,28 @@ class Main(object):
                 data[param] = meta_nd.attr(param).get()
             self.rig_overall_data.append(data)
 
-        logger.log(level='info', message=self.steps[0], logger=module_logger)
+        logger.log(level="info", message=self.steps[0], logger=module_logger)
         return self.rig_overall_data
 
-    def get_main_operators(self, plug=MAINMETANDPLUG):
+    def get_main_operators(self, plug=MAINMETANDPLUG, main_op_tag =
+    OPMAINTAGNAME, sub_op_tag = OPSUBTAGNAME):
 
         for main_nd in self.root_op_meta_nd:
+            print main_nd
+            data = {}
+            data["root_operator_nd"] = main_nd
             ud_attr = main_nd.listAttr(ud=True)
-            ud_attr = [attr_ for attr_ in ud_attr if strings]
+            ud_attr = [
+                attr_
+                for attr_ in ud_attr
+                if strings.search(plug, str(attr_))
+            ]
+            main_operators = [node.get() for node in ud_attr]
+            for x in range(len(main_operators)):
+                main_operator_nd = main_operators[x].main_operator_nd.get()
+                data['main_operator_nd_{}'.format(str(x))] = main_operator_nd
+                if main_operator_nd.getParent().hasAttr(main_op_tag) or \
+                        main_operator_nd.getParent().hasAttr(sub_op_tag):
+                    data['main_operator_ref'] = main_operator_nd.getParent()
+            self.main_operators.append(data)
+        return self.main_operators
