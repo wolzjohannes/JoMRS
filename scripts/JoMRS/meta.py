@@ -47,6 +47,10 @@ ROOTOPMETAPARAMS = ['rig_name', 'l_rig_color',
                     'l_rig_sub_color', 'r_rig_color',
                     'r_rig_sub_color', 'm_rig_color',
                     'm_rig_sub_color']
+MAINOPMETAPARAMS = ['component_name', 'component_name', 'component_type',
+                    'component_side', 'component_index', 'connection_type',
+                    'ik_spaces_ref', 'fk_spaces_ref', 'ik_pvec_spaces_ref',
+                    'main_operator_nd']
 MAINMETANDPLUG = 'main_meta_nd'
 
 ##########################################################
@@ -445,6 +449,7 @@ class MainOpMetaNode(MetaNode):
         type=TYPE,
         god_meta_name="god_meta_0_METAND",
         connection_types=DEFAULTCONNECTIONTYPES,
+        main_op_meta_param = MAINOPMETAPARAMS
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -468,28 +473,28 @@ class MainOpMetaNode(MetaNode):
         newNode.rename(name)
 
         comp_name_attr = {
-            "name": "component_name",
+            "name": main_op_meta_param[0],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_type_attr = {
-            "name": "component_type",
+            "name": main_op_meta_param[1],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_side_attr = {
-            "name": "component_side",
+            "name": main_op_meta_param[2],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_index_attr = {
-            "name": "component_index",
+            "name": main_op_meta_param[3],
             "attrType": "long",
             "keyable": False,
             "channelBox": False,
@@ -497,7 +502,7 @@ class MainOpMetaNode(MetaNode):
         }
 
         connection_type_attr = {
-            "name": "connection_type",
+            "name": main_op_meta_param[4],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
@@ -505,28 +510,28 @@ class MainOpMetaNode(MetaNode):
         }
 
         ik_spaces_ref_attr = {
-            "name": "ik_spaces_ref",
+            "name": main_op_meta_param[5],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         fk_spaces_ref_attr = {
-            "name": "fk_spaces_ref",
+            "name": main_op_meta_param[6],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         ik_pvec_spaces_ref_attr = {
-            "name": "ik_pvec_spaces_ref",
+            "name": main_op_meta_param[7],
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         main_operator_connection = {
-            "name": "main_operator_nd",
+            "name": main_op_meta_param[8],
             "attrType": "message",
             "keyable": False,
             "channelBox": False,

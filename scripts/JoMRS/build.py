@@ -53,6 +53,7 @@ STEPS = [
     "build_bind_skeleton",
 ]
 OVERALLRIGPARAMS = meta.ROOTOPMETAPARAMS
+MAINOPCOMPPARAMS = meta.MAINOPMETAPARAMS
 MAINMETANDPLUG = meta.MAINMETANDPLUG
 
 ##########################################################
@@ -110,11 +111,10 @@ class Main(object):
         logger.log(level="info", message=self.steps[0], logger=module_logger)
         return self.rig_overall_data
 
-    def get_main_operators(self, plug=MAINMETANDPLUG, main_op_tag =
-    OPMAINTAGNAME, sub_op_tag = OPSUBTAGNAME):
+    def get_main_operators(self, plug=MAINMETANDPLUG,
+                           main_op_comp_params = MAINOPCOMPPARAMS):
 
         for main_nd in self.root_op_meta_nd:
-            print main_nd
             data = {}
             data["root_operator_nd"] = main_nd
             ud_attr = main_nd.listAttr(ud=True)
@@ -123,12 +123,21 @@ class Main(object):
                 for attr_ in ud_attr
                 if strings.search(plug, str(attr_))
             ]
-            main_operators = [node.get() for node in ud_attr]
-            for x in range(len(main_operators)):
-                main_operator_nd = main_operators[x].main_operator_nd.get()
-                data['main_operator_nd_{}'.format(str(x))] = main_operator_nd
-                if main_operator_nd.getParent().hasAttr(main_op_tag) or \
-                        main_operator_nd.getParent().hasAttr(sub_op_tag):
-                    data['main_operator_ref'] = main_operator_nd.getParent()
+            main_operators_meta_nd = [node.get() for node in ud_attr]
+            for x in range(len(main_operators_meta_nd)):
+                main_operator_nd = main_operators_meta_nd[
+                    x].main_operator_nd.get()
+                temp_data = {}
+                temp_data['main_operator_nd'] = main_operator_nd
+                for param in main_op_comp_params:
+                    temp_data[param] = main_operators_meta_nd[x].attr(
+                        param).get()
+                data['main_op_data_{}'.format(str(x))] = temp_data
+
+            #     main_operator_nd = main_operators[x].main_operator_nd.get()
+            #     data['main_operator_nd_{}'.format(str(x))] = main_operator_nd
+            #     if main_operator_nd.getParent().hasAttr(main_op_tag) or \
+            #             main_operator_nd.getParent().hasAttr(sub_op_tag):
+            #         data['main_operator_ref'] = main_operator_nd.getParent()
             self.main_operators.append(data)
         return self.main_operators
