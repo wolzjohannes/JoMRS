@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 26
+# Date:       2019 / 10 / 13
 
 """
 JoMRS main operator module. Handles the operators creation.

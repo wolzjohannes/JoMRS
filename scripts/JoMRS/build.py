@@ -33,6 +33,8 @@ import logging
 import operators
 import strings
 import meta
+reload(operators)
+reload(meta)
 
 ##########################################################
 # GLOBALS
@@ -45,7 +47,8 @@ OPSUBTAGNAME = operators.OPSUBTAGNAME
 ROOTOPMETANDATTRNAME = operators.ROOTOPMETANDATTRNAME
 STEPS = [
     "collect_overall_rig_data",
-    "collect_main_operators",
+    "collect_main_operators_data",
+    "collect_components_inputs_outputs"
     "create_main_ops_dic",
     "create_init_hierarchy",
     "create_rig_elements",
@@ -94,16 +97,26 @@ class Main(object):
             meta_nd.attr(root_op_meta_nd_attr_name).get()
             for meta_nd in self.root_operator_nd
         ]
-        self.main_operators = []
+        self.main_operators_data = []
         self.rig_overall_data = []
+        self.components_input_connects = []
         self.build_data = []
 
     def get_overall_rig_data(self, overall_rig_parameters=OVERALLRIGPARAMS):
+        """
+        Get overall rig data for each root operator node. And pass it to
+        self.rig_overall_data class list.
+        Args:
+                overall_rig_parameters(list): Params to search for.
+        Return:
+                list: self.rig_overall_data class list.
+        """
 
         overall_rig_parameters = overall_rig_parameters
 
         for meta_nd in self.root_op_meta_nd:
             data = {}
+            data["root_operator_meta_nd"] = meta_nd
             for param in overall_rig_parameters:
                 data[param] = meta_nd.attr(param).get()
             self.rig_overall_data.append(data)
@@ -111,12 +124,21 @@ class Main(object):
         logger.log(level="info", message=self.steps[0], logger=module_logger)
         return self.rig_overall_data
 
-    def get_main_operators(self, plug=MAINMETANDPLUG,
-                           main_op_comp_params = MAINOPCOMPPARAMS):
+    def get_main_operators_data(self, plug=MAINMETANDPLUG,
+                                main_op_comp_params = MAINOPCOMPPARAMS):
+        """
+        Get the main operators data.
+        Args:
+                plug(str): Name for main_nd message attribute.
+                main_op_comp_params(list): Attribute names to search for.
+        Return:
+                list: Dictonaries with main operators data for each
+                root_operator_meta_nd.
+        """
 
         for main_nd in self.root_op_meta_nd:
             data = {}
-            data["root_operator_nd"] = main_nd
+            data["root_operator_meta_nd"] = main_nd
             ud_attr = main_nd.listAttr(ud=True)
             ud_attr = [
                 attr_
@@ -133,11 +155,10 @@ class Main(object):
                     temp_data[param] = main_operators_meta_nd[x].attr(
                         param).get()
                 data['main_op_data_{}'.format(str(x))] = temp_data
+            self.main_operators_data.append(data)
+        logger.log(level="info", message=self.steps[1], logger=module_logger)
+        return self.main_operators_data
 
-            #     main_operator_nd = main_operators[x].main_operator_nd.get()
-            #     data['main_operator_nd_{}'.format(str(x))] = main_operator_nd
-            #     if main_operator_nd.getParent().hasAttr(main_op_tag) or \
-            #             main_operator_nd.getParent().hasAttr(sub_op_tag):
-            #         data['main_operator_ref'] = main_operator_nd.getParent()
-            self.main_operators.append(data)
-        return self.main_operators
+    def define_component_edges(self):
+        pass
+

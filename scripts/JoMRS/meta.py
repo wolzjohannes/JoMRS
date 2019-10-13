@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 21
+# Date:       2019 / 10 / 13
 
 """
 Meta node creation module.
@@ -47,10 +47,11 @@ ROOTOPMETAPARAMS = ['rig_name', 'l_rig_color',
                     'l_rig_sub_color', 'r_rig_color',
                     'r_rig_sub_color', 'm_rig_color',
                     'm_rig_sub_color']
-MAINOPMETAPARAMS = ['component_name', 'component_name', 'component_type',
-                    'component_side', 'component_index', 'connection_type',
-                    'ik_spaces_ref', 'fk_spaces_ref', 'ik_pvec_spaces_ref',
-                    'main_operator_nd']
+MAINOPMETAPARAMS = ['component_name', 'component_type', 'component_side',
+                    'component_index', 'connection_types', 'ik_spaces_ref',
+                    'fk_spaces_ref', 'ik_pvec_spaces_ref',
+                    'main_operator_nd', 'output_matrix_nds',
+                    'output_ud_plug_nds']
 MAINMETANDPLUG = 'main_meta_nd'
 
 ##########################################################
@@ -537,6 +538,22 @@ class MainOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        output_matrix_nd_attr = {
+            "name": main_op_meta_param[9],
+            "attrType": "string",
+            "multi": True,
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        output_ud_plug_nd_attr = {
+            "name": main_op_meta_param[10],
+            "attrType": "string",
+            "multi": True,
+            "keyable": False,
+            "channelBox": False,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -547,6 +564,8 @@ class MainOpMetaNode(MetaNode):
             fk_spaces_ref_attr,
             ik_pvec_spaces_ref_attr,
             main_operator_connection,
+            output_matrix_nd_attr,
+            output_ud_plug_nd_attr,
         ]
         for attr_ in main_node_param_list:
             attributes.add_attr(node=newNode, **attr_)

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 26
+# Date:       2019 / 10 / 13
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -64,6 +64,7 @@ def add_attr(
     lock=False,
     input=None,
     output=None,
+    multi=False,
 ):
     """
     Add attribute to a node.
@@ -82,6 +83,7 @@ def add_attr(
             lock(bool): Lock/Unlock the attribute.
             input(dagNode.attribute): Connects the attribute with the input.
             output(dagNode.attribute): Connects the attribute with the output.
+            multi(bool): Define if attribute is a multi attribute.
     Return:
             str: The new created attributes name.
 
@@ -105,6 +107,7 @@ def add_attr(
     data_dic["keyable"] = keyable
     data_dic["hidden"] = hidden
     data_dic["writable"] = writable
+    data_dic["multi"] = multi
 
     if minValue is not None:
         data_dic["minValue"] = minValue
