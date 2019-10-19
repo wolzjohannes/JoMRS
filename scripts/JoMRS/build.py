@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 09 / 16
+# Date:       2019 / 09 / 19
 
 """
 Rig build method. Collect the rig data based on the specified rig guide
@@ -58,6 +58,10 @@ STEPS = [
 OVERALLRIGPARAMS = meta.ROOTOPMETAPARAMS
 MAINOPCOMPPARAMS = meta.MAINOPMETAPARAMS
 MAINMETANDPLUG = meta.MAINMETANDPLUG
+INITHIERARCHYNAMES = ['M_RIG_ROOT_*_0_GRP', 'M_RIG_0_GRP',
+                      'M_RIG_components_0_GRP', 'M_GEO_0_GRP',
+                      'M_RIG_blendShapes_0_GRP',
+                      'M_shared_attributes_0_GRP', 'M_no_transform_0_GRP']
 
 ##########################################################
 # CLASSES
@@ -158,6 +162,18 @@ class Main(object):
             self.main_operators_data.append(data)
         logger.log(level="info", message=self.steps[1], logger=module_logger)
         return self.main_operators_data
+
+    def init_hierarchy(self, overall_rig_parameters=OVERALLRIGPARAMS,
+                       init_hierarchy=INITHIERARCHYNAMES):
+        rig_name_str = [param for param in overall_rig_parameters if
+                    strings.search('name', param)][0]
+        for data in self.rig_overall_data:
+            rig_name = data['root_operator_meta_nd'].attr(rig_name_str).get()
+            try:
+                rig_root_nd = pmc.PyNode(init_hierarchy[0].replace('*', rig_name))
+            except:
+
+
 
     def define_component_edges(self):
         pass
