@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 13
+# Date:       2019 / 10 / 27
 
 """
 Meta node creation module.
@@ -307,6 +307,7 @@ class RootOpMetaNode(MetaNode):
             "name": root_op_meta_nd_params[0],
             "attrType": "string",
             "keyable": False,
+            "value": 'None'
         }
 
         l_rig_color_attr = {
