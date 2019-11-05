@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 09 / 08
+# Date:       2019 / 11 / 05
 
 """
 Rig elements main class.
@@ -28,6 +28,7 @@ Rig elements main class.
 import pymel.core as pmc
 import logger
 import logging
+import operators
 
 ##########################################################
 # GLOBALS
@@ -39,3 +40,7 @@ module_logger = logging.getLogger(__name__ + ".py")
 # CLASSES
 ##########################################################
 
+class Main(operators.create_component_operator):
+    def __init__(operators_name, side, sub_operators_count, self):
+        super(main, self).__init__()
+        operator = self.build_node()
