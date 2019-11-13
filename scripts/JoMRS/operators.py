@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 13
+# Date:       2019 / 10 / 27
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -33,6 +33,7 @@ import attributes
 import curves
 import mayautils
 import meta
+reload(meta)
 
 ##########################################################
 # GLOBALS
