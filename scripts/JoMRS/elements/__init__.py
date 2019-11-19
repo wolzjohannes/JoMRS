@@ -44,4 +44,5 @@ class Main(operators.create_component_operator):
     def __init__(operators_typ, operators_name, side, sub_operators_count,
                  self):
         super(main, self).__init__()
-        operator = self.build_node(operators_name=operator_name, side=side, )
+        operator = self.build_node(operators_name=operator_name, side=side,
+                                   )pass
