@@ -20,29 +20,40 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 11 / 05
+# Date:       2019 / 11 / 19
 
 """
 Rig elements main class.
+This class should do:
+- Template class for all components operators.
+- Should create a operator for his own component.
+- Should create the component init hierarchy.
+- Should build the rig component based on the created operators.
+- Should be able to import or reference a component maya file and change
+the names of the components nodes. And get/return the meta node.
 """
 import pymel.core as pmc
 import logger
 import logging
 import operators
+import os
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
 module_logger = logging.getLogger(__name__ + ".py")
+JOMRSVAR = os.environ['JoMRS']
+ELEMENTSPATH = "/scripts/JoMRS/elements"
 
 ##########################################################
 # CLASSES
 ##########################################################
 
 class Main(operators.create_component_operator):
-    def __init__(operators_typ, operators_name, side, sub_operators_count,
-                 self):
-        super(main, self).__init__()
-        operator = self.build_node(operators_name=operator_name, side=side,
-                                   )pass
+    def __init__(self):
+        super(Main, self).__init__()
+        self.operators = self
+
+    def build_operator(operator_name, self):
+        self.operator = self.operators.build_node(operator_name=operator_name)
