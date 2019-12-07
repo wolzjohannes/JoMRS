@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 27
+# Date:       2019 / 12 / 7
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -33,6 +33,7 @@ import attributes
 import curves
 import mayautils
 import meta
+
 reload(meta)
 
 ##########################################################
@@ -73,6 +74,11 @@ ERRORMESSAGE = {
 # CLASSES
 # To Do:
 # - Add aim constraint to LRA control.
+# - Parent operator curve under main control.
+# - Delete first buffer group. Be able to delete the whole component.
+# - All methods to be able to create a full operartor and set
+#   all meta datas.
+# - Able to get back the meta node and its data.
 ##########################################################
 
 
@@ -272,7 +278,7 @@ class create_component_operator(mainOperatorNode):
         root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
         sub_op_meta_nd_attr_name=SUBOPMETANDATTRNAME,
         main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
-        main_op_message_attr_name=MAINOPMESSAGEATTRNAME
+        main_op_message_attr_name=MAINOPMESSAGEATTRNAME,
     ):
         """
         Init the operators creation.
@@ -394,3 +400,9 @@ class create_component_operator(mainOperatorNode):
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
         return self.op_root_nd
+
+    def set_operator_type(self):
+        pass
+
+    def set_operator_module_path(self):
+        pass

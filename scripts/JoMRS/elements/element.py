@@ -20,27 +20,11 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 11 / 30
+# Date:       2019 / 11 /
 
 """
-Rig elements main class. Every rig element should inherit this class.
-From this class you can build the element operators and the actual rig
-component.
-This class should do:
-- Template class for all components operators.
-- Should create a operator for his own component.
-- Should create the component init hierarchy.
-- Should build the rig component based on the created operators.
-- Should be able to import or reference a component maya file and change
-the names of the components nodes. And get/return the meta node.
-- Maybe split things of. One class to create component operators and
-another to import comps.
-- The create component class should inherit all impotand things to create
-the operators and create the final rig.
-- All of them should be able to use with nodegraph qt.
-- Create component class should create the component init hierarchy.
-- Maya the build module i wrote can be in this module.
-- This module creates a nodeGraph node.
+Rig elements main module. This class is the template to create a rig
+element. This class should inherit later from each element main module.
 """
 import pymel.core as pmc
 import logger
@@ -48,35 +32,40 @@ import logging
 import operators
 import os
 import strings
+import attributes
 
 ##########################################################
 # GLOBALS
 ##########################################################
 
 module_logger = logging.getLogger(__name__ + ".py")
-JOMRSVAR = os.environ['JoMRS']
+JOMRSVAR = os.environ["JoMRS"]
 ELEMENTSPATH = "/scripts/JoMRS/elements"
 
 ##########################################################
 # CLASSES
+# - able to build the input and offset connections
 ##########################################################
 
-class operator(operators.create_component_operator):
-    # def __init__(self):
-    #     super(Main, self).__init__()
-    #     self.element_op_hierarchy = self._init_hierarchy()
 
-    def _init_hierarchy(self, element_name, side):
-        self.component_root = pmc.createNode('transform', )
+class build_rig_element(object):
 
-    def build_operator(operator_name, self):
-        self.operator = self.operators.build_node(operator_name=operator_name)
-
-    def set_element_type(self):
-        pass
-
-    def set_element_module_path(self):
-        pass
+    def init_hierarchy(self, element_name, side):
+        element_root_name = "{}_RIG_{}_element_0_GRP".format(
+            side, element_name.lower()
+        )
+        element_root_name = strings.string_checkup(element_root_name)
+        self.element_root = pmc.createNode("transform", n=element_root_name)
+        attributes.lock_and_hide_attributes(self.element_root)
+        temp = [
+            pmc.createNode("transform", n="input"),
+            pmc.createNode("transform", n="output"),
+            pmc.createNode("transform", n="element"),
+            pmc.createNode("transform", n="spaces"),
+        ]
+        for node in temp:
+            self.element_root.addChild(node)
+            attributes.lock_and_hide_attributes(node)
 
     def create_input_port(self):
         pass
