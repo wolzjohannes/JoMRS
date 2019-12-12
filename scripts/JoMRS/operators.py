@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 12 / 7
+# Date:       2019 / 12 / 8
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -259,10 +259,10 @@ class create_component_operator(mainOperatorNode):
     Create the whole component operator.
     """
 
-    def __init__(self):
-        super(create_component_operator, self).__init__()
+    # def __init__(self):
+    #     super(create_component_operator, self).__init__()
 
-    def build_node(
+    def __init__(
         self,
         sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
         operator_name=DEFAULTOPERATORNAME,
@@ -298,6 +298,7 @@ class create_component_operator(mainOperatorNode):
                 sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
                 main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
         """
+        super(create_component_operator, self).__init__()
         self.result = []
         self.sub_operators = []
         self.joint_control = curves.JointControl()
@@ -318,6 +319,7 @@ class create_component_operator(mainOperatorNode):
         self.main_meta_nd = (
             self.main_operator_node[1].attr(main_op_meta_nd_attr_name).get()
         )
+        self.main_meta_nd.component_side.set(side)
         for sub in range(sub_operators_count):
             instance = "_op_{}_{}".format(operator_name, str(sub))
             self.sub_op_nd_name = sub_operators_node_name.replace(
@@ -399,10 +401,48 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        return self.op_root_nd
+        # return self.op_root_nd
 
-    def set_operator_type(self):
-        pass
+    def set_component_type(self, type):
+        """
+        Set the component type.
+        Args:
+                type(str): The component type.
+        """
+        self.main_meta_nd.component_type.set(type)
 
-    def set_operator_module_path(self):
-        pass
+    def set_component_name(self, name):
+        """
+        Set the component name.
+        Args:
+                name(str): The component name.
+        """
+        self.main_meta_nd.component_name.set(name)
+
+    def set_component_side(self, side):
+        """
+        Set the component side.
+        Args:
+                side(str): The component side.
+        """
+        self.main_meta_nd.component_side.set(side)
+
+    def set_component_index(self, index):
+        """
+        Set the compnent indes.
+        Args:
+                index(int): The component index.
+        """
+        self.main_meta_nd.component_index.set(index)
+
+    def set_ik_spaces_ref(self, spaces):
+        """
+        Set the ik_spaces_reference nodes.
+        Args:
+                spaces(list): The references for the ik spaces.
+        """
+        if not isinstance(spaces, list):
+            logger.log(level='error', message='Argument is no list',
+                func=self.set_ik_spaces_ref, logger=module_logger)
+            return
+        self.main_meta_nd.ik_spaces_ref.set(";".join(spaces))
