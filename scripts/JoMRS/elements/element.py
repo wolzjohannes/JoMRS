@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 11 /
+# Date:       2019 / 12 / 14
 
 """
 Rig elements main module. This class is the template to create a rig
@@ -43,26 +43,42 @@ JOMRSVAR = os.environ["JoMRS"]
 ELEMENTSPATH = "/scripts/JoMRS/elements"
 
 ##########################################################
-# CLASSES
-# - able to build the input and offset connections
+# Methods
+# init hierarchy
+# input output management
+# build process
+# build steps. Example: layout rig. orient rig. ref nodes.
+# all repedative things in a element build.
 ##########################################################
 
 
 class build_rig_element(object):
+    """
+    Class as rig build template for each rig element.
+    """
+
+    def __init__(self, element_name, side):
+        self.element_root = []
+        self.input = []
+        self.output = []
+        self.element = []
+        self.spaces = []
 
     def init_hierarchy(self, element_name, side):
+        """
+        Init rig element base hierarchy.
+        """
         element_root_name = "{}_RIG_{}_element_0_GRP".format(
             side, element_name.lower()
         )
         element_root_name = strings.string_checkup(element_root_name)
         self.element_root = pmc.createNode("transform", n=element_root_name)
         attributes.lock_and_hide_attributes(self.element_root)
-        temp = [
-            pmc.createNode("transform", n="input"),
-            pmc.createNode("transform", n="output"),
-            pmc.createNode("transform", n="element"),
-            pmc.createNode("transform", n="spaces"),
-        ]
+        self.input = pmc.createNode("transform", n="input")
+        self.output = pmc.createNode("transform", n="output")
+        self.element = pmc.createNode("transform", n="element")
+        self.spaces = pmc.createNode("transform", n="spaces")
+        temp = [self.input, self.output, self.element, self.spaces]
         for node in temp:
             self.element_root.addChild(node)
             attributes.lock_and_hide_attributes(node)
@@ -74,4 +90,7 @@ class build_rig_element(object):
         pass
 
     def build_from_operator(self):
+        """
+        Build the element from operator. wikt all repetative steps.
+        """
         pass

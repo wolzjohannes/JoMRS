@@ -69,6 +69,7 @@ ERRORMESSAGE = {
     "get_comp_side": "Registered component side not valid",
     "set_comp_side": "Selected side not valid",
 }
+MAINOPMETAPARAMS = meta.MAINOPMETAPARAMS
 
 ##########################################################
 # CLASSES
@@ -403,46 +404,56 @@ class create_component_operator(mainOperatorNode):
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
         # return self.op_root_nd
 
-    def set_component_type(self, type):
+    def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
         """
         Set the component type.
         Args:
                 type(str): The component type.
         """
-        self.main_meta_nd.component_type.set(type)
+        self.main_meta_nd.attr(plug).set(type)
 
-    def set_component_name(self, name):
+    def set_component_name(self, name, plug=MAINOPMETAPARAMS[0]):
         """
         Set the component name.
         Args:
                 name(str): The component name.
         """
-        self.main_meta_nd.component_name.set(name)
+        self.main_meta_nd.attr(plug).set(name)
 
-    def set_component_side(self, side):
+    def set_component_side(self, side, plug=MAINOPMETAPARAMS[2]):
         """
         Set the component side.
         Args:
                 side(str): The component side.
         """
-        self.main_meta_nd.component_side.set(side)
+        self.main_meta_nd.attr(plug).set(side)
 
-    def set_component_index(self, index):
+    def set_component_index(self, index, plug=MAINOPMETAPARAMS[3]):
         """
         Set the compnent indes.
         Args:
                 index(int): The component index.
         """
-        self.main_meta_nd.component_index.set(index)
+        self.main_meta_nd.attr(plug).set(index)
 
-    def set_ik_spaces_ref(self, spaces):
+    def set_ik_spaces_ref(self, spaces, plug=MAINOPMETAPARAMS[5]):
         """
         Set the ik_spaces_reference nodes.
         Args:
                 spaces(list): The references for the ik spaces.
         """
         if not isinstance(spaces, list):
-            logger.log(level='error', message='Argument is no list',
-                func=self.set_ik_spaces_ref, logger=module_logger)
+            logger.log(
+                level="error",
+                message="Argument is no list",
+                func=self.set_ik_spaces_ref,
+                logger=module_logger,
+            )
             return
-        self.main_meta_nd.ik_spaces_ref.set(";".join(spaces))
+        self.main_meta_nd.attr(plug).set(";".join(spaces))
+
+    def set_connect_nd(self, node, plug=MAINOPMETAPARAMS[9]):
+        """
+        Set the element connect node for build process.
+        """
+        self.main_meta_nd.attr(plug).set(node)

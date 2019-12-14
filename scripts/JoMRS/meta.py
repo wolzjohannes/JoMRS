@@ -50,7 +50,7 @@ ROOTOPMETAPARAMS = ['rig_name', 'l_rig_color',
 MAINOPMETAPARAMS = ['component_name', 'component_type', 'component_side',
                     'component_index', 'connection_types', 'ik_spaces_ref',
                     'fk_spaces_ref', 'ik_pvec_spaces_ref',
-                    'main_operator_nd']
+                    'main_operator_nd', 'connect_nd']
 MAINMETANDPLUG = 'main_meta_nd'
 
 ##########################################################
@@ -538,6 +538,13 @@ class MainOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        connect_nd_attr = {
+            "name": main_op_meta_param[9],
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -548,6 +555,7 @@ class MainOpMetaNode(MetaNode):
             fk_spaces_ref_attr,
             ik_pvec_spaces_ref_attr,
             main_operator_connection,
+            connect_nd_attr,
         ]
 
         for attr_ in main_node_param_list:
