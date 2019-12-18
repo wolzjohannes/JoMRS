@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 12 / 8
+# Date:       2019 / 12 / 18
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -402,7 +402,6 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        # return self.op_root_nd
 
     def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
         """
