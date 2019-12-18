@@ -57,7 +57,7 @@ class build_rig_element(object):
     Class as rig build template for each rig element.
     """
 
-    def __init__(self, element_name, side):
+    def __init__(self):
         self.element_root = []
         self.input = []
         self.output = []
@@ -82,6 +82,22 @@ class build_rig_element(object):
         for node in temp:
             self.element_root.addChild(node)
             attributes.lock_and_hide_attributes(node)
+        attributes.add_attr(
+            self.input,
+            name="input_connect_ws_matrix",
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+            multi=True,
+        )
+        attributes.add_attr(
+            self.output,
+            name="output_connect_ws_matrix",
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+            multi=True,
+        )
 
     def create_input_port(self):
         pass
