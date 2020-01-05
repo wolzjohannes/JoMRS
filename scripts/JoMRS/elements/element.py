@@ -57,6 +57,7 @@ ELEMENTSPATH = "/scripts/JoMRS/elements"
 # Create ref transforms.
 # Create Controls.
 # Connect input ud attributes with driven.
+# Connect input was matrix with offset node.
 # Connect output matrix.
 # Connect ud attributes with output node.
 # Create BND joints.
@@ -67,7 +68,6 @@ class build_rig_element(object):
     """
     Class as rig build template for each rig element.
     """
-
     def __init__(self):
         self.element_root = []
         self.input = []
@@ -75,9 +75,13 @@ class build_rig_element(object):
         self.element = []
         self.spaces = []
 
-    def init_hierarchy(self, element_name, side):
+    def init_hierarchy(self, element_name, side, parent):
         """
         Init rig element base hierarchy.
+        Args:
+                element_name(str): The Elements name.
+                side(str): Element Side.
+                parent(dagnode): Element parent node.
         """
         element_root_name = "{}_RIG_{}_element_0_GRP".format(
             side, element_name.lower()
@@ -95,26 +99,50 @@ class build_rig_element(object):
             attributes.lock_and_hide_attributes(node)
         attributes.add_attr(
             self.input,
-            name="input_connect_ws_matrix",
+            name="input_ws_matrix",
             attrType="matrix",
+            multi=True,
             keyable=False,
             hidden=True,
-            multi=True,
         )
         attributes.add_attr(
             self.output,
-            name="output_connect_ws_matrix",
+            name="output_ws_matrix",
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )
+        if parent:
+            parent.addChild(self.element_root)
+
+    def create_input_ws_matrix_port(self, name):
+        """
+        Create a input port for ws matrix connection.
+        Args:
+                name(str): Name of the attribute.
+        """
+        attributes.add_attr(
+            self.input,
+            name="{}_input_ws_matrix".format(name),
             attrType="matrix",
             keyable=False,
             hidden=True,
-            multi=True,
         )
 
-    def create_input_port(self):
-        pass
-
-    def create_output_port(self):
-        pass
+    def create_output_ws_matrix_port(self, name):
+        """
+        Create a output port for ws matrix connection.
+        Args:
+                name(str): Name of the attribute.
+        """
+        attributes.add_attr(
+            self.output,
+            name="{}_output_ws_matrix".format(name),
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+        )
 
     def build_from_operator(self):
         """
