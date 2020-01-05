@@ -20,10 +20,15 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 27
+# Date:       2020 / 01 / 05
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
+To Do:
+build.py should find all operators. Build the rigs based on the operators
+meta data. Then it should connect each component via input and output matrix.
+And connect ud attributes if necessary.
+All this should be definded in the operators meta data.
 """
 
 import pymel.core as pmc

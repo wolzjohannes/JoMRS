@@ -49,6 +49,17 @@ ELEMENTSPATH = "/scripts/JoMRS/elements"
 # build process
 # build steps. Example: layout rig. orient rig. ref nodes.
 # all repedative things in a element build.
+# What are the repedative things:
+# Build comp hierarchy and parent it under root hierarchy.
+# Set and orient joints.
+# Create fk, Drv and ik joints.
+# Create rig logic.
+# Create ref transforms.
+# Create Controls.
+# Connect input ud attributes with driven.
+# Connect output matrix.
+# Connect ud attributes with output node.
+# Create BND joints.
 ##########################################################
 
 
