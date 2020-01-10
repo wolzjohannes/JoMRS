@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 12 / 14
+# Date:       2020 / 01 / 10
 
 """
 Rig elements main module. This class is the template to create a rig
@@ -68,6 +68,7 @@ class build_rig_element(object):
     """
     Class as rig build template for each rig element.
     """
+
     def __init__(self):
         self.element_root = []
         self.input = []
@@ -142,6 +143,40 @@ class build_rig_element(object):
             attrType="matrix",
             keyable=False,
             hidden=True,
+        )
+
+    def add_ud_port(
+        self,
+        element_port='input',
+        name=None,
+        typ="float",
+        minValue=0,
+        maxValue=1,
+        value=1,
+    ):
+        """
+        Add userdefinet port the input or output port of rig element.
+        By Default it add a float value to the input port with a given
+        name, with a 0 min value a 1 max value and 1 as value.
+        Args:
+                element_port(str): The rig elements port.
+                name(str): The port name.
+                type(str): The port typ.
+                minValue(float or int): The minimal port value.
+                max
+        """
+        if element_port == 'input':
+            node = self.input
+        elif element_port == 'output':
+            node = self.output
+
+        attributes.add_attr(
+            node=node,
+            name=name,
+            attrType=typ,
+            minValue=minValue,
+            maxValue=maxValue,
+            value=value,
         )
 
     def build_from_operator(self):
