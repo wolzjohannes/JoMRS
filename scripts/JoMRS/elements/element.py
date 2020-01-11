@@ -27,12 +27,11 @@ Rig elements main module. This class is the template to create a rig
 element. This class should inherit later from each element main module.
 """
 import pymel.core as pmc
-import logger
 import logging
-import operators
 import os
 import strings
 import attributes
+import mayautils
 
 ##########################################################
 # GLOBALS
@@ -155,15 +154,16 @@ class build_rig_element(object):
         value=1,
     ):
         """
-        Add userdefinet port the input or output port of rig element.
+        Add userdefined port to the input or output port of a rig element.
         By Default it add a float value to the input port with a given
-        name, with a 0 min value a 1 max value and 1 as value.
+        name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
         Args:
                 element_port(str): The rig elements port.
                 name(str): The port name.
                 type(str): The port typ.
                 minValue(float or int): The minimal port value.
-                max
+                maxValue(float or int): The maximum port value.
+                value(float or int or str): The port value.
         """
         if element_port == 'input':
             node = self.input
@@ -178,6 +178,9 @@ class build_rig_element(object):
             maxValue=maxValue,
             value=value,
         )
+
+    def create_joints_by_list(self):
+        pass
 
     def build_from_operator(self):
         """
