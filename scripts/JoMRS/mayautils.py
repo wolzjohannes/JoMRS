@@ -897,12 +897,13 @@ def default_orient_joint_hierarchy(root_node, aim_axes="xyz", up_axes="yup"):
 
 
 def create_joint(
-    name="M_BND_0_JNT", typ="BND", node=None, orient_match_rotation=True
+    name="M_BND_0_JNT", typ="BND", node=None, orient_match_rotation=True,
+    match_matrix=None
 ):
     """
     Create a joint node with a specific typ.
     By Default it creates a 'BND' joint and match the jointOrient with
-    the roatation of a node.
+    the rotation of a node.
     Args:
             name(str): The name of the node. Try to use the JoMRS
             naming convention. If not it will throw a warning.
@@ -910,6 +911,7 @@ def create_joint(
             node(dagnode): The node for transformation match.
             orient_match_rotation(bool): Enable the match of the joint
             orientation with the rotation of the node.
+            match_matrix(matirx): The matrix to match
     Return:
             tuple: The created joint node.
     """
@@ -928,10 +930,12 @@ def create_joint(
             jnt.radius.set(util["radius"])
             jnt.overrideColor.set(util["overrideColor"])
     if node:
-        pmc.delete(pmc.parentConstraint(node, jnt, mo=False))
+        jnt.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     if orient_match_rotation:
         jnt.jointOrient.set(jnt.rotate.get())
         jnt.rotate.set(0, 0, 0)
+    if match_matrix:
+        jnt.setMatrix(match_matrix, worldSpace=True)
     return jnt
 
 

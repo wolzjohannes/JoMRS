@@ -74,6 +74,10 @@ class build_rig_element(object):
         self.output = []
         self.element = []
         self.spaces = []
+        self.fk_joints = []
+        self.ik_joints = []
+        self.drv_joints = []
+        self.bnd_joints = []
 
     def init_hierarchy(self, element_name, side, parent):
         """
@@ -146,7 +150,7 @@ class build_rig_element(object):
 
     def add_ud_port(
         self,
-        element_port='input',
+        element_port="input",
         name=None,
         typ="float",
         minValue=0,
@@ -165,9 +169,9 @@ class build_rig_element(object):
                 maxValue(float or int): The maximum port value.
                 value(float or int or str): The port value.
         """
-        if element_port == 'input':
+        if element_port == "input":
             node = self.input
-        elif element_port == 'output':
+        elif element_port == "output":
             node = self.output
 
         attributes.add_attr(
@@ -179,8 +183,37 @@ class build_rig_element(object):
             value=value,
         )
 
-    def create_joints_by_list(self):
-        pass
+    def create_joint_by_data(self, matrix, side, name, typ, index):
+        """
+        Create a joint by data.
+        Args:
+                matrix(matrix): Matrix data to match.
+                side(str): Joint side. Valid is M, R, L.
+                name(str): Joint name.
+                typ(str): Joint typ
+        """
+        name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
+        jnt = mayautils.create_joint(name=name, typ=typ, match_matrix=matrix)
+
+    def create_joint_skeleton_by_data_dic(self, data_dic):
+        temp = []
+        for data in data_dic:
+            jnt = self.create_joint_by_data(
+                data["matrix"],
+                data["side"],
+                data["name"],
+                data["typ"],
+                data["index"],
+            )
+            if data['typ'] == 'FK':
+                self.fk_joints.append(jnt)
+            elif data['typ'] == 'IK':
+                self.ik_joints.append(jnt)
+            elif data['typ'] == 'DRV':
+                self.drv_joints.append(jnt)
+            elif data['typ'] == 'BND':
+                self.bnd_joints.append(jnt)
+        mayautils.create_hierarchy(temp)
 
     def build_from_operator(self):
         """
