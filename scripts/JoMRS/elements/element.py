@@ -20,11 +20,11 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 01 / 10
+# Date:       2020 / 01 / 12
 
 """
 Rig elements main module. This class is the template to create a rig
-element. This class should inherit later from each element main module.
+element. Every rig element should inherit this class as template.
 """
 import pymel.core as pmc
 import logging
