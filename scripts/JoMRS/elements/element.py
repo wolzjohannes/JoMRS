@@ -194,8 +194,17 @@ class build_rig_element(object):
         """
         name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
         jnt = mayautils.create_joint(name=name, typ=typ, match_matrix=matrix)
+        return jnt
 
-    def create_joint_skeleton_by_data_dic(self, data_dic):
+    def create_joint_skeleton_by_data_dic(self, data_list):
+        """
+        Create a joint skeleton by a data dictonary.
+        Args:
+                data_dic(list with dics): A List filled with dictonaries.
+                Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
+                , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
+                name: 'Test'; 'typ': 'BND; 'index': 0}]
+        """
         temp = []
         for data in data_dic:
             jnt = self.create_joint_by_data(
@@ -205,13 +214,13 @@ class build_rig_element(object):
                 data["typ"],
                 data["index"],
             )
-            if data['typ'] == 'FK':
+            if data["typ"] == "FK":
                 self.fk_joints.append(jnt)
-            elif data['typ'] == 'IK':
+            elif data["typ"] == "IK":
                 self.ik_joints.append(jnt)
-            elif data['typ'] == 'DRV':
+            elif data["typ"] == "DRV":
                 self.drv_joints.append(jnt)
-            elif data['typ'] == 'BND':
+            elif data["typ"] == "BND":
                 self.bnd_joints.append(jnt)
         mayautils.create_hierarchy(temp)
 
