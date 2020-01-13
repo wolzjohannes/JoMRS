@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 01 / 12
+# Date:       2020 / 01 / 13
 
 """
 Rig elements main module. This class is the template to create a rig
@@ -78,6 +78,7 @@ class build_rig_element(object):
         self.ik_joints = []
         self.drv_joints = []
         self.bnd_joints = []
+        self.ref_transforms = []
 
     def init_hierarchy(self, element_name, side, parent):
         """
@@ -190,7 +191,10 @@ class build_rig_element(object):
                 matrix(matrix): Matrix data to match.
                 side(str): Joint side. Valid is M, R, L.
                 name(str): Joint name.
-                typ(str): Joint typ
+                typ(str): Joint typ.
+                index(int): The index number.
+        Return:
+                tuple: The create joint.
         """
         name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
         jnt = mayautils.create_joint(name=name, typ=typ, match_matrix=matrix)
@@ -200,7 +204,7 @@ class build_rig_element(object):
         """
         Create a joint skeleton by a data dictonary.
         Args:
-                data_dic(list with dics): A List filled with dictonaries.
+                data_list(list with dics): A List filled with dictonaries.
                 Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
                 , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
                 name: 'Test'; 'typ': 'BND; 'index': 0}]
@@ -223,6 +227,29 @@ class build_rig_element(object):
             elif data["typ"] == "BND":
                 self.bnd_joints.append(jnt)
         mayautils.create_hierarchy(temp)
+
+    def create_ref_transform(self, name, side, index, buffer_grp, match_matrix):
+        """
+        Create a reference transform.
+        Args:
+                name(str): Name for the ref node.
+                side(str): The side. Valid is M, R, L.
+                index(int): The index number.
+                buffer_grp(bool): Enable buffer grp.
+                match_matrix(matrix): The match matrix.
+        Return:
+                tuple: The new ref node.
+        """
+        name = '{}_REF_{}_{}_GRP'.format(side, name, str(index))
+        name = strings.string_checkup(name, logger_= module_logger)
+        ref_trs = pmc.createNode('transform', n=name)
+        if self.element:
+            self.element.addChild(ref_trs)
+        if match_matrix:
+            ref_trs.setMatrix(match_matrix, worldSpace=True)
+        if buffer_grp:
+            mayautils.create_buffer_grp(node=ref_trs)
+        return ref_trs
 
     def build_from_operator(self):
         """
