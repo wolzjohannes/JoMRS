@@ -34,6 +34,8 @@ import attributes
 import mayautils
 import operators
 
+reload(operators)
+
 ##########################################################
 # GLOBALS
 ##########################################################
@@ -70,12 +72,24 @@ class build_element_operator(operators.create_component_operator):
         operators.create_component_operator.__init__(self)
         self.operator = None
 
-    def init_operator(self,
-        operator_name=None, sub_operators_count=None, side=None, axes=None,
-        local_rotate_axes=True
+    def build(
+        self,
+        operator_name,
+        sub_operators_count,
+        side,
+        axes,
+        comp_typ,
+        local_rotate_axes=True,
     ):
-        self.operator = self
-        self.operator.set_component_side(side=side)
+        self.init_operator(
+            operator_name=operator_name,
+            sub_operators_count=sub_operators_count,
+            axes=axes,
+            local_rotate_axes=local_rotate_axes,
+        )
+        self.set_component_type(comp_typ)
+        self.set_component_name(operator_name)
+        self.set_component_side(side)
 
 
 # class template for rig element creation.
