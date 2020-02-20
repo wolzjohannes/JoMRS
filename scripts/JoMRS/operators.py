@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 12 / 18
+# Date:       2020 / 02 / 20
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -260,10 +260,22 @@ class create_component_operator(mainOperatorNode):
     Create the whole component operator.
     """
 
-    # def __init__(self):
-    #     super(create_component_operator, self).__init__()
+    def __init__(self):
+        super(create_component_operator, self).__init__()
+        self.result = []
+        self.sub_operators = []
+        self.joint_control = None
+        self.main_operator_node_name = None
+        self.main_operator_node = None
+        self.root_meta_nd = None
+        self.main_meta_nd = None
+        self.sub_op_nd_name = None
+        self.sub_meta_nd = None
+        self.linear_curve_name = None
+        self.main_operator_node = None
+        self.op_root_nd = None
 
-    def __init__(
+    def init_operator(
         self,
         sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
         operator_name=DEFAULTOPERATORNAME,
@@ -299,9 +311,6 @@ class create_component_operator(mainOperatorNode):
                 sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
                 main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
         """
-        super(create_component_operator, self).__init__()
-        self.result = []
-        self.sub_operators = []
         self.joint_control = curves.JointControl()
         self.main_operator_node_name = main_operator_node_name.replace(
             "M_", "{}_".format(side)
@@ -402,6 +411,7 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
+        return self.result
 
     def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
         """
