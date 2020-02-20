@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 01 / 13
+# Date:       2020 / 02 / 01
 
 """
 Rig elements main module. This class is the template to create a rig
@@ -32,6 +32,7 @@ import os
 import strings
 import attributes
 import mayautils
+import operators
 
 ##########################################################
 # GLOBALS
@@ -63,6 +64,21 @@ ELEMENTSPATH = "/scripts/JoMRS/elements"
 ##########################################################
 
 
+# class template to build the element operator.
+class build_element_operator(operators.create_component_operator):
+    def __init__(self):
+        operators.create_component_operator.__init__(self)
+        self.operator = None
+
+    def init_operator(self,
+        operator_name=None, sub_operators_count=None, side=None, axes=None,
+        local_rotate_axes=True
+    ):
+        self.operator = self
+        self.operator.set_component_side(side=side)
+
+
+# class template for rig element creation.
 class build_rig_element(object):
     """
     Class as rig build template for each rig element.
@@ -240,9 +256,9 @@ class build_rig_element(object):
         Return:
                 tuple: The new ref node.
         """
-        name = '{}_REF_{}_{}_GRP'.format(side, name, str(index))
-        name = strings.string_checkup(name, logger_= module_logger)
-        ref_trs = pmc.createNode('transform', n=name)
+        name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
+        name = strings.string_checkup(name, logger_=module_logger)
+        ref_trs = pmc.createNode("transform", n=name)
         if self.element:
             self.element.addChild(ref_trs)
         if match_matrix:
@@ -251,8 +267,15 @@ class build_rig_element(object):
             mayautils.create_buffer_grp(node=ref_trs)
         return ref_trs
 
-    def build_from_operator(self):
+    def build_from_operator(self, element_name, side, parent):
         """
-        Build the element from operator. wikt all repetative steps.
+        Build the element from operator.
         """
-        pass
+        self.init_hierarchy(element_name, side, parent)
+        self.build_rig()
+
+    def build_rig(self):
+        """
+        Create the actual rig.
+        """
+        return False
