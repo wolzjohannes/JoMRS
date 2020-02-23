@@ -310,6 +310,8 @@ class create_component_operator(mainOperatorNode):
                 root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
                 sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
                 main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
+        Returns:
+                List: The operators root node.
         """
         self.joint_control = curves.JointControl()
         self.main_operator_node_name = main_operator_node_name.replace(
@@ -411,7 +413,7 @@ class create_component_operator(mainOperatorNode):
         linear_curve.inheritsTransform.set(0)
         self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        return self.result
+        return self.op_root_nd
 
     def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
         """

@@ -71,17 +71,20 @@ class build_element_operator(operators.create_component_operator):
     def __init__(self):
         operators.create_component_operator.__init__(self)
         self.operator = None
-
+    # This build should let operators class work in default if args are none.
     def build(
         self,
         operator_name,
-        sub_operators_count,
         side,
         axes,
         comp_typ,
+        index,
+        connect_node,
+        ik_space_ref,
+        sub_operators_count=0,
         local_rotate_axes=True,
     ):
-        self.init_operator(
+        self.operator = self.init_operator(
             operator_name=operator_name,
             sub_operators_count=sub_operators_count,
             axes=axes,
@@ -90,6 +93,10 @@ class build_element_operator(operators.create_component_operator):
         self.set_component_type(comp_typ)
         self.set_component_name(operator_name)
         self.set_component_side(side)
+        self.set_component_index(index)
+        self.set_connect_nd(connect_node)
+        self.set_ik_spaces_ref(ik_space_ref)
+
 
 
 # class template for rig element creation.
