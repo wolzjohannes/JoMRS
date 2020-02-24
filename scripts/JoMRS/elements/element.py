@@ -28,6 +28,7 @@ element. Every rig element should inherit this class as template.
 """
 import pymel.core as pmc
 import logging
+import logger
 import os
 import strings
 import attributes
@@ -40,7 +41,7 @@ reload(operators)
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 JOMRSVAR = os.environ["JoMRS"]
 ELEMENTSPATH = "/scripts/JoMRS/elements"
 
@@ -66,22 +67,24 @@ ELEMENTSPATH = "/scripts/JoMRS/elements"
 ##########################################################
 
 
-# class template to build the element operator.
 class build_element_operator(operators.create_component_operator):
+    """
+    Build element operator template class.
+    """
     def __init__(self):
         operators.create_component_operator.__init__(self)
         self.operator = None
-    # This build should let operators class work in default if args are none.
+
     def build(
         self,
         operator_name,
-        side,
-        axes,
         comp_typ,
-        index,
-        connect_node,
-        ik_space_ref,
-        sub_operators_count=0,
+        side=None,
+        axes=None,
+        index=None,
+        connect_node=None,
+        ik_space_ref=None,
+        sub_operators_count=None,
         local_rotate_axes=True,
     ):
         self.operator = self.init_operator(
@@ -90,13 +93,17 @@ class build_element_operator(operators.create_component_operator):
             axes=axes,
             local_rotate_axes=local_rotate_axes,
         )
-        self.set_component_type(comp_typ)
         self.set_component_name(operator_name)
-        self.set_component_side(side)
-        self.set_component_index(index)
-        self.set_connect_nd(connect_node)
-        self.set_ik_spaces_ref(ik_space_ref)
-
+        self.set_component_type(comp_typ)
+        if side:
+            self.set_component_side(side)
+        if index:
+            self.set_component_index(index)
+        if connect_node:
+            self.set_connect_nd(connect_node)
+        if ik_space_ref:
+            self.set_ik_spaces_ref(ik_space_ref)
+        return True
 
 
 # class template for rig element creation.
@@ -278,7 +285,7 @@ class build_rig_element(object):
                 tuple: The new ref node.
         """
         name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
-        name = strings.string_checkup(name, logger_=module_logger)
+        name = strings.string_checkup(name, logger_=_LOGGER)
         ref_trs = pmc.createNode("transform", n=name)
         if self.element:
             self.element.addChild(ref_trs)

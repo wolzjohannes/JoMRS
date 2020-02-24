@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="">
+    <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="get the operators class work">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/operators.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/operators.py" afterDir="false" />
@@ -17,8 +17,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/elements/element.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="163">
-              <caret line="73" column="77" selection-start-line="73" selection-start-column="77" selection-end-line="73" selection-end-column="77" />
+            <state relative-caret-position="373">
+              <caret line="92" column="22" lean-forward="true" selection-start-line="92" selection-start-column="22" selection-end-line="92" selection-end-column="22" />
               <folding>
                 <element signature="e#1307#1331#0" expanded="true" />
               </folding>
@@ -29,8 +29,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="14245">
-              <caret line="449" column="25" selection-start-line="449" selection-start-column="8" selection-end-line="449" selection-end-column="25" />
+            <state relative-caret-position="-3547">
+              <caret line="315" column="35" lean-forward="true" selection-start-line="315" selection-start-column="35" selection-end-line="315" selection-end-column="35" />
             </state>
           </provider>
         </entry>
@@ -72,6 +72,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -106,7 +107,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -151,7 +151,14 @@
       <option name="project" value="LOCAL" />
       <updated>1582401485655</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="get the operators class work">
+      <created>1582487749589</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1582487749589</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TodoView">
@@ -167,11 +174,11 @@
     <frame x="0" y="48" width="2160" height="1392" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24976392" />
+      <window_info content_ui="combo" id="Project" order="0" weight="0.24976392" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.3292789" />
       <window_info anchor="bottom" id="Run" order="2" weight="0.3292789" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
@@ -189,7 +196,8 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="pycharm workspace" />
     <MESSAGE value="extend gitignore with pycharm xml" />
-    <option name="LAST_COMMIT_MESSAGE" value="extend gitignore with pycharm xml" />
+    <MESSAGE value="get the operators class work" />
+    <option name="LAST_COMMIT_MESSAGE" value="get the operators class work" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -220,6 +228,13 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3547">
+          <caret line="315" column="35" lean-forward="true" selection-start-line="315" selection-start-column="35" selection-end-line="315" selection-end-column="35" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="968">
@@ -230,17 +245,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="14245">
-          <caret line="449" column="25" selection-start-line="449" selection-start-column="8" selection-end-line="449" selection-end-column="25" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/elements/element.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="163">
-          <caret line="73" column="77" selection-start-line="73" selection-start-column="77" selection-end-line="73" selection-end-column="77" />
+        <state relative-caret-position="373">
+          <caret line="92" column="22" lean-forward="true" selection-start-line="92" selection-start-column="22" selection-end-line="92" selection-end-column="22" />
           <folding>
             <element signature="e#1307#1331#0" expanded="true" />
           </folding>

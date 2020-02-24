@@ -56,7 +56,7 @@ LINEARCURVENAME = "M_linear_op_0_CRV"
 DEFAULTOPERATORNAME = "component"
 DEFAULTSIDE = "M"
 DEFAULTINDEX = 0
-DEFAULTSUBOPERATORSCOUNT = 1
+DEFAULTSUBOPERATORSCOUNT = 0
 DEFAULTAXES = "X"
 DEFAULTSPACING = 10
 DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
@@ -283,7 +283,7 @@ class create_component_operator(mainOperatorNode):
         main_operator_node_name=MAINOPROOTNODENAME,
         sub_operators_node_name=SUBOPROOTNODENAME,
         axes=DEFAULTAXES,
-        spaceing=DEFAULTSPACING,
+        spacing=DEFAULTSPACING,
         sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
         linear_curve_name=LINEARCURVENAME,
         local_rotate_axes=True,
@@ -302,7 +302,7 @@ class create_component_operator(mainOperatorNode):
                 main_operator_node_name: Main Operators node name.
                 sub_operators_node_name: Sub Operators node name.
                 axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
-                spaceing(int): Space between main and sub op nodes
+                spacing(int): Space between main and sub op nodes
                 sub_operators_scale(int): Sub operators node scale factor.
                 linear_curve_name(str): Operators visualisation curve name.
                 local_rotate_axes(bool): Enabel local rotate axes.
@@ -313,6 +313,18 @@ class create_component_operator(mainOperatorNode):
         Returns:
                 List: The operators root node.
         """
+        if not sub_operators_count:
+            sub_operators_count = DEFAULTSUBOPERATORSCOUNT
+        if not operator_name:
+            operator_name = DEFAULTOPERATORNAME
+        if not side:
+            side = DEFAULTSIDE
+        if not axes:
+            axes = DEFAULTAXES
+        if not spacing:
+            spacing = DEFAULTSPACING
+        if not sub_operators_scale:
+            sub_operators_scale = DEFAULTSUBOPERATORSSCALE
         self.joint_control = curves.JointControl()
         self.main_operator_node_name = main_operator_node_name.replace(
             "M_", "{}_".format(side)
@@ -392,14 +404,14 @@ class create_component_operator(mainOperatorNode):
             self.sub_operators.append(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
-                spaceing = spaceing * -1
+                spacing = spacing * -1
             if axes == "-X":
                 axes = "X"
             elif axes == "-Y":
                 axes = "Y"
             elif axes == "-Z":
                 axes = "Z"
-            sub_op_node[0].attr("translate" + axes).set(spaceing)
+            sub_op_node[0].attr("translate" + axes).set(spacing)
             self.result.append(sub_op_node[-1])
         self.linear_curve_name = linear_curve_name.replace(
             "M_", "{}_".format(side)
