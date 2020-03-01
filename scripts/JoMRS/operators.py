@@ -259,21 +259,25 @@ class create_component_operator(mainOperatorNode):
     """
     Create the whole component operator.
     """
-
-    def __init__(self):
+    def __init__(self, operator_root_nd=None):
+        """ Init all important data.
+        Args:
+                operator_root_nd(pmc.PyNode(), optional): The
+                operators_root_node.
+        """
         super(create_component_operator, self).__init__()
+        self.op_root_nd = operator_root_nd
         self.result = []
         self.sub_operators = []
         self.joint_control = None
         self.main_operator_node_name = None
         self.main_operator_node = None
         self.root_meta_nd = None
-        self.main_meta_nd = None
+        self.main_meta_nd = self.get_main_meta_node()
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
         self.linear_curve_name = None
         self.main_operator_node = None
-        self.op_root_nd = None
 
     def init_operator(
         self,
@@ -349,9 +353,7 @@ class create_component_operator(mainOperatorNode):
             self.sub_op_nd_name = sub_operators_node_name.replace(
                 "M_", "{}_".format(side)
             )
-            self.sub_op_nd_name = self.sub_op_nd_name.replace(
-                "_op_0", instance
-            )
+            self.sub_op_nd_name = self.sub_op_nd_name.replace("_op_0", instance)
             self.sub_meta_nd = meta.SubOpMetaNode(
                 n=self.sub_op_nd_name.replace("_CON", "")
             )
@@ -480,3 +482,12 @@ class create_component_operator(mainOperatorNode):
         Set the element connect node for build process.
         """
         self.main_meta_nd.attr(plug).set(node)
+
+    def get_main_meta_node(self):
+        """
+        Get main meta node from operator root node.
+        Return:
+                pmc.PyNode(): The meta main node.
+        """
+        if self.op_root_nd:
+            return self.op_root_nd.main_op_meta_nd.get()

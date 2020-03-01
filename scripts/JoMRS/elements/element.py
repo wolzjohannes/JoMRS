@@ -29,7 +29,6 @@ element. Every rig element should inherit this class as template.
 import pymel.core as pmc
 import logging
 import logger
-import os
 import strings
 import attributes
 import mayautils
@@ -42,8 +41,6 @@ reload(operators)
 ##########################################################
 
 _LOGGER = logging.getLogger(__name__ + ".py")
-JOMRSVAR = os.environ["JoMRS"]
-ELEMENTSPATH = "/scripts/JoMRS/elements"
 
 ##########################################################
 # Methods
@@ -71,8 +68,14 @@ class build_element_operator(operators.create_component_operator):
     """
     Build element operator template class.
     """
-    def __init__(self):
-        operators.create_component_operator.__init__(self)
+    def __init__(self, operator=None):
+        """
+        Init of important data.
+
+        Args:
+                operator(pmc.PyNode(), optional): Operators main node.
+        """
+        operators.create_component_operator.__init__(self, operator)
         self.operator = None
 
     def build(
@@ -87,6 +90,21 @@ class build_element_operator(operators.create_component_operator):
         sub_operators_count=None,
         local_rotate_axes=True,
     ):
+        """Build the elements operator.
+
+        Args:
+                operator_name(str): The operator name.
+                comp_typ(str): The component typ.
+                side(str): The component side. Valid is L, R, M.
+                axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
+                index(int): The component index.
+                connect_node(str): The connect node .
+                ik_space_ref(list): Spaces given as nodes in a string
+                sub_operators_count(int): Suboperators count.
+                local_rotate_axes(bool): Enable/Disable
+        Return:
+                True if successful.
+        """
         self.operator = self.init_operator(
             operator_name=operator_name,
             sub_operators_count=sub_operators_count,
