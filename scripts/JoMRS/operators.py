@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 02 / 20
+# Date:       2020 / 03 / 01
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -259,6 +259,7 @@ class create_component_operator(mainOperatorNode):
     """
     Create the whole component operator.
     """
+
     def __init__(self, operator_root_nd=None):
         """ Init all important data.
         Args:
@@ -309,7 +310,7 @@ class create_component_operator(mainOperatorNode):
                 spacing(int): Space between main and sub op nodes
                 sub_operators_scale(int): Sub operators node scale factor.
                 linear_curve_name(str): Operators visualisation curve name.
-                local_rotate_axes(bool): Enabel local rotate axes.
+                local_rotate_axes(bool): Enable local rotate axes.
                 op_sub_tag_name(str): Tag name.
                 root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
                 sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
@@ -434,6 +435,7 @@ class create_component_operator(mainOperatorNode):
         Set the component type.
         Args:
                 type(str): The component type.
+                plug(str): Plug name.
         """
         self.main_meta_nd.attr(plug).set(type)
 
@@ -442,6 +444,7 @@ class create_component_operator(mainOperatorNode):
         Set the component name.
         Args:
                 name(str): The component name.
+                plug(str): Plug name.
         """
         self.main_meta_nd.attr(plug).set(name)
 
@@ -450,22 +453,25 @@ class create_component_operator(mainOperatorNode):
         Set the component side.
         Args:
                 side(str): The component side.
+                plug(str): Plug name.
         """
         self.main_meta_nd.attr(plug).set(side)
 
     def set_component_index(self, index, plug=MAINOPMETAPARAMS[3]):
         """
-        Set the compnent indes.
+        Set the component index.
         Args:
                 index(int): The component index.
+                plug(str): Plug name.
         """
         self.main_meta_nd.attr(plug).set(index)
 
     def set_ik_spaces_ref(self, spaces, plug=MAINOPMETAPARAMS[5]):
         """
-        Set the ik_spaces_reference nodes.
+        Set the ik_spaces_reference nodes. Will fail if spaces attr is no list.
         Args:
                 spaces(list): The references for the ik spaces.
+                plug(str): Plug name.
         """
         if not isinstance(spaces, list):
             logger.log(
@@ -480,8 +486,60 @@ class create_component_operator(mainOperatorNode):
     def set_connect_nd(self, node, plug=MAINOPMETAPARAMS[9]):
         """
         Set the element connect node for build process.
+        Args:
+                plug(str): The connect nodes name.
         """
         self.main_meta_nd.attr(plug).set(node)
+
+    def get_component_type(self, plug=MAINOPMETAPARAMS[1]):
+        """
+        Get component type.
+        Args:
+                plug(str): Plug name.
+        Return:
+                string: Component type.
+        """
+        return self.main_meta_nd.attr(plug).get()
+
+    def get_component_name(self, plug=MAINOPMETAPARAMS[0]):
+        """
+        Get component name.
+        Args:
+                plug(str): Plug name.
+        Return:
+                string: Component name.
+        """
+        return self.main_meta_nd.attr(plug).get()
+
+    def get_component_side(self, plug=MAINOPMETAPARAMS[2]):
+        """
+        Get component side.
+        Args:
+                plug(str): Plug name.
+        Return:
+                string: Component side.
+        """
+        return self.main_meta_nd.attr(plug).get()
+
+    def get_component_index(self, plug=MAINOPMETAPARAMS[3]):
+        """
+        Get component index.
+        Args:
+                plug(str): Plug name.
+        Return:
+                string: Component side.
+        """
+        return self.main_meta_nd.attr(plug).get()
+
+    def get_ik_spaces_ref(self, plug=MAINOPMETAPARAMS[5]):
+        """
+        Get ik spaces.
+        Args:
+                plug(str): Plug name.
+        Return:
+                string: Ik spaces.
+        """
+        return self.main_meta_nd.attr(plug).get()
 
     def get_main_meta_node(self):
         """
