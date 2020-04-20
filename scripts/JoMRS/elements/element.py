@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 02 / 01
+# Date:       2020 / 04 / 20
 
 """
 Rig elements main module. This class is the template to create a rig
