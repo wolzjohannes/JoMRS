@@ -43,16 +43,29 @@ TYPEA = "root_operators_meta_class"
 TYPEB = "main_operator_meta_class"
 TYPEC = "sub_operator_meta_class"
 DEFAULTCONNECTIONTYPES = "translate;rotate;scale"
-ROOTOPMETAPARAMS = ['rig_name', 'l_rig_color',
-                    'l_rig_sub_color', 'r_rig_color',
-                    'r_rig_sub_color', 'm_rig_color',
-                    'm_rig_sub_color']
-MAINOPMETAPARAMS = ['component_name', 'component_type', 'component_side',
-                    'component_index', 'connection_types', 'ik_spaces_ref',
-                    'fk_spaces_ref', 'ik_pvec_spaces_ref',
-                    'main_operator_nd', 'output_matrix_nds',
-                    'output_ud_plug_nds']
-MAINMETANDPLUG = 'main_meta_nd'
+ROOTOPMETAPARAMS = [
+    "rig_name",
+    "l_rig_color",
+    "l_rig_sub_color",
+    "r_rig_color",
+    "r_rig_sub_color",
+    "m_rig_color",
+    "m_rig_sub_color",
+]
+MAINOPMETAPARAMS = [
+    "component_name",
+    "component_type",
+    "component_side",
+    "component_index",
+    "connection_types",
+    "ik_spaces_ref",
+    "fk_spaces_ref",
+    "ik_pvec_spaces_ref",
+    "main_operator_nd",
+    "connect_nd",
+    "rig_build_class_ref",
+]
+MAINMETANDPLUG = "main_meta_nd"
 
 ##########################################################
 # CLASSES
@@ -218,16 +231,12 @@ class GodMetaNode(MetaNode):
         """
         result = None
         ud_attr = self.listAttr(ud=True)
-        meta_plug = [
-            attr_ for attr_ in ud_attr if re.search(plug, str(attr_))
-        ]
+        meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, str(attr_))]
         if meta_plug:
             result = [node.get() for node in meta_plug]
         if class_filter:
             result = [
-                node
-                for node in result
-                if node.attr(type).get() == class_filter
+                node for node in result if node.attr(type).get() == class_filter
             ]
         return result
 
@@ -279,8 +288,11 @@ class RootOpMetaNode(MetaNode):
 
     @classmethod
     def _postCreateVirtual(
-        cls, newNode, type=TYPE, god_meta_name="god_meta_0_METAND",
-        root_op_meta_nd_params=ROOTOPMETAPARAMS
+        cls,
+        newNode,
+        type=TYPE,
+        god_meta_name="god_meta_0_METAND",
+        root_op_meta_nd_params=ROOTOPMETAPARAMS,
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -307,7 +319,7 @@ class RootOpMetaNode(MetaNode):
             "name": root_op_meta_nd_params[0],
             "attrType": "string",
             "keyable": False,
-            "value": 'None'
+            "value": "None",
         }
 
         l_rig_color_attr = {
@@ -451,7 +463,7 @@ class MainOpMetaNode(MetaNode):
         type=TYPE,
         god_meta_name="god_meta_0_METAND",
         connection_types=DEFAULTCONNECTIONTYPES,
-        main_op_meta_param = MAINOPMETAPARAMS
+        main_op_meta_param=MAINOPMETAPARAMS,
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -539,18 +551,16 @@ class MainOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
-        output_matrix_nd_attr = {
+        connect_nd_attr = {
             "name": main_op_meta_param[9],
             "attrType": "string",
-            "multi": True,
             "keyable": False,
             "channelBox": False,
         }
 
-        output_ud_plug_nd_attr = {
+        rig_build_class_ref = {
             "name": main_op_meta_param[10],
             "attrType": "string",
-            "multi": True,
             "keyable": False,
             "channelBox": False,
         }
@@ -565,9 +575,10 @@ class MainOpMetaNode(MetaNode):
             fk_spaces_ref_attr,
             ik_pvec_spaces_ref_attr,
             main_operator_connection,
-            output_matrix_nd_attr,
-            output_ud_plug_nd_attr,
+            connect_nd_attr,
+            rig_build_class_ref,
         ]
+
         for attr_ in main_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
