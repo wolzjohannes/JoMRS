@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 03 / 01
+# Date:       2020 / 04 / 21
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -34,7 +34,7 @@ import curves
 import mayautils
 import meta
 
-reload(meta)
+reload(curves)
 
 ##########################################################
 # GLOBALS
@@ -238,8 +238,9 @@ class mainOperatorNode(OperatorsRootNode):
             match=self.op_root_nd,
             local_rotate_axes=local_rotate_axes,
         )
+        print self.main_op_nd
         for attr_ in self.main_node_param_list:
-            attributes.add_attr(node=self.main_op_nd[-1], **attr_)
+            attributes.add_attr(node=self.main_op_nd[1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
         meta_name = name.replace("_CON", "")
         self.main_meta_nd = meta.MainOpMetaNode(n=meta_name)
@@ -341,6 +342,7 @@ class create_component_operator(mainOperatorNode):
             name=self.main_operator_node_name,
             local_rotate_axes=local_rotate_axes,
         )
+        print self.main_operator_node
         self.result.append(self.main_operator_node[1])
         self.root_meta_nd = (
             self.main_operator_node[1].attr(root_op_meta_nd_attr_name).get()
