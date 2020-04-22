@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 04 / 21
+# Date:       2020 / 04 / 22
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -238,7 +238,6 @@ class mainOperatorNode(OperatorsRootNode):
             match=self.op_root_nd,
             local_rotate_axes=local_rotate_axes,
         )
-        print self.main_op_nd
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd[1], **attr_)
         self.op_root_nd.addChild(self.main_op_nd[0])
@@ -261,25 +260,29 @@ class create_component_operator(mainOperatorNode):
     Create the whole component operator.
     """
 
-    def __init__(self, operator_root_nd=None):
+    def __init__(self, main_operator_node=None):
         """ Init all important data.
         Args:
-                operator_root_nd(pmc.PyNode(), optional): The
+                main_operator_node(pmc.PyNode(), optional): The
                 operators_root_node.
         """
         super(create_component_operator, self).__init__()
-        self.op_root_nd = operator_root_nd
+        self.op_root_nd = None
         self.result = []
         self.sub_operators = []
         self.joint_control = None
         self.main_operator_node_name = None
         self.main_operator_node = None
+        if main_operator_node:
+            self.main_operator_node = [
+                main_operator_node.getParent(),
+                main_operator_node,
+            ]
         self.root_meta_nd = None
         self.main_meta_nd = self.get_main_meta_node()
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
         self.linear_curve_name = None
-        self.main_operator_node = None
 
     def init_operator(
         self,
@@ -342,7 +345,6 @@ class create_component_operator(mainOperatorNode):
             name=self.main_operator_node_name,
             local_rotate_axes=local_rotate_axes,
         )
-        print self.main_operator_node
         self.result.append(self.main_operator_node[1])
         self.root_meta_nd = (
             self.main_operator_node[1].attr(root_op_meta_nd_attr_name).get()
@@ -543,11 +545,10 @@ class create_component_operator(mainOperatorNode):
         """
         return self.main_meta_nd.attr(plug).get()
 
-    def get_main_meta_node(self):
+    def get_main_meta_node(self, plug=MAINOPMETANDATTRNAME):
         """
-        Get main meta node from operator root node.
+        Get main meta node from main operator node.
         Return:
                 pmc.PyNode(): The meta main node.
         """
-        if self.op_root_nd:
-            return self.op_root_nd.main_op_meta_nd.get()
+        return self.main_operator_node[1].attr(plug).get()

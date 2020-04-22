@@ -1761,7 +1761,6 @@ class DiamondControl:
             rotate_axes_con[0].translate.set(0, 0, 0)
             rotate_axes_con[0].scale.set(1, 1, 1)
             spear0.extend(rotate_axes_con)
-        print spear0
         return spear0
 
 

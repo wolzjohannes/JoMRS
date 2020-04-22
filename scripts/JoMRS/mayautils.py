@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 05
+# Date:       2020 / 04 / 22
 
 """
 JoMRS maya utils module. Utilities helps
@@ -767,6 +767,24 @@ def descendants(root_node, reverse=None, typ="transform"):
     return result
 
 
+def get_descendants_from_parent(node, reverse=None, typ="transform"):
+    """
+    Get all descendants from parent of given node.
+    By Default it takes the parent of the given node and goes down the
+    hierarchy.
+    Args:
+            node(dagnode): The source node.
+            reverse(bool): Reverse the order of the output.
+            typ(str): The typ to search for.
+    Return:
+            list: The descendant nodes.
+    """
+    if node.getParent():
+        return descendants(node.getParent(), reverse=reverse, typ=typ)
+    else:
+        raise IndexError("{} has no parent node".format(str(node)))
+
+
 def custom_orient_joint(source, target, aim_axes=[1, 0, 0], up_axes=[0, 1, 0]):
     """
     Orient a joint based on aimConstraint technic.
@@ -897,8 +915,11 @@ def default_orient_joint_hierarchy(root_node, aim_axes="xyz", up_axes="yup"):
 
 
 def create_joint(
-    name="M_BND_0_JNT", typ="BND", node=None, orient_match_rotation=True,
-    match_matrix=None
+    name="M_BND_0_JNT",
+    typ="BND",
+    node=None,
+    orient_match_rotation=True,
+    match_matrix=None,
 ):
     """
     Create a joint node with a specific typ.
@@ -1101,8 +1122,7 @@ def create_hierarchy(nodes=None, inverse_scale=None):
             else:
                 logger.log(
                     level="error",
-                    message="Inverse scale option only"
-                    " available for joints",
+                    message="Inverse scale option only" " available for joints",
                     logger=module_logger,
                 )
     return nodes
