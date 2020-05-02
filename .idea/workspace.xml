@@ -16,8 +16,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="562">
-              <caret line="431" column="35" lean-forward="true" selection-start-line="431" selection-start-column="35" selection-end-line="431" selection-end-column="35" />
+            <state relative-caret-position="496">
+              <caret line="22" column="23" selection-start-line="22" selection-start-column="23" selection-end-line="22" selection-end-column="23" />
               <folding>
                 <element signature="e#1233#1257#0" expanded="true" />
               </folding>
@@ -275,7 +275,14 @@
       <option name="project" value="LOCAL" />
       <updated>1587590906773</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="wip">
+      <created>1588449952801</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1588449952801</updated>
+    </task>
+    <option name="localTasksCounter" value="10" />
     <servers />
   </component>
   <component name="TodoView">
@@ -355,11 +362,11 @@
     <MESSAGE value="extend gitignore with pycharm xml" />
     <MESSAGE value="get the operators class work" />
     <MESSAGE value="Use default values and nones to reduce the argument needs" />
-    <MESSAGE value="wip" />
     <MESSAGE value="test" />
     <MESSAGE value="wip. tweak curve control result to get LRA buffer group" />
     <MESSAGE value="wip. found get main meta node form root node issue" />
-    <option name="LAST_COMMIT_MESSAGE" value="wip. found get main meta node form root node issue" />
+    <MESSAGE value="wip" />
+    <option name="LAST_COMMIT_MESSAGE" value="wip" />
   </component>
   <component name="WindowStateProjectService">
     <state width="1035" height="752" key="Git.Branch.Popup" />
@@ -399,8 +406,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="562">
-          <caret line="431" column="35" lean-forward="true" selection-start-line="431" selection-start-column="35" selection-end-line="431" selection-end-column="35" />
+        <state relative-caret-position="496">
+          <caret line="22" column="23" selection-start-line="22" selection-start-column="23" selection-end-line="22" selection-end-column="23" />
           <folding>
             <element signature="e#1233#1257#0" expanded="true" />
           </folding>
