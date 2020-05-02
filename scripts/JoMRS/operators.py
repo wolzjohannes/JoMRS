@@ -273,13 +273,14 @@ class create_component_operator(mainOperatorNode):
         self.joint_control = None
         self.main_operator_node_name = None
         self.main_operator_node = None
+        self.main_meta_nd = None
         if main_operator_node:
             self.main_operator_node = [
                 main_operator_node.getParent(),
                 main_operator_node,
             ]
+            self.main_meta_nd = self.get_main_meta_node()
         self.root_meta_nd = None
-        self.main_meta_nd = self.get_main_meta_node()
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
         self.linear_curve_name = None
@@ -408,7 +409,7 @@ class create_component_operator(mainOperatorNode):
             )
 
             sub_op_node[0].message.connect(self.sub_meta_nd.sub_operator_nd)
-            self.sub_operators.append(sub_op_node)
+            self.sub_operators.extend(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 spacing = spacing * -1
@@ -420,6 +421,28 @@ class create_component_operator(mainOperatorNode):
                 axes = "Z"
             sub_op_node[0].attr("translate" + axes).set(spacing)
             self.result.append(sub_op_node[-1])
+        if self.sub_operators:
+            if axes == "X":
+                aim_vec = (1, 0, 0)
+                up_vec = (0, 1, 0)
+            elif axes == "Y":
+                aim_vec = (0, 1, 0)
+                up_vec = (1, 0, 0)
+            elif axes == "Z":
+                aim_vec = (0, 0, 1)
+                up_vec = (0, 1, 0)
+            elif axes == "-X":
+                aim_vec = (-1, 0, 0)
+                up_vec = (0, 1, 0)
+            elif axes == "-Y":
+                aim_vec = (0, -1, 0)
+                up_vec = (1, 0, 0)
+            elif axes == "-Z":
+                aim_vec = (0, 0, -1)
+                up_vec = (0, 1, 0)
+            pmc.aimConstraint(self.sub_operators[0], self.main_operator_node[
+                2], aim=aim_vec, u=up_vec, wut='object',
+                              worldUpObject=self.main_operator_node[1], mo=True)
         self.linear_curve_name = linear_curve_name.replace(
             "M_", "{}_".format(side)
         )
