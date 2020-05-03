@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 26
+# Date:       2020 / 05 / 03
 
 """
 JoMRS nurbsCurve modification module.
@@ -42,7 +42,7 @@ import attributes
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # CLASSES
@@ -93,7 +93,7 @@ class ControlCurves(object):
                 list: The buffer group, the control curve node.
         """
         result = []
-        name = strings.string_checkup(name, module_logger)
+        name = strings.string_checkup(name, _LOGGER)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
         for shape in shapes:
@@ -1760,6 +1760,7 @@ class DiamondControl:
             rotate_axes_con[0].rotate.set(0, 0, 0)
             rotate_axes_con[0].translate.set(0, 0, 0)
             rotate_axes_con[0].scale.set(1, 1, 1)
+            spear0.extend(rotate_axes_con)
         return spear0
 
 
@@ -1900,6 +1901,6 @@ def mirror_curve(
         logger.log(
             level="error",
             message="mirror only for nurbsCurves",
-            logger=module_logger,
+            logger=_LOGGER,
         )
     return result

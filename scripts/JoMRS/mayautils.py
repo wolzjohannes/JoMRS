@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 05
+# Date:       2020 / 03 / 05
 
 """
 JoMRS maya utils module. Utilities helps
@@ -44,7 +44,7 @@ import logger
 # GLOBAL
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
@@ -64,9 +64,9 @@ def create_buffer_grp(node, name=None):
     """
     parent = node.getParent()
     if name:
-        name = strings.string_checkup(name + "_buffer_GRP", module_logger)
+        name = strings.string_checkup(name + "_buffer_GRP", _LOGGER)
     else:
-        name = strings.string_checkup(str(node) + "_buffer_GRP", module_logger)
+        name = strings.string_checkup(str(node) + "_buffer_GRP", _LOGGER)
     buffer_grp = pmc.createNode("transform", n=name)
     buffer_grp.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     buffer_grp.addChild(node)
@@ -85,7 +85,7 @@ def space_locator_on_position(node, buffer_grp=True):
             list: The buffer group, the locator node.
     """
     result = []
-    name = strings.string_checkup(str(node) + "_0_LOC", module_logger)
+    name = strings.string_checkup(str(node) + "_0_LOC", _LOGGER)
     loc = pmc.spaceLocator(n=name)
     loc.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     result.append(loc)
@@ -126,7 +126,7 @@ def create_spline_ik(
     """
     result = []
     data = {}
-    name = strings.string_checkup(name, module_logger)
+    name = strings.string_checkup(name, _LOGGER)
     data["n"] = name
     data["solver"] = "ikSplineSolver"
     data["createCurve"] = False
@@ -163,7 +163,7 @@ def create_spline_ik(
     logger.log(
         level="info",
         message='Spline IK "' + name + '" created',
-        logger=module_logger,
+        logger=_LOGGER,
     )
     return result
 
@@ -196,7 +196,7 @@ def create_IK(
     Return:
     """
     data = {}
-    name = strings.string_checkup(name, module_logger)
+    name = strings.string_checkup(name, _LOGGER)
     data["n"] = name
     data["solver"] = solver
     data["sj"] = start_jnt
@@ -215,7 +215,7 @@ def create_IK(
     logger.log(
         level="info",
         message=solver + ' "' + name + '" created',
-        logger=module_logger,
+        logger=_LOGGER,
     )
     return ik_handle
 
@@ -321,7 +321,7 @@ def constraint_ui_node_(constraint=None, target=None):
         logger.log(
             level="error",
             message="source and constraint needed for" " constraint_UI_node",
-            logger=module_logger,
+            logger=_LOGGER,
         )
     return constraint_ui
 
@@ -346,7 +346,7 @@ def no_pivots_no_rotate_order_(constraint):
     except Exception as e:
         exceptions.append(e)
     if exceptions:
-        logger.log(level="warning", message=exceptions, logger=module_logger)
+        logger.log(level="warning", message=exceptions, logger=_LOGGER)
 
 
 def no_constraint_cycle(constraint=None, source=None, target=None):
@@ -767,6 +767,24 @@ def descendants(root_node, reverse=None, typ="transform"):
     return result
 
 
+def get_descendants_from_parent(node, reverse=None, typ="transform"):
+    """
+    Get all descendants from parent of given node.
+    By Default it takes the parent of the given node and goes down the
+    hierarchy.
+    Args:
+            node(dagnode): The source node.
+            reverse(bool): Reverse the order of the output.
+            typ(str): The typ to search for.
+    Return:
+            list: The descendant nodes.
+    """
+    if node.getParent():
+        return descendants(node.getParent(), reverse=reverse, typ=typ)
+    else:
+        raise IndexError("{} has no parent node".format(str(node)))
+
+
 def custom_orient_joint(source, target, aim_axes=[1, 0, 0], up_axes=[0, 1, 0]):
     """
     Orient a joint based on aimConstraint technic.
@@ -805,7 +823,7 @@ def custom_orient_joint(source, target, aim_axes=[1, 0, 0], up_axes=[0, 1, 0]):
         logger.log(
             level="error",
             message="The source node must be a joint",
-            logger=module_logger,
+            logger=_LOGGER,
         )
 
 
@@ -842,7 +860,7 @@ def custom_orient_joint_hierarchy(
         logger.log(
             level="error",
             message="It must be a hierarchy for a proper orient",
-            logger=module_logger,
+            logger=_LOGGER,
         )
 
 
@@ -866,13 +884,13 @@ def default_orient_joint(node, aim_axes="xyz", up_axes="yup"):
                 level="error",
                 message="Joint not in hierarchy. Or"
                 " rotate channels has values.",
-                logger=module_logger,
+                logger=_LOGGER,
             )
     else:
         logger.log(
             level="error",
             message="Node has to be a joint",
-            logger=module_logger,
+            logger=_LOGGER,
         )
 
 
@@ -897,8 +915,11 @@ def default_orient_joint_hierarchy(root_node, aim_axes="xyz", up_axes="yup"):
 
 
 def create_joint(
-    name="M_BND_0_JNT", typ="BND", node=None, orient_match_rotation=True,
-    match_matrix=None
+    name="M_BND_0_JNT",
+    typ="BND",
+    node=None,
+    orient_match_rotation=True,
+    match_matrix=None,
 ):
     """
     Create a joint node with a specific typ.
@@ -915,7 +936,7 @@ def create_joint(
     Return:
             tuple: The created joint node.
     """
-    name = strings.string_checkup(name, module_logger)
+    name = strings.string_checkup(name, _LOGGER)
     data = [
         {"typ": "BND", "radius": 1, "overrideColor": 17},
         {"typ": "DRV", "radius": 2.5, "overrideColor": 18},
@@ -969,7 +990,7 @@ def convert_to_skeleton(
     if hierarchy:
         for tra in range(len(hierarchy)):
             name = "{}_{}_{}".format(prefix, str(tra), suffix)
-            name = strings.string_checkup(name, module_logger)
+            name = strings.string_checkup(name, _LOGGER)
             jnt = create_joint(name=name, node=hierarchy[tra], typ=typ)
             result.append(jnt)
     temp = result[:]
@@ -1021,7 +1042,7 @@ def create_motion_path(
             tuple: The created motion path node.
     """
     axes = ["X", "Y", "Z"]
-    name = strings.string_checkup(name, module_logger)
+    name = strings.string_checkup(name, _LOGGER)
     mpnd = pmc.creatNode("motionPath", n=name)
     mpnd.fractionMode.set(1)
     mpnd.uValue.set(position)
@@ -1064,7 +1085,7 @@ def create_motion_path(
                 logger.log(
                     level="error",
                     message="You need a upvector transform",
-                    logger=module_logger,
+                    logger=_LOGGER,
                 )
         if value__ == 2 or value__ == 3:
             mpnd.worldUpVectorX.set(world_up_vector[0])
@@ -1101,9 +1122,8 @@ def create_hierarchy(nodes=None, inverse_scale=None):
             else:
                 logger.log(
                     level="error",
-                    message="Inverse scale option only"
-                    " available for joints",
-                    logger=module_logger,
+                    message="Inverse scale option only" " available for joints",
+                    logger=_LOGGER,
                 )
     return nodes
 

@@ -1,7 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="wip" />
+    <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="aim constraint from LRA to sub node if subnode">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/attributes.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/attributes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/build.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/build.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/curves.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/curves.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/logger.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/logger.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/meta.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/meta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/operators.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/operators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/strings.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/strings.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -10,11 +21,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="525">
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="16585">
-              <caret line="535" column="22" lean-forward="true" selection-start-line="535" selection-start-column="22" selection-end-line="535" selection-end-column="22" />
+            <state relative-caret-position="684">
+              <caret line="411" column="35" lean-forward="true" selection-start-line="411" selection-start-column="35" selection-end-line="411" selection-end-column="35" />
               <folding>
                 <element signature="e#1233#1257#0" expanded="true" />
               </folding>
@@ -22,48 +33,13 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/elements/element.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="548">
-              <caret line="219" column="19" lean-forward="true" selection-start-line="219" selection-start-column="19" selection-end-line="219" selection-end-column="19" />
-              <folding>
-                <element signature="e#1307#1331#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/meta.py">
+        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/attributes.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17670">
-              <caret line="574" column="31" selection-start-line="574" selection-start-column="31" selection-end-line="574" selection-end-column="31" />
+            <state relative-caret-position="651">
+              <caret line="39" column="58" lean-forward="true" selection-start-line="39" selection-start-column="58" selection-end-line="39" selection-end-column="58" />
               <folding>
-                <element signature="e#1199#1222#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="1395">
-              <caret line="50" column="53" selection-start-line="50" selection-start-column="53" selection-end-line="50" selection-end-column="53" />
-              <folding>
-                <element signature="e#1425#1449#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state>
-              <folding>
-                <element signature="e#1558#1582#0" expanded="true" />
+                <element signature="e#1229#1243#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -71,11 +47,17 @@
       </file>
     </leaf>
   </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>print</find>
+      <find>main_op_meta_nd</find>
+    </findStrings>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
-        <entry key="$PROJECT_DIR$" value="elements_class" />
+        <entry key="$PROJECT_DIR$" value="master" />
       </map>
     </option>
   </component>
@@ -83,17 +65,23 @@
     <option name="CHANGED_PATHS">
       <list>
         <option value="$PROJECT_DIR$/.gitignore" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/operators.py" />
+        <option value="$PROJECT_DIR$/.idea/workspace.xml" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/curves.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/meta.py" />
-        <option value="$PROJECT_DIR$/.idea/workspace.xml" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/build.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/attributes.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/strings.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/logger.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/operators.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2160" />
-    <option name="width" value="3840" />
-    <option name="height" value="2160" />
+    <option name="x" value="2001" />
+    <option name="width" value="1620" />
+    <option name="height" value="1051" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -145,11 +133,6 @@
             <path>
               <item name="JoMRS" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
               <item name="~/Development/maya/JoMRS" type="442cc68d:ScopeViewTreeModel$RootNode" />
-              <item name=".idea" type="9f88c78c:ScopeViewTreeModel$FileNode" />
-            </path>
-            <path>
-              <item name="JoMRS" type="3d21c010:ScopeViewTreeModel$ProjectNode" />
-              <item name="~/Development/maya/JoMRS" type="442cc68d:ScopeViewTreeModel$RootNode" />
               <item name="scripts" type="9f88c78c:ScopeViewTreeModel$FileNode" />
             </path>
             <path>
@@ -172,6 +155,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="Git.Branch.Popup.ShowAllRemotes" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="project.propVCSSupport.Ignored.Files" />
@@ -234,7 +218,42 @@
       <option name="project" value="LOCAL" />
       <updated>1587384930677</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="test">
+      <created>1587393187824</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1587393187824</updated>
+    </task>
+    <task id="LOCAL-00007" summary="wip. tweak curve control result to get LRA buffer group">
+      <created>1587502693309</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1587502693309</updated>
+    </task>
+    <task id="LOCAL-00008" summary="wip. found get main meta node form root node issue">
+      <created>1587590906773</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1587590906773</updated>
+    </task>
+    <task id="LOCAL-00009" summary="wip">
+      <created>1588449952801</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1588449952801</updated>
+    </task>
+    <task id="LOCAL-00010" summary="wip">
+      <created>1588449983564</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1588449983564</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TodoView">
@@ -248,18 +267,19 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="2160" y="0" width="3840" height="2160" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13328075" />
+      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.16035752" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
-      <window_info anchor="bottom" id="Find" order="1" weight="0.3292789" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3292789" />
+      <window_info anchor="bottom" id="Find" order="1" weight="0.329062" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.329062" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" weight="0.3292789" />
-      <window_info anchor="bottom" id="Version Control" order="7" weight="0.3292789" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32857144" />
       <window_info anchor="bottom" id="Terminal" order="8" weight="0.3292789" />
       <window_info anchor="bottom" id="Event Log" order="9" side_tool="true" weight="0.32957458" />
       <window_info anchor="bottom" id="Python Console" order="10" weight="0.3292789" />
@@ -268,13 +288,63 @@
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
     </layout>
   </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State>
+              <option name="RECENTLY_FILTERED_USER_GROUPS">
+                <collection />
+              </option>
+              <option name="RECENTLY_FILTERED_BRANCH_GROUPS">
+                <collection />
+              </option>
+              <option name="COLUMN_ORDER">
+                <list>
+                  <option value="0" />
+                  <option value="1" />
+                  <option value="2" />
+                  <option value="3" />
+                </list>
+              </option>
+            </State>
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="RECENT_FILTERS">
+      <map>
+        <entry key="Branch">
+          <value>
+            <list />
+          </value>
+        </entry>
+        <entry key="User">
+          <value>
+            <list />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="pycharm workspace" />
     <MESSAGE value="extend gitignore with pycharm xml" />
     <MESSAGE value="get the operators class work" />
     <MESSAGE value="Use default values and nones to reduce the argument needs" />
+    <MESSAGE value="test" />
+    <MESSAGE value="wip. tweak curve control result to get LRA buffer group" />
+    <MESSAGE value="wip. found get main meta node form root node issue" />
     <MESSAGE value="wip" />
     <option name="LAST_COMMIT_MESSAGE" value="wip" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state width="1035" height="752" key="Git.Branch.Popup" />
+    <state width="1031" height="748" key="Git.Branch.Popup/2160.1440" />
+    <state width="1035" height="752" key="Git.Branch.Popup/2160.1440/1920.1080" />
+    <state width="1035" height="752" key="Git.Branch.Popup@1920.1080@144dpi" />
+    <state width="1031" height="748" key="Git.Branch.Popup@2160.1440@144dpi" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -282,22 +352,17 @@
         <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
           <url>file://$PROJECT_DIR$/scripts/JoMRS/meta.py</url>
           <line>27</line>
-          <option name="timeStamp" value="1" />
+          <option name="timeStamp" value="2" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/scripts/JoMRS/__init__.py</url>
+          <line>27</line>
+          <option name="timeStamp" value="3" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/attributes.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="35">
-          <caret line="26" column="3" lean-forward="true" selection-start-line="26" selection-start-column="3" selection-end-line="26" selection-end-column="3" />
-          <folding>
-            <element signature="e#1229#1243#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="255">
@@ -305,51 +370,98 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/curves.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16585">
-          <caret line="535" column="22" lean-forward="true" selection-start-line="535" selection-start-column="22" selection-end-line="535" selection-end-column="22" />
+        <state relative-caret-position="651">
+          <caret line="27" column="48" lean-forward="true" selection-start-line="27" selection-start-column="48" selection-end-line="27" selection-end-column="48" />
           <folding>
-            <element signature="e#1233#1257#0" expanded="true" />
+            <element signature="e#1408#1432#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/meta.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/elements/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/logger.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17670">
-          <caret line="574" column="31" selection-start-line="574" selection-start-column="31" selection-end-line="574" selection-end-column="31" />
+        <state relative-caret-position="713">
+          <caret line="23" lean-forward="true" selection-start-line="23" selection-end-line="23" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/__init__.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
           <folding>
-            <element signature="e#1199#1222#0" expanded="true" />
+            <element signature="e#1188#1199#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/strings.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1395">
-          <caret line="50" column="53" selection-start-line="50" selection-start-column="53" selection-end-line="50" selection-end-column="53" />
+        <state relative-caret-position="589">
+          <caret line="22" column="28" lean-forward="true" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
           <folding>
-            <element signature="e#1425#1449#0" expanded="true" />
+            <element signature="e#1429#1438#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state>
+        <state relative-caret-position="370">
+          <caret line="28" column="52" lean-forward="true" selection-start-line="28" selection-start-column="52" selection-end-line="28" selection-end-column="52" />
           <folding>
             <element signature="e#1558#1582#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="620">
+          <caret line="26" column="26" lean-forward="true" selection-start-line="26" selection-start-column="26" selection-end-line="26" selection-end-column="26" />
+          <folding>
+            <element signature="e#1425#1449#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/meta.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="703">
+          <caret line="24" column="3" lean-forward="true" selection-start-line="24" selection-start-column="3" selection-end-line="24" selection-end-column="3" />
+          <folding>
+            <element signature="e#1199#1222#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/elements/element.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="548">
-          <caret line="219" column="19" lean-forward="true" selection-start-line="219" selection-start-column="19" selection-end-line="219" selection-end-column="19" />
+        <state relative-caret-position="517">
+          <caret line="30" column="13" lean-forward="true" selection-start-line="30" selection-start-column="13" selection-end-line="30" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/attributes.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="651">
+          <caret line="39" column="58" lean-forward="true" selection-start-line="39" selection-start-column="58" selection-end-line="39" selection-end-column="58" />
           <folding>
-            <element signature="e#1307#1331#0" expanded="true" />
+            <element signature="e#1229#1243#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="684">
+          <caret line="411" column="35" lean-forward="true" selection-start-line="411" selection-start-column="35" selection-end-line="411" selection-end-column="35" />
+          <folding>
+            <element signature="e#1233#1257#0" expanded="true" />
           </folding>
         </state>
       </provider>

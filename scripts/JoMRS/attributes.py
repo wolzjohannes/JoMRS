@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 13
+# Date:       2020 / 05 / 03
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -33,7 +33,7 @@ import logger
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
@@ -93,7 +93,7 @@ def add_attr(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=module_logger,
+            logger=_LOGGER,
         )
         return
 
@@ -164,7 +164,7 @@ def add_array_attribute(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=module_logger,
+            logger=_LOGGER,
         )
         return
 
@@ -232,7 +232,7 @@ def add_enum_attribute(
         logger.log(
             level="error",
             message=name + " attribute already exist",
-            logger=module_logger,
+            logger=_LOGGER,
         )
         return
 
@@ -277,7 +277,7 @@ def add_separator_attr(node, name):
     logger.log(
         level="error",
         message="no attributes name specified",
-        logger=module_logger,
+        logger=_LOGGER,
     )
     return
 
@@ -449,7 +449,7 @@ def re_arrange_usd_attributes_by_index(
                     level="error",
                     message="Negative newIndex not allowed",
                     func=re_arrange_usd_attributes_by_index,
-                    logger=module_logger,
+                    logger=_LOGGER,
                 )
                 return
         else:
@@ -460,7 +460,7 @@ def re_arrange_usd_attributes_by_index(
             level="error",
             message="You have to specifie the index_change",
             func=re_arrange_usd_attributes_by_index,
-            logger=module_logger,
+            logger=_LOGGER,
         )
     if new_indexing:
         for x in range(len(usd_attr)):
@@ -536,7 +536,7 @@ def move_attribute_in_channel_box(
                 message="more then one selection "
                 "in the channelBox not supported",
                 func=move_attribute_in_channel_box,
-                logger=module_logger,
+                logger=_LOGGER,
             )
             return
     if exchange_attr_name:
@@ -596,7 +596,7 @@ def move_attribute_in_channel_box(
             logger.log(
                 level="info",
                 message=attribute_name + " reordered in channelBox",
-                logger=module_logger,
+                logger=_LOGGER,
             )
 
     re_create_attr()
@@ -668,11 +668,11 @@ def transfer_attributes(
             + str(source)
             + " to "
             + str(target),
-            logger=module_logger,
+            logger=_LOGGER,
         )
         return source_usd_attr
     logger.log(
         level="error",
         message="No user defined attributes found for " + str(source),
-        logger=module_logger,
+        logger=_LOGGER,
     )

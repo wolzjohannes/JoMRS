@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 04 / 20
+# Date:       2020 / 05 / 03
 
 """
 Rig elements main module. This class is the template to create a rig
@@ -33,8 +33,6 @@ import strings
 import attributes
 import mayautils
 import operators
-
-reload(operators)
 
 ##########################################################
 # GLOBALS
@@ -68,14 +66,14 @@ class build_element_operator(operators.create_component_operator):
     """
     Build element operator template class.
     """
-    def __init__(self, operator=None):
+    def __init__(self, main_operator_node=None):
         """
         Init of important data.
 
         Args:
-                operator(pmc.PyNode(), optional): Operators main node.
+                main_operator_node(pmc.PyNode(), optional): Operators main node.
         """
-        operators.create_component_operator.__init__(self, operator)
+        operators.create_component_operator.__init__(self, main_operator_node)
         self.operator = None
 
     def build(

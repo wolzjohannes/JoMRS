@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 06 / 05
+# Date:       2020 / 05 / 03
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -39,14 +39,14 @@ import logger
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # FUNCTIONS
 ##########################################################
 
 
-def normalize_prefix(string, logger_=module_logger):
+def normalize_prefix(string, logger_=_LOGGER):
     """
     Normalize the string start. It cut offs the first letter and
     put a '_' inbetween.
@@ -68,7 +68,7 @@ def normalize_prefix(string, logger_=module_logger):
     return string
 
 
-def replace_invalid_prefix(string, logger_=module_logger):
+def replace_invalid_prefix(string, logger_=_LOGGER):
     """
     Replace invalid side start characters of a string and replace it.
     Args:
@@ -149,7 +149,7 @@ def replace_hash_with_padding(string, index):
     return re.sub("#+", digit, string)
 
 
-def normalize_suffix(string, logger_=module_logger):
+def normalize_suffix(string, logger_=_LOGGER):
     """
     Replace numbers in the suffix with a ''.
     And if the suffix is lowercase it will turn it uppercase.
@@ -180,7 +180,7 @@ def normalize_suffix(string, logger_=module_logger):
     return string
 
 
-def normalize_numbers(string, logger_=module_logger):
+def normalize_numbers(string, logger_=_LOGGER):
     """
     Finds the numbers in the string and move them to the correct
     position in the string.
@@ -210,7 +210,7 @@ def normalize_numbers(string, logger_=module_logger):
     return string
 
 
-def valid_suffix(string, logger_=module_logger):
+def valid_suffix(string, logger_=_LOGGER):
     """
     Finds valid suffix in a string. If not it throw a warning message.
     Args:
@@ -235,7 +235,7 @@ def valid_suffix(string, logger_=module_logger):
     return string
 
 
-def valid_string_separator(string, logger_=module_logger):
+def valid_string_separator(string, logger_=_LOGGER):
     """
     Finds valid separator in a string. If not it throw a warning message.
     Args:
@@ -256,7 +256,7 @@ def valid_string_separator(string, logger_=module_logger):
     return string
 
 
-def string_checkup(string, logger_=module_logger):
+def string_checkup(string, logger_=_LOGGER):
     """
     String checkups.
     Args:
