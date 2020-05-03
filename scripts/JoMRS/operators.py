@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 02
+# Date:       2020 / 05 / 03
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -34,13 +34,11 @@ import curves
 import mayautils
 import meta
 
-reload(curves)
-
 ##########################################################
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = "JOMRS_op_root"
 OPMAINTAGNAME = "JOMRS_op_main"
 OPSUBTAGNAME = "JOMRS_op_sub"
@@ -73,13 +71,6 @@ MAINOPMETAPARAMS = meta.MAINOPMETAPARAMS
 
 ##########################################################
 # CLASSES
-# To Do:
-# - Add aim constraint to LRA control.
-# - Parent operator curve under main control.
-# - Delete first buffer group. Be able to delete the whole component.
-# - All methods to be able to create a full operartor and set
-#   all meta datas.
-# - Able to get back the meta node and its data.
 ##########################################################
 
 
@@ -177,9 +168,7 @@ class mainOperatorNode(OperatorsRootNode):
             ):
                 continue
             else:
-                logger.log(
-                    level="error", message=error_message, logger=module_logger
-                )
+                logger.log(level="error", message=error_message, logger=_LOGGER)
 
         self.main_op_attr = {
             "name": op_main_tag_name,
@@ -261,7 +250,8 @@ class create_component_operator(mainOperatorNode):
     """
 
     def __init__(self, main_operator_node=None):
-        """ Init all important data.
+        """
+        Init all important data.
         Args:
                 main_operator_node(pmc.PyNode(), optional): The
                 operators_root_node.
@@ -320,21 +310,14 @@ class create_component_operator(mainOperatorNode):
                 root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
                 sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
                 main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
+                main_op_message_attr_name(str): Message attr to operator root nd.
         Returns:
                 List: The operators root node.
         """
-        if not sub_operators_count:
-            sub_operators_count = DEFAULTSUBOPERATORSCOUNT
-        if not operator_name:
-            operator_name = DEFAULTOPERATORNAME
-        if not side:
-            side = DEFAULTSIDE
-        if not axes:
-            axes = DEFAULTAXES
-        if not spacing:
-            spacing = DEFAULTSPACING
-        if not sub_operators_scale:
-            sub_operators_scale = DEFAULTSUBOPERATORSSCALE
+        axes_ = axes
+        vec = 0
+        aim_vec = ()
+        up_vec = ()
         self.joint_control = curves.JointControl()
         self.main_operator_node_name = main_operator_node_name.replace(
             "M_", "{}_".format(side)
@@ -412,14 +395,14 @@ class create_component_operator(mainOperatorNode):
             self.sub_operators.extend(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
-                spacing = spacing * -1
+                vec = spacing * -1
             if axes == "-X":
-                axes = "X"
+                axes_ = "X"
             elif axes == "-Y":
-                axes = "Y"
+                axes_ = "Y"
             elif axes == "-Z":
-                axes = "Z"
-            sub_op_node[0].attr("translate" + axes).set(spacing)
+                axes_ = "Z"
+            sub_op_node[0].attr("translate" + axes_).set(vec)
             self.result.append(sub_op_node[-1])
         if self.sub_operators:
             if axes == "X":
@@ -440,9 +423,15 @@ class create_component_operator(mainOperatorNode):
             elif axes == "-Z":
                 aim_vec = (0, 0, -1)
                 up_vec = (0, 1, 0)
-            pmc.aimConstraint(self.sub_operators[0], self.main_operator_node[
-                2], aim=aim_vec, u=up_vec, wut='object',
-                              worldUpObject=self.main_operator_node[1], mo=True)
+            pmc.aimConstraint(
+                self.sub_operators[0],
+                self.main_operator_node[2],
+                aim=aim_vec,
+                u=up_vec,
+                wut="object",
+                worldUpObject=self.main_operator_node[1],
+                mo=True,
+            )
         self.linear_curve_name = linear_curve_name.replace(
             "M_", "{}_".format(side)
         )
@@ -505,7 +494,7 @@ class create_component_operator(mainOperatorNode):
                 level="error",
                 message="Argument is no list",
                 func=self.set_ik_spaces_ref,
-                logger=module_logger,
+                logger=_LOGGER,
             )
             return
         self.main_meta_nd.attr(plug).set(";".join(spaces))

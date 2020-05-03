@@ -34,7 +34,7 @@ import strings
 ##########################################################
 # GLOBALS
 #########################################################
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 NODEID = "meta_node"
 TYPE = "meta_class"
 BASETYPE = "meta_node_class"
@@ -312,7 +312,7 @@ class RootOpMetaNode(MetaNode):
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         god_mata_nd.add_meta_node(newNode)
         name = "{}_METAND".format(str(newNode))
-        name = strings.string_checkup(name, logger_=module_logger)
+        name = strings.string_checkup(name, logger_=_LOGGER)
         newNode.rename(name)
 
         rigname_attr = {
@@ -483,7 +483,7 @@ class MainOpMetaNode(MetaNode):
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         god_mata_nd.add_meta_node(newNode)
         name = "{}_METAND".format(str(newNode))
-        name = strings.string_checkup(name, logger_=module_logger)
+        name = strings.string_checkup(name, logger_=_LOGGER)
         newNode.rename(name)
 
         comp_name_attr = {
@@ -676,7 +676,7 @@ class SubOpMetaNode(MetaNode):
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         god_mata_nd.add_meta_node(newNode)
         name = "{}_METAND".format(str(newNode))
-        name = strings.string_checkup(name, logger_=module_logger)
+        name = strings.string_checkup(name, logger_=_LOGGER)
         newNode.rename(name)
 
         connection_type_attr = {

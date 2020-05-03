@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 01 / 05
+# Date:       2020 / 05 / 03
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
@@ -28,7 +28,7 @@ To Do:
 build.py should find all operators. Build the rigs based on the operators
 meta data. Then it should connect each component via input and output matrix.
 And connect ud attributes if necessary.
-All this should be definded in the operators meta data.
+All this should be defined in the operators meta data.
 """
 
 import pymel.core as pmc
@@ -39,14 +39,11 @@ import strings
 import meta
 import attributes
 
-reload(operators)
-reload(meta)
-
 ##########################################################
 # GLOBALS
 ##########################################################
 
-module_logger = logging.getLogger(__name__ + ".py")
+_LOGGER = logging.getLogger(__name__ + ".py")
 OPROOTTAGNAME = operators.OPROOTTAGNAME
 OPMAINTAGNAME = operators.OPMAINTAGNAME
 OPSUBTAGNAME = operators.OPSUBTAGNAME
@@ -145,12 +142,12 @@ class Main(object):
                 self.rig_overall_data.append(data)
 
             logger.log(
-                level="info", message=self.steps[0], logger=module_logger
+                level="info", message=self.steps[0], logger=_LOGGER
             )
             return self.rig_overall_data
         else:
             logger.log(
-                level="error", message=error_message, logger=module_logger
+                level="error", message=error_message, logger=_LOGGER
             )
 
     def get_main_operators_data(
@@ -193,12 +190,12 @@ class Main(object):
                     data["main_op_data_{}".format(str(x))] = temp_data
                 self.main_operators_data.append(data)
             logger.log(
-                level="info", message=self.steps[1], logger=module_logger
+                level="info", message=self.steps[1], logger=_LOGGER
             )
             return self.main_operators_data
         else:
             logger.log(
-                level="error", message=error_message, logger=module_logger
+                level="error", message=error_message, logger=_LOGGER
             )
 
     def init_hierarchy(
@@ -270,14 +267,14 @@ class Main(object):
                     rig_root_nd.addChild(node)
                     attributes.lock_and_hide_attributes(node)
                 logger.log(
-                    level="info", message=self.steps[3], logger=module_logger
+                    level="info", message=self.steps[3], logger=_LOGGER
                 )
             return self.root_nodes
         else:
             logger.log(
                 level="error",
                 message="No overall rig data collected",
-                logger=module_logger,
+                logger=_LOGGER,
             )
 
     def define_component_edges(self):
