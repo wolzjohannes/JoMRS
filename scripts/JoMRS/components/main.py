@@ -20,11 +20,11 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 03
+# Date:       2020 / 05 / 09
 
 """
-Rig elements main module. This class is the template to create a rig
-element. Every rig element should inherit this class as template.
+Rig components main module. This class is the template to create a rig
+component. Every rig component should inherit this class as template.
 """
 import pymel.core as pmc
 import logging
@@ -46,7 +46,7 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 # input output management
 # build process
 # build steps. Example: layout rig. orient rig. ref nodes.
-# all repedative things in a element build.
+# all repedative things in a component build.
 # What are the repedative things:
 # Build comp hierarchy and parent it under root hierarchy.
 # Set and orient joints.
@@ -62,9 +62,9 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 ##########################################################
 
 
-class build_element_operator(operators.create_component_operator):
+class build_component_operator(operators.create_component_operator):
     """
-    Build element operator template class.
+    Build component operator template class.
     """
     def __init__(self, main_operator_node=None):
         """
@@ -88,7 +88,7 @@ class build_element_operator(operators.create_component_operator):
         sub_operators_count=None,
         local_rotate_axes=True,
     ):
-        """Build the elements operator.
+        """Build the components operator.
 
         Args:
                 operator_name(str): The operator name.
@@ -122,17 +122,17 @@ class build_element_operator(operators.create_component_operator):
         return True
 
 
-# class template for rig element creation.
-class build_rig_element(object):
+# class template for rig component creation.
+class build_component_rig(object):
     """
-    Class as rig build template for each rig element.
+    Class as rig build template for each rig component.
     """
 
     def __init__(self):
-        self.element_root = []
+        self.component_root = []
         self.input = []
         self.output = []
-        self.element = []
+        self.component = []
         self.spaces = []
         self.fk_joints = []
         self.ik_joints = []
@@ -140,27 +140,27 @@ class build_rig_element(object):
         self.bnd_joints = []
         self.ref_transforms = []
 
-    def init_hierarchy(self, element_name, side, parent):
+    def init_hierarchy(self, component_name, side, parent):
         """
-        Init rig element base hierarchy.
+        Init rig component base hierarchy.
         Args:
-                element_name(str): The Elements name.
-                side(str): Element Side.
-                parent(dagnode): Element parent node.
+                component_name(str): The Components name.
+                side(str): Component Side.
+                parent(dagnode): Component parent node.
         """
-        element_root_name = "{}_RIG_{}_element_0_GRP".format(
-            side, element_name.lower()
+        component_root_name = "{}_RIG_{}_component_0_GRP".format(
+            side, component_name.lower()
         )
-        element_root_name = strings.string_checkup(element_root_name)
-        self.element_root = pmc.createNode("transform", n=element_root_name)
-        attributes.lock_and_hide_attributes(self.element_root)
+        component_root_name = strings.string_checkup(component_root_name)
+        self.component_root = pmc.createNode("transform", n=component_root_name)
+        attributes.lock_and_hide_attributes(self.component_root)
         self.input = pmc.createNode("transform", n="input")
         self.output = pmc.createNode("transform", n="output")
-        self.element = pmc.createNode("transform", n="element")
+        self.component = pmc.createNode("transform", n="component")
         self.spaces = pmc.createNode("transform", n="spaces")
-        temp = [self.input, self.output, self.element, self.spaces]
+        temp = [self.input, self.output, self.component, self.spaces]
         for node in temp:
-            self.element_root.addChild(node)
+            self.component_root.addChild(node)
             attributes.lock_and_hide_attributes(node)
         attributes.add_attr(
             self.input,
@@ -179,7 +179,7 @@ class build_rig_element(object):
             hidden=True,
         )
         if parent:
-            parent.addChild(self.element_root)
+            parent.addChild(self.component_root)
 
     def create_input_ws_matrix_port(self, name):
         """
@@ -211,7 +211,7 @@ class build_rig_element(object):
 
     def add_ud_port(
         self,
-        element_port="input",
+        component_port="input",
         name=None,
         typ="float",
         minValue=0,
@@ -219,20 +219,20 @@ class build_rig_element(object):
         value=1,
     ):
         """
-        Add userdefined port to the input or output port of a rig element.
+        Add userdefined port to the input or output port of a rig component.
         By Default it add a float value to the input port with a given
         name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
         Args:
-                element_port(str): The rig elements port.
+                component_port(str): The rig components port.
                 name(str): The port name.
                 type(str): The port typ.
                 minValue(float or int): The minimal port value.
                 maxValue(float or int): The maximum port value.
                 value(float or int or str): The port value.
         """
-        if element_port == "input":
+        if component_port == "input":
             node = self.input
-        elif element_port == "output":
+        elif component_port == "output":
             node = self.output
 
         attributes.add_attr(
@@ -303,19 +303,19 @@ class build_rig_element(object):
         name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
         name = strings.string_checkup(name, logger_=_LOGGER)
         ref_trs = pmc.createNode("transform", n=name)
-        if self.element:
-            self.element.addChild(ref_trs)
+        if self.component:
+            self.component.addChild(ref_trs)
         if match_matrix:
             ref_trs.setMatrix(match_matrix, worldSpace=True)
         if buffer_grp:
             mayautils.create_buffer_grp(node=ref_trs)
         return ref_trs
 
-    def build_from_operator(self, element_name, side, parent):
+    def build_from_operator(self, component_name, side, parent):
         """
-        Build the element from operator.
+        Build the component from operator.
         """
-        self.init_hierarchy(element_name, side, parent)
+        self.init_hierarchy(component_name, side, parent)
         self.build_rig()
 
     def build_rig(self):

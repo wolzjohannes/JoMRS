@@ -149,7 +149,7 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
 
     def expand_tree(self, root_node):
         """
-        Expands all the collapsed elements in a tree starting at the root_node
+        Expands all the collapsed components in a tree starting at the root_node
         """
         parent = root_node.parent()
         parent_idx = (
