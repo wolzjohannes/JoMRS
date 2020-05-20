@@ -62,10 +62,11 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 ##########################################################
 
 
-class build_component_operator(operators.create_component_operator):
+class component(operators.create_component_operator):
     """
-    Build component operator template class.
+    Handles all component operations.
     """
+
     def __init__(self, main_operator_node=None):
         """
         Init of important data.
@@ -74,34 +75,46 @@ class build_component_operator(operators.create_component_operator):
                 main_operator_node(pmc.PyNode(), optional): Operators main node.
         """
         operators.create_component_operator.__init__(self, main_operator_node)
-        self.operator = None
+        self.operator = main_operator_node
+        self.component_root = []
+        self.input = []
+        self.output = []
+        self.component = []
+        self.spaces = []
+        self.fk_joints = []
+        self.ik_joints = []
+        self.drv_joints = []
+        self.bnd_joints = []
+        self.ref_transforms = []
 
-    def build(
+    def build_operator(
         self,
         operator_name,
         comp_typ,
-        side=None,
-        axes=None,
-        index=None,
+        side,
+        axes,
+        index,
+        sub_operators_count,
+        local_rotate_axes=True,
         connect_node=None,
         ik_space_ref=None,
-        sub_operators_count=None,
-        local_rotate_axes=True,
     ):
-        """Build the components operator.
+        """Build component operator.
 
         Args:
                 operator_name(str): The operator name.
                 comp_typ(str): The component typ.
                 side(str): The component side. Valid is L, R, M.
                 axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
+                sub_operators_count(int): Sub operators count.
                 index(int): The component index.
                 connect_node(str): The connect node .
                 ik_space_ref(list): Spaces given as nodes in a string
-                sub_operators_count(int): Suboperators count.
                 local_rotate_axes(bool): Enable/Disable
+
         Return:
-                True if successful.
+                Created component operator
+
         """
         self.operator = self.init_operator(
             operator_name=operator_name,
@@ -111,15 +124,13 @@ class build_component_operator(operators.create_component_operator):
         )
         self.set_component_name(operator_name)
         self.set_component_type(comp_typ)
-        if side:
-            self.set_component_side(side)
-        if index:
-            self.set_component_index(index)
+        self.set_component_side(side)
+        self.set_component_index(index)
         if connect_node:
             self.set_connect_nd(connect_node)
         if ik_space_ref:
             self.set_ik_spaces_ref(ik_space_ref)
-        return True
+        return self.operator
 
 
 # class template for rig component creation.

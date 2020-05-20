@@ -3,9 +3,7 @@
   <component name="ChangeListManager">
     <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="aim constraint from LRA to sub node if subnode">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/elements/__init__.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/__init__.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/tests/mayaunittestui.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/tests/mayaunittestui.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -18,8 +16,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="16895">
-              <caret line="551" column="22" selection-start-line="551" selection-start-column="22" selection-end-line="551" selection-end-column="22" />
+            <state relative-caret-position="-3875">
+              <caret line="191" column="9" lean-forward="true" selection-start-line="191" selection-start-column="9" selection-end-line="191" selection-end-column="9" />
+              <folding>
+                <element signature="e#1233#1257#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -27,18 +28,10 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="760">
-              <caret line="161" column="25" lean-forward="true" selection-start-line="161" selection-start-column="25" selection-end-line="161" selection-end-column="25" />
-              <folding>
-                <element signature="e#1307#1331#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="314">
+              <caret line="184" column="24" lean-forward="true" selection-start-line="184" selection-start-column="24" selection-end-line="184" selection-end-column="24" />
             </state>
           </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/__init__.py">
-          <provider selected="true" editor-type-id="text-editor" />
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
@@ -70,9 +63,6 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="4557">
               <caret line="153" column="13" selection-start-line="153" selection-start-column="13" selection-end-line="153" selection-end-column="13" />
-              <folding>
-                <element signature="e#1557#1581#0" expanded="true" />
-              </folding>
             </state>
           </provider>
         </entry>
@@ -93,10 +83,14 @@
       </map>
     </option>
   </component>
+  <component name="GithubProjectSettings">
+    <option name="CREATE_PULL_REQUEST_DEFAULT_BRANCH" value="master" />
+    <option name="CREATE_PULL_REQUEST_DEFAULT_REPO_USER" value="wolzjohannes" />
+    <option name="CREATE_PULL_REQUEST_DEFAULT_REPO_NAME" value="JoMRS" />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
-        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/.idea/workspace.xml" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/curves.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/elements/element.py" />
@@ -108,11 +102,14 @@
         <option value="$PROJECT_DIR$/scripts/JoMRS/logger.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/operators.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/element.py" />
+        <option value="$PROJECT_DIR$/.gitignore" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/components/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2001" />
+    <option name="x" value="270" />
+    <option name="y" value="215" />
     <option name="width" value="1620" />
     <option name="height" value="1051" />
   </component>
@@ -286,7 +283,14 @@
       <option name="project" value="LOCAL" />
       <updated>1588449983564</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="update gitignore">
+      <created>1589059617826</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1589059617826</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TodoView">
@@ -299,15 +303,15 @@
     </todo-panel>
   </component>
   <component name="ToolWindowManager">
-    <frame x="2160" y="0" width="3840" height="2160" extended-state="6" />
+    <frame x="0" y="41" width="2160" height="1399" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.12039958" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.120056495" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.329062" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.329062" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.32857144" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -370,16 +374,17 @@
     <MESSAGE value="wip. tweak curve control result to get LRA buffer group" />
     <MESSAGE value="wip. found get main meta node form root node issue" />
     <MESSAGE value="wip" />
-    <option name="LAST_COMMIT_MESSAGE" value="wip" />
+    <MESSAGE value="update gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="update gitignore" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1055" height="772" key="Git.Branch.Popup" />
-    <state width="1031" height="748" key="Git.Branch.Popup/2160.1440" />
+    <state width="1039" height="756" key="Git.Branch.Popup" />
+    <state width="1039" height="756" key="Git.Branch.Popup/2160.1440" />
     <state width="1111" height="828" key="Git.Branch.Popup/2160.1440/1920.1080" />
-    <state width="1055" height="772" key="Git.Branch.Popup/2160.1440/3840.2160" />
+    <state width="1083" height="800" key="Git.Branch.Popup/2160.1440/3840.2160" />
     <state width="1111" height="828" key="Git.Branch.Popup@1920.1080@144dpi" />
-    <state width="1031" height="748" key="Git.Branch.Popup@2160.1440@144dpi" />
-    <state width="1055" height="772" key="Git.Branch.Popup@3840.2160@144dpi" />
+    <state width="1039" height="756" key="Git.Branch.Popup@2160.1440@144dpi" />
+    <state width="1083" height="800" key="Git.Branch.Popup@3840.2160@144dpi" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -398,13 +403,6 @@
     </breakpoint-manager>
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/.gitignore">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="91" column="5" lean-forward="true" selection-start-line="91" selection-start-column="5" selection-end-line="91" selection-end-column="5" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/curves.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="651">
@@ -451,10 +449,13 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/__init__.py">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="16895">
-          <caret line="551" column="22" selection-start-line="551" selection-start-column="22" selection-end-line="551" selection-end-column="22" />
+        <state relative-caret-position="961">
+          <caret line="31" column="49" lean-forward="true" selection-start-line="31" selection-start-column="49" selection-end-line="31" selection-end-column="49" />
         </state>
       </provider>
     </entry>
@@ -482,22 +483,23 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="4557">
           <caret line="153" column="13" selection-start-line="153" selection-start-column="13" selection-end-line="153" selection-end-column="13" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-3875">
+          <caret line="191" column="9" lean-forward="true" selection-start-line="191" selection-start-column="9" selection-end-line="191" selection-end-column="9" />
           <folding>
-            <element signature="e#1557#1581#0" expanded="true" />
+            <element signature="e#1233#1257#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/__init__.py">
-      <provider selected="true" editor-type-id="text-editor" />
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="760">
-          <caret line="161" column="25" lean-forward="true" selection-start-line="161" selection-start-column="25" selection-end-line="161" selection-end-column="25" />
-          <folding>
-            <element signature="e#1307#1331#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="314">
+          <caret line="184" column="24" lean-forward="true" selection-start-line="184" selection-start-column="24" selection-end-line="184" selection-end-column="24" />
         </state>
       </provider>
     </entry>
