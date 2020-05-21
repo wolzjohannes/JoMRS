@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 03 / 05
+# Date:       2020 / 05 / 21
 
 """
 JoMRS maya utils module. Utilities helps
@@ -161,9 +161,7 @@ def create_spline_ik(
     result[0].attr("weight").set(weight)
     result[0].attr("po_weight").set(po_weight)
     logger.log(
-        level="info",
-        message='Spline IK "' + name + '" created',
-        logger=_LOGGER,
+        level="info", message='Spline IK "' + name + '" created', logger=_LOGGER
     )
     return result
 
@@ -213,9 +211,7 @@ def create_IK(
     ik_handle[0].attr("weight").set(weight)
     ik_handle[0].attr("po_weight").set(po_weight)
     logger.log(
-        level="info",
-        message=solver + ' "' + name + '" created',
-        logger=_LOGGER,
+        level="info", message=solver + ' "' + name + '" created', logger=_LOGGER
     )
     return ik_handle
 
@@ -888,9 +884,7 @@ def default_orient_joint(node, aim_axes="xyz", up_axes="yup"):
             )
     else:
         logger.log(
-            level="error",
-            message="Node has to be a joint",
-            logger=_LOGGER,
+            level="error", message="Node has to be a joint", logger=_LOGGER
         )
 
 
@@ -1143,3 +1137,64 @@ def reduce_shape_nodes(node=None):
         result = strings.search(search_pattern, str(shape))
         pmc.delete(result)
     return node.getShapes()
+
+
+def create_joint_by_data(matrix, side, name, typ, index):
+    """
+    Create a joint by data.
+    Args:
+            matrix(matrix): Matrix data to match.
+            side(str): Joint side. Valid is M, R, L.
+            name(str): Joint name.
+            typ(str): Joint typ.
+            index(int): The index number.
+    Return:
+            tuple: The create joint.
+    """
+    name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
+    jnt = create_joint(name=name, typ=typ, match_matrix=matrix)
+    return jnt
+
+
+def create_joint_skeleton_by_data_dic(data_list):
+    """
+    Create a joint skeleton by a data dictonary.
+    Args:
+            data_list(list with dics): A List filled with dictonaries.
+            Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
+            , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
+            name: 'Test'; 'typ': 'BND; 'index': 0}]
+    """
+    temp = [
+        create_joint_by_data(
+            data["matrix"],
+            data["side"],
+            data["name"],
+            data["typ"],
+            data["index"],
+        )
+        for data in data_list
+    ]
+    create_hierarchy(temp)
+
+
+def create_ref_transform(name, side, index, buffer_grp, match_matrix):
+    """
+    Create a reference transform.
+    Args:
+            name(str): Name for the ref node.
+            side(str): The side. Valid is M, R, L.
+            index(int): The index number.
+            buffer_grp(bool): Enable buffer grp.
+            match_matrix(matrix): The match matrix.
+    Return:
+            tuple: The new ref node.
+    """
+    name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
+    name = strings.string_checkup(name, logger_=_LOGGER)
+    ref_trs = pmc.createNode("transform", n=name)
+    if match_matrix:
+        ref_trs.setMatrix(match_matrix, worldSpace=True)
+    if buffer_grp:
+        create_buffer_grp(node=ref_trs)
+    return ref_trs

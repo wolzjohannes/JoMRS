@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 09
+# Date:       2020 / 05 / 21
 
 """
 Rig components main module. This class is the template to create a rig
@@ -81,11 +81,6 @@ class component(operators.create_component_operator):
         self.output = []
         self.component = []
         self.spaces = []
-        self.fk_joints = []
-        self.ik_joints = []
-        self.drv_joints = []
-        self.bnd_joints = []
-        self.ref_transforms = []
 
     def build_operator(
         self,
@@ -131,25 +126,6 @@ class component(operators.create_component_operator):
         if ik_space_ref:
             self.set_ik_spaces_ref(ik_space_ref)
         return self.operator
-
-
-# class template for rig component creation.
-class build_component_rig(object):
-    """
-    Class as rig build template for each rig component.
-    """
-
-    def __init__(self):
-        self.component_root = []
-        self.input = []
-        self.output = []
-        self.component = []
-        self.spaces = []
-        self.fk_joints = []
-        self.ik_joints = []
-        self.drv_joints = []
-        self.bnd_joints = []
-        self.ref_transforms = []
 
     def init_hierarchy(self, component_name, side, parent):
         """
@@ -230,7 +206,7 @@ class build_component_rig(object):
         value=1,
     ):
         """
-        Add userdefined port to the input or output port of a rig component.
+        Add user defined port to the input or output port of a rig component.
         By Default it add a float value to the input port with a given
         name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
         Args:
@@ -254,73 +230,6 @@ class build_component_rig(object):
             maxValue=maxValue,
             value=value,
         )
-
-    def create_joint_by_data(self, matrix, side, name, typ, index):
-        """
-        Create a joint by data.
-        Args:
-                matrix(matrix): Matrix data to match.
-                side(str): Joint side. Valid is M, R, L.
-                name(str): Joint name.
-                typ(str): Joint typ.
-                index(int): The index number.
-        Return:
-                tuple: The create joint.
-        """
-        name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
-        jnt = mayautils.create_joint(name=name, typ=typ, match_matrix=matrix)
-        return jnt
-
-    def create_joint_skeleton_by_data_dic(self, data_list):
-        """
-        Create a joint skeleton by a data dictonary.
-        Args:
-                data_list(list with dics): A List filled with dictonaries.
-                Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
-                , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
-                name: 'Test'; 'typ': 'BND; 'index': 0}]
-        """
-        temp = []
-        for data in data_dic:
-            jnt = self.create_joint_by_data(
-                data["matrix"],
-                data["side"],
-                data["name"],
-                data["typ"],
-                data["index"],
-            )
-            if data["typ"] == "FK":
-                self.fk_joints.append(jnt)
-            elif data["typ"] == "IK":
-                self.ik_joints.append(jnt)
-            elif data["typ"] == "DRV":
-                self.drv_joints.append(jnt)
-            elif data["typ"] == "BND":
-                self.bnd_joints.append(jnt)
-        mayautils.create_hierarchy(temp)
-
-    def create_ref_transform(self, name, side, index, buffer_grp, match_matrix):
-        """
-        Create a reference transform.
-        Args:
-                name(str): Name for the ref node.
-                side(str): The side. Valid is M, R, L.
-                index(int): The index number.
-                buffer_grp(bool): Enable buffer grp.
-                match_matrix(matrix): The match matrix.
-        Return:
-                tuple: The new ref node.
-        """
-        name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
-        name = strings.string_checkup(name, logger_=_LOGGER)
-        ref_trs = pmc.createNode("transform", n=name)
-        if self.component:
-            self.component.addChild(ref_trs)
-        if match_matrix:
-            ref_trs.setMatrix(match_matrix, worldSpace=True)
-        if buffer_grp:
-            mayautils.create_buffer_grp(node=ref_trs)
-        return ref_trs
 
     def build_from_operator(self, component_name, side, parent):
         """
