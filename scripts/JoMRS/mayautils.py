@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 21
+# Date:       2020 / 05 / 22
 
 """
 JoMRS maya utils module. Utilities helps
@@ -926,7 +926,7 @@ def create_joint(
             node(dagnode): The node for transformation match.
             orient_match_rotation(bool): Enable the match of the joint
             orientation with the rotation of the node.
-            match_matrix(matirx): The matrix to match
+            match_matrix(matrix): The matrix to match
     Return:
             tuple: The created joint node.
     """
@@ -937,8 +937,7 @@ def create_joint(
         {"typ": "FK", "radius": 1.5, "overrideColor": 4},
         {"typ": "IK", "radius": 2, "overrideColor": 6},
     ]
-    pmc.select(clear=True)
-    jnt = pmc.joint(n=name)
+    jnt = pmc.createNode("joint", n=name)
     for util in data:
         if util["typ"] == typ:
             jnt.overrideEnabled.set(1)
@@ -1126,9 +1125,9 @@ def reduce_shape_nodes(node=None):
     """
     Reduce a transform to his true shape node.
     Args:
-            node(dagnode): The transform with the shape ndoe.
+            node(dagnode): The transform with the shape node.
     Return:
-            list: The true shape node of the transform.
+            List: The true shape node of the transform.
     """
     search_pattern = "ShapeOrig|ShapeDeformed"
     shapes = node.getShapes()
@@ -1139,57 +1138,86 @@ def reduce_shape_nodes(node=None):
     return node.getShapes()
 
 
-def create_joint_by_data(matrix, side, name, typ, index):
+def create_joint_by_data(name, type_, side, index, matrix=None):
     """
     Create a joint by data.
     Args:
-            matrix(matrix): Matrix data to match.
-            side(str): Joint side. Valid is M, R, L.
             name(str): Joint name.
-            typ(str): Joint typ.
+            type_(str): Joint typ. Valid values are "BND", "DRV", "IK", "FK".
+            side(str): Joint side. Valid values are "M", "R", "L".
             index(int): The index number.
+            matrix(matrix): Matrix data to snap.
     Return:
-            tuple: The create joint.
+            The new joint.
     """
-    name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
-    jnt = create_joint(name=name, typ=typ, match_matrix=matrix)
-    return jnt
+    valid_sides = ["L", "R", "M"]
+    valid_types = ["BND", "DRV", "FK", "IK"]
+    if side not in valid_sides:
+        raise AttributeError(
+            'Chosen side is not valid. Valid values are ["L", "R", "M"]'
+        )
+    if type_ not in valid_types:
+        raise AttributeError(
+            "Chosen joint type is not valid. Valid values "
+            'are ["BND", "DRV", "IK", "FK"]'
+        )
+    name = "{}_{}_{}_{}_JNT".format(side, type_, name, str(index))
+    return create_joint(name=name, typ=type_, match_matrix=matrix)
 
 
 def create_joint_skeleton_by_data_dic(data_list):
     """
-    Create a joint skeleton by a data dictonary.
+    Create a joint skeleton by a data dictionary.
     Args:
-            data_list(list with dics): A List filled with dictonaries.
-            Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
-            , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
-            name: 'Test'; 'typ': 'BND; 'index': 0}]
+            data_list(list): A List filled with dictionaries.
+
+    Example:
+            >>> create_joint_skeleton_by_data_dic([{'matrix': [1.0, 0.0, 0.0,
+            >>> 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            >>> , 'side': 'M', 'name': 'Test', 'typ': 'BND', 'index': 0},
+            >>> {'matrix': [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            >>> 1.0, 0.0, 3.0, 10.0, -3.6787579514, 1.0], 'side': 'M', 'name':
+            >>> 'Test', 'typ': 'DRV', 'index': 1}])
     """
     temp = [
         create_joint_by_data(
-            data["matrix"],
-            data["side"],
             data["name"],
             data["typ"],
+            data["side"],
             data["index"],
+            data["matrix"],
         )
         for data in data_list
     ]
     create_hierarchy(temp)
 
 
-def create_ref_transform(name, side, index, buffer_grp, match_matrix):
+def create_ref_transform(
+    name, side, index, buffer_grp=False, match_matrix=None, child=None
+):
     """
     Create a reference transform.
     Args:
             name(str): Name for the ref node.
-            side(str): The side. Valid is M, R, L.
+            side(str): The side. Valid values are "M", "R", "L".
             index(int): The index number.
             buffer_grp(bool): Enable buffer grp.
             match_matrix(matrix): The match matrix.
+            child(dagnode): Child of node.
+
+    Example:
+            >>> create_ref_transform('test', 'M', 0, True,
+            >>> [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('yournode'))
+
     Return:
-            tuple: The new ref node.
+            The new ref node.
     """
+    valid_sides = ["L", "R", "M"]
+    if side not in valid_sides:
+        raise AttributeError(
+            'Chosen side is not valid. Valid values are ["L", "R", "M"]'
+        )
     name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
     name = strings.string_checkup(name, logger_=_LOGGER)
     ref_trs = pmc.createNode("transform", n=name)
@@ -1197,4 +1225,6 @@ def create_ref_transform(name, side, index, buffer_grp, match_matrix):
         ref_trs.setMatrix(match_matrix, worldSpace=True)
     if buffer_grp:
         create_buffer_grp(node=ref_trs)
+    if child:
+        ref_trs.addChild(child)
     return ref_trs
