@@ -315,7 +315,7 @@ class create_component_operator(mainOperatorNode):
                 List: The operators root node.
         """
         axes_ = axes
-        vec = 0
+        vec = spacing
         aim_vec = ()
         up_vec = ()
         self.joint_control = curves.JointControl()
@@ -395,7 +395,7 @@ class create_component_operator(mainOperatorNode):
             self.sub_operators.extend(sub_op_node)
             self.result[-1].addChild(sub_op_node[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
-                vec = spacing * -1
+                vec = vec * -1
             if axes == "-X":
                 axes_ = "X"
             elif axes == "-Y":
@@ -432,19 +432,20 @@ class create_component_operator(mainOperatorNode):
                 worldUpObject=self.main_operator_node[1],
                 mo=True,
             )
-        self.linear_curve_name = linear_curve_name.replace(
-            "M_", "{}_".format(side)
-        )
-        self.linear_curve_name = self.linear_curve_name.replace(
-            "_op_", "_op_{}_".format(operator_name)
-        )
-        linear_curve = curves.linear_curve(
-            driver_nodes=self.result, name=self.linear_curve_name
-        )
-        linear_curve.inheritsTransform.set(0)
-        self.main_operator_node[0].addChild(linear_curve)
+        if sub_operators_count:
+            self.linear_curve_name = linear_curve_name.replace(
+                "M_", "{}_".format(side)
+            )
+            self.linear_curve_name = self.linear_curve_name.replace(
+                "_op_", "_op_{}_".format(operator_name)
+            )
+            linear_curve = curves.linear_curve(
+                driver_nodes=self.result, name=self.linear_curve_name
+            )
+            linear_curve.inheritsTransform.set(0)
+            self.main_operator_node[0].addChild(linear_curve)
         self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        return self.op_root_nd
+        return self.main_operator_node[1]
 
     def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
         """

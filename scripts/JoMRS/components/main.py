@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 21
+# Date:       2020 / 05 / 23
 
 """
 Rig components main module. This class is the template to create a rig
@@ -33,6 +33,8 @@ import strings
 import attributes
 import mayautils
 import operators
+
+reload(operators)
 
 ##########################################################
 # GLOBALS
@@ -59,6 +61,7 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 # Connect output matrix.
 # Connect ud attributes with output node.
 # Create BND joints.
+# Add entry in ref rig build class attr
 ##########################################################
 
 
@@ -200,7 +203,7 @@ class component(operators.create_component_operator):
         self,
         component_port="input",
         name=None,
-        typ="float",
+        type_="float",
         minValue=0,
         maxValue=1,
         value=1,
@@ -212,20 +215,24 @@ class component(operators.create_component_operator):
         Args:
                 component_port(str): The rig components port.
                 name(str): The port name.
-                type(str): The port typ.
+                type_(str): The port typ.
                 minValue(float or int): The minimal port value.
                 maxValue(float or int): The maximum port value.
                 value(float or int or str): The port value.
         """
-        if component_port == "input":
-            node = self.input
-        elif component_port == "output":
+        valid_ports = ["input", "output"]
+        if component_port not in valid_ports:
+            raise AttributeError(
+                'Chosen port not valid. Valid values are ["input", "output"]'
+            )
+        node = self.input
+        if component_port == "output":
             node = self.output
 
         attributes.add_attr(
             node=node,
             name=name,
-            attrType=typ,
+            attrType=type_,
             minValue=minValue,
             maxValue=maxValue,
             value=value,
@@ -233,7 +240,7 @@ class component(operators.create_component_operator):
 
     def build_from_operator(self, component_name, side, parent):
         """
-        Build the component from operator.
+        Build the component from operator. With initial hierarchy.
         """
         self.init_hierarchy(component_name, side, parent)
         self.build_rig()
@@ -242,4 +249,4 @@ class component(operators.create_component_operator):
         """
         Create the actual rig.
         """
-        return False
+        return True
