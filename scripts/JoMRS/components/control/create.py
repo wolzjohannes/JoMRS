@@ -20,42 +20,70 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 23
+# Date:       2020 / 08 / 04
 
 """
 Build a single control
 """
 
 import pymel.core as pmc
-import logging
-import logger
-import mayautils
-import components.main
+from components import main
 
-reload(components.main)
-
-##########################################################
-# GLOBALS
-##########################################################
-
-_LOGGER = logging.getLogger(__name__ + ".py")
+reload(main)
 
 ##########################################################
 # CLASSES
 ##########################################################
 
 
-class Main(components.main.component):
+class Main(main.component):
+    """
+    Main class for component building.It handles the operator building,
+    component logic and rig building.
+    """
 
     COMP_TYPE = "control"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = False
-    AXES = 'X'
+    AXES = "X"
 
-    def __init__(self, main_operator_node=None):
-        components.main.component.__init__(self, main_operator_node)
+    def __init__(self, name, side, index, main_operator_node=None):
+        """
+        Init function.
+
+        Args:
+            main_operator_node(pmc.PyNode): The main operator node.
+
+        """
+        main.component.__init__(self, main_operator_node)
+        self.main_operator_node = main_operator_node
+        self.name = name
+        self.side = side
+        self.index = index
 
     def _init_operator(self, name, side, index):
-        self.build_operator(name, self.COMP_TYPE, side, self.AXES, index,
-                            self.SUB_OPERATORS_COUNT,
-                            self.LOCAL_ROTATION_AXES)
+        """
+        Init the operator creation.
+
+        Args:
+            name(str): Component name.
+            side(str): The component side.
+            index(str): Component index.
+
+        """
+        self.build_operator(
+            self.name,
+            self.COMP_TYPE,
+            self.side,
+            self.AXES,
+            self.index,
+            self.SUB_OPERATORS_COUNT,
+            self.LOCAL_ROTATION_AXES,
+        )
+
+    def build_component_logic(self):
+        """
+        Build component logic. It is derivative method
+        """
+        jnt = pmc.createNode('joint')
+        self.component.addChild(jnt)

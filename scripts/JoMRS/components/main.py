@@ -20,27 +20,20 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 23
+# Date:       2020 / 08 / 04
 
 """
 Rig components main module. This class is the template to create a rig
 component. Every rig component should inherit this class as template.
 """
 import pymel.core as pmc
-import logging
-import logger
 import strings
 import attributes
-import mayautils
 import operators
+import logger
+import logging
 
 reload(operators)
-
-##########################################################
-# GLOBALS
-##########################################################
-
-_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # Methods
@@ -64,34 +57,59 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 # Add entry in ref rig build class attr
 ##########################################################
 
+##########################################################
+# GLOBALS
+##########################################################
+
+_LOGGER = logging.getLogger(__name__ + ".py")
+
+##########################################################
+# CLASSES
+##########################################################
 
 class component(operators.create_component_operator):
     """
     Handles all component operations.
     """
 
-    def __init__(self, main_operator_node=None):
+    def __init__(
+        self,
+        name=None,
+        component_type=None,
+        side=None,
+        index=None,
+        main_operator_node=None,
+    ):
         """
-        Init of important data.
+        Init important data.
 
         Args:
-                main_operator_node(pmc.PyNode(), optional): Operators main node.
+            name(str, optional): Component name.
+            component_type(str, optional): Component type.
+            side(str, optional): The component side.
+            index(int, optional): The component index.
+            main_operator_node(pmc.PyNode(), optional): Operators main node.
         """
         operators.create_component_operator.__init__(self, main_operator_node)
         self.operator = main_operator_node
+        self.name = name
+        self.component_type = component_type
+        self.side = side
+        self.index = index
         self.component_root = []
         self.input = []
         self.output = []
         self.component = []
         self.spaces = []
+        if main_operator_node:
+            self.name = self.get_component_name()
+            self.component_type = self.get_component_type()
+            self.side = self.get_component_side()
+            self.index = self.get_component_index()
 
     def build_operator(
         self,
-        operator_name,
-        comp_typ,
-        side,
         axes,
-        index,
         sub_operators_count,
         local_rotate_axes=True,
         connect_node=None,
@@ -100,46 +118,40 @@ class component(operators.create_component_operator):
         """Build component operator.
 
         Args:
-                operator_name(str): The operator name.
-                comp_typ(str): The component typ.
-                side(str): The component side. Valid is L, R, M.
                 axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
                 sub_operators_count(int): Sub operators count.
-                index(int): The component index.
                 connect_node(str): The connect node .
                 ik_space_ref(list): Spaces given as nodes in a string
                 local_rotate_axes(bool): Enable/Disable
 
-        Return:
-                Created component operator
-
         """
         self.operator = self.init_operator(
-            operator_name=operator_name,
+            operator_name=self.name,
             sub_operators_count=sub_operators_count,
             axes=axes,
             local_rotate_axes=local_rotate_axes,
         )
-        self.set_component_name(operator_name)
-        self.set_component_type(comp_typ)
-        self.set_component_side(side)
-        self.set_component_index(index)
+        self.set_component_name(self.name)
+        self.set_component_type(self.component_type)
+        self.set_component_side(self.component_side)
+        self.set_component_index(self.index)
         if connect_node:
             self.set_connect_nd(connect_node)
         if ik_space_ref:
             self.set_ik_spaces_ref(ik_space_ref)
-        return self.operator
+        logger.log(level='info', message='{} component operator '
+                                         'build named: {}'.format(
+            self.component_type, self.name),
+                   logger=_LOGGER)
 
-    def init_hierarchy(self, component_name, side, parent):
+    def init_hierarchy(self, component_root):
         """
         Init rig component base hierarchy.
         Args:
-                component_name(str): The Components name.
-                side(str): Component Side.
-                parent(dagnode): Component parent node.
+            component_root(dagnode): Component parent node.
         """
         component_root_name = "{}_RIG_{}_component_0_GRP".format(
-            side, component_name.lower()
+            self.side, self.name.lower()
         )
         component_root_name = strings.string_checkup(component_root_name)
         self.component_root = pmc.createNode("transform", n=component_root_name)
@@ -168,8 +180,16 @@ class component(operators.create_component_operator):
             keyable=False,
             hidden=True,
         )
-        if parent:
-            parent.addChild(self.component_root)
+        attributes.add_attr(
+            self.output,
+            name="BND_output_ws_matrix",
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )
+        if component_root:
+            component_root.addChild(self.component_root)
 
     def create_input_ws_matrix_port(self, name):
         """
@@ -185,6 +205,20 @@ class component(operators.create_component_operator):
             hidden=True,
         )
 
+    def create_input_os_matrix_port(self, name):
+        """
+        Create a input port for os matrix connection.
+        Args:
+                name(str): Name of the attribute.
+        """
+        attributes.add_attr(
+            self.input,
+            name="{}_input_os_matrix".format(name),
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+        )
+
     def create_output_ws_matrix_port(self, name):
         """
         Create a output port for ws matrix connection.
@@ -194,6 +228,20 @@ class component(operators.create_component_operator):
         attributes.add_attr(
             self.output,
             name="{}_output_ws_matrix".format(name),
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+        )
+
+    def create_output_os_matrix_port(self, name):
+        """
+        Create a output port for os matrix connection.
+        Args:
+                name(str): Name of the attribute.
+        """
+        attributes.add_attr(
+            self.output,
+            name="{}_output_os_matrix".format(name),
             attrType="matrix",
             keyable=False,
             hidden=True,
@@ -238,15 +286,35 @@ class component(operators.create_component_operator):
             value=value,
         )
 
-    def build_from_operator(self, component_name, side, parent):
+    def build_component_logic(
+        self,
+        main_operator_ws_matrix=None,
+        sub_operator_ws_matrix=None,
+        joint_count=1,
+    ):
         """
-        Build the component from operator. With initial hierarchy.
-        """
-        self.init_hierarchy(component_name, side, parent)
-        self.build_rig()
+        Method for building a component.
 
-    def build_rig(self):
-        """
-        Create the actual rig.
+        Args:
+            main_operator_ws_matrix(matrix): World space position of main
+            operator.
+            sub_operator_ws_matrix(list): List of sub operators world space
+            position.
+            joint(int): Count of rig joints.
+
+        Return:
+            True
+
         """
         return True
+
+    def build_from_operator(self, component_root=None):
+        """
+        Build the whole component rig from operator.
+        With initial hierarchy.
+
+        Args:
+            component_root(pmc.PyNode()): The component root node.)
+        """
+        self.init_hierarchy(component_root)
+        self.build_component_logic()
