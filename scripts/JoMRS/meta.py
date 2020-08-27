@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 10 / 27
+# Date:       2020 / 08 / 19
 
 """
 Meta node creation module.
@@ -30,42 +30,14 @@ import logging
 import attributes
 import re
 import strings
+import constants
+reload(constants)
 
 ##########################################################
 # GLOBALS
 #########################################################
 _LOGGER = logging.getLogger(__name__ + ".py")
-NODEID = "meta_node"
-TYPE = "meta_class"
-BASETYPE = "meta_node_class"
-GODTYPE = "god_meta_class"
-TYPEA = "root_operators_meta_class"
-TYPEB = "main_operator_meta_class"
-TYPEC = "sub_operator_meta_class"
-DEFAULTCONNECTIONTYPES = "translate;rotate;scale"
-ROOTOPMETAPARAMS = [
-    "rig_name",
-    "l_rig_color",
-    "l_rig_sub_color",
-    "r_rig_color",
-    "r_rig_sub_color",
-    "m_rig_color",
-    "m_rig_sub_color",
-]
-MAINOPMETAPARAMS = [
-    "component_name",
-    "component_type",
-    "component_side",
-    "component_index",
-    "connection_types",
-    "ik_spaces_ref",
-    "fk_spaces_ref",
-    "ik_pvec_spaces_ref",
-    "main_operator_nd",
-    "connect_nd",
-    "rig_build_class_ref",
-]
-MAINMETANDPLUG = "main_meta_nd"
+constants.MAIN_META_ND_PLUG = "main_meta_nd"
 
 ##########################################################
 # CLASSES
@@ -87,7 +59,7 @@ class MetaNode(pmc.nt.Network):
         ]
 
     @classmethod
-    def _isVirtual(cls, obj, name, tag=NODEID):
+    def _isVirtual(cls, obj, name, tag=constants.META_NODE_ID):
         """
         This actual creates the node. If a specific tag is found.
         If not it will create a default node.
@@ -118,7 +90,8 @@ class MetaNode(pmc.nt.Network):
 
     @classmethod
     def _postCreateVirtual(
-        cls, newNode, tag=NODEID, type=TYPE, class_type=BASETYPE
+        cls, newNode, tag=constants.META_NODE_ID, type=constants.META_TYPE,
+            class_type=constants.META_BASE_TYPE
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -141,7 +114,7 @@ class GodMetaNode(MetaNode):
     Creates a Meta Node as God Meta Node for all meta nodes in the scene.
     """
 
-    SUBNODE_TYPE = GODTYPE
+    SUBNODE_TYPE = constants.META_GOD_TYPE
 
     @classmethod
     def list(cls, *args, **kwargs):
@@ -153,7 +126,8 @@ class GodMetaNode(MetaNode):
         ]
 
     @classmethod
-    def _isVirtual(cls, obj, name, tag=NODEID, type=TYPE):
+    def _isVirtual(cls, obj, name, tag=constants.META_NODE_ID,
+                   type=constants.META_TYPE):
         """
          This actual creates the node. If a specific tag is found.
          If not it will create a default node.
@@ -182,7 +156,8 @@ class GodMetaNode(MetaNode):
         return False
 
     @classmethod
-    def _postCreateVirtual(cls, newNode, type=TYPE, name="god_meta_0_METAND"):
+    def _postCreateVirtual(cls, newNode, type=constants.META_TYPE,
+                           name="god_meta_0_METAND"):
         """
         This is called after creation, pymel/cmds allowed.
         It will create a set of attributes. And the important check up tag for
@@ -219,7 +194,8 @@ class GodMetaNode(MetaNode):
         new_attribute["input"] = node.message
         attributes.add_attr(node=self, **new_attribute)
 
-    def list_meta_nodes(self, plug="meta_nd", class_filter=None, type=TYPE):
+    def list_meta_nodes(self, plug="meta_nd", class_filter=None,
+                        type=constants.META_TYPE):
         """
         List all meta nodes in the scene.
         Args:
@@ -246,7 +222,7 @@ class RootOpMetaNode(MetaNode):
     Creates a Meta Node as Root Meta Node for all operators meta nodes.
     """
 
-    SUBNODE_TYPE = TYPEA
+    SUBNODE_TYPE = constants.META_TYPE_A
 
     @classmethod
     def list(cls, *args, **kwargs):
@@ -258,7 +234,8 @@ class RootOpMetaNode(MetaNode):
         ]
 
     @classmethod
-    def _isVirtual(cls, obj, name, tag=NODEID, type=TYPE):
+    def _isVirtual(cls, obj, name, tag=constants.META_NODE_ID,
+                   type=constants.META_TYPE):
         """
          This actual creates the node. If a specific tag is found.
          If not it will create a default node.
@@ -290,9 +267,8 @@ class RootOpMetaNode(MetaNode):
     def _postCreateVirtual(
         cls,
         newNode,
-        type=TYPE,
+        type=constants.META_TYPE,
         god_meta_name="god_meta_0_METAND",
-        root_op_meta_nd_params=ROOTOPMETAPARAMS,
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -316,14 +292,14 @@ class RootOpMetaNode(MetaNode):
         newNode.rename(name)
 
         rigname_attr = {
-            "name": root_op_meta_nd_params[0],
+            "name": constants.META_ROOT_RIG_NAME,
             "attrType": "string",
             "keyable": False,
             "value": "None",
         }
 
         l_rig_color_attr = {
-            "name": root_op_meta_nd_params[1],
+            "name": constants.META_LEFT_RIG_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 13,
@@ -332,7 +308,7 @@ class RootOpMetaNode(MetaNode):
         }
 
         l_rig_sub_color_attr = {
-            "name": root_op_meta_nd_params[2],
+            "name": constants.META_LEFT_RIG_SUB_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 18,
@@ -341,7 +317,7 @@ class RootOpMetaNode(MetaNode):
         }
 
         r_rig_color_attr = {
-            "name": root_op_meta_nd_params[3],
+            "name": constants.META_RIGHT_RIG_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 6,
@@ -350,7 +326,7 @@ class RootOpMetaNode(MetaNode):
         }
 
         r_rig_sub_color_attr = {
-            "name": root_op_meta_nd_params[4],
+            "name": constants.META_RIGHT_RIG_SUB_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 9,
@@ -359,7 +335,7 @@ class RootOpMetaNode(MetaNode):
         }
 
         m_rig_color_attr = {
-            "name": root_op_meta_nd_params[5],
+            "name": constants.META_MID_RIG_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 17,
@@ -368,7 +344,7 @@ class RootOpMetaNode(MetaNode):
         }
 
         m_rig_sub_color_attr = {
-            "name": root_op_meta_nd_params[6],
+            "name": constants.META_MID_RIG_SUB_COLOR,
             "attrType": "long",
             "keyable": False,
             "defaultValue": 11,
@@ -388,7 +364,7 @@ class RootOpMetaNode(MetaNode):
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
-    def add_main_meta_node(self, node, plug=MAINMETANDPLUG):
+    def add_main_meta_node(self, node, plug=constants.MAIN_META_ND_PLUG):
         """
         Add a main meta node to the root meta node as message attr connection.
         Args:
@@ -416,7 +392,7 @@ class MainOpMetaNode(MetaNode):
     Creates a Meta Node as Main Operator Meta Node for a component.
     """
 
-    SUBNODE_TYPE = TYPEB
+    SUBNODE_TYPE = constants.META_TYPE_B
 
     @classmethod
     def list(cls, *args, **kwargs):
@@ -428,7 +404,8 @@ class MainOpMetaNode(MetaNode):
         ]
 
     @classmethod
-    def _isVirtual(cls, obj, name, tag=NODEID, type=TYPE):
+    def _isVirtual(cls, obj, name, tag=constants.META_NODE_ID,
+                   type=constants.META_TYPE):
         """
          This actual creates the node. If a specific tag is found.
          If not it will create a default node.
@@ -460,10 +437,9 @@ class MainOpMetaNode(MetaNode):
     def _postCreateVirtual(
         cls,
         newNode,
-        type=TYPE,
+        type=constants.META_TYPE,
         god_meta_name="god_meta_0_METAND",
-        connection_types=DEFAULTCONNECTIONTYPES,
-        main_op_meta_param=MAINOPMETAPARAMS,
+        connection_types=constants.DEFAULT_CONNECTION_TYPES,
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -487,28 +463,28 @@ class MainOpMetaNode(MetaNode):
         newNode.rename(name)
 
         comp_name_attr = {
-            "name": main_op_meta_param[0],
+            "name": constants.META_MAIN_COMP_NAME,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_type_attr = {
-            "name": main_op_meta_param[1],
+            "name": constants.META_MAIN_COMP_TYPE,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_side_attr = {
-            "name": main_op_meta_param[2],
+            "name": constants.META_MAIN_COMP_SIDE,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         comp_index_attr = {
-            "name": main_op_meta_param[3],
+            "name": constants.META_MAIN_COMP_INDEX,
             "attrType": "long",
             "keyable": False,
             "channelBox": False,
@@ -516,51 +492,65 @@ class MainOpMetaNode(MetaNode):
         }
 
         connection_type_attr = {
-            "name": main_op_meta_param[4],
+            "name": constants.META_DEFAULT_CONNECTION_TYPES,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
-            "value": connection_types,
+            "value": constants.DEFAULT_CONNECTION_TYPES,
         }
 
         ik_spaces_ref_attr = {
-            "name": main_op_meta_param[5],
+            "name": constants.META_MAIN_IK_SPACES,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         fk_spaces_ref_attr = {
-            "name": main_op_meta_param[6],
+            "name": constants.META_MAIN_FK_SPACES,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         ik_pvec_spaces_ref_attr = {
-            "name": main_op_meta_param[7],
+            "name": constants.META_MAIN_IK_PVEC_SPACES,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         main_operator_connection = {
-            "name": main_op_meta_param[8],
+            "name": constants.MAIN_OP_MESSAGE_ATTR_NAME,
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
         }
 
         connect_nd_attr = {
-            "name": main_op_meta_param[9],
+            "name": constants.META_MAIN_CONNECT_ND,
             "attrType": "string",
             "keyable": False,
             "channelBox": False,
         }
 
         rig_build_class_ref = {
-            "name": main_op_meta_param[10],
+            "name": constants.META_MAIN_RIG_BUILD_CLASS_REF,
             "attrType": "string",
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        parent_nd_attr = {
+            "name": constants.META_MAIN_PARENT_ND,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        child_nd_attr = {
+            "name": constants.META_MAIN_CHILD_ND,
+            "attrType": "message",
             "keyable": False,
             "channelBox": False,
         }
@@ -577,6 +567,9 @@ class MainOpMetaNode(MetaNode):
             main_operator_connection,
             connect_nd_attr,
             rig_build_class_ref,
+            parent_nd_attr,
+            child_nd_attr,
+
         ]
 
         for attr_ in main_node_param_list:
@@ -610,7 +603,7 @@ class SubOpMetaNode(MetaNode):
     Creates a Meta Node as Sub Meta Node for a component..
     """
 
-    SUBNODE_TYPE = TYPEC
+    SUBNODE_TYPE = constants.META_TYPE_C
 
     @classmethod
     def list(cls, *args, **kwargs):
@@ -622,7 +615,7 @@ class SubOpMetaNode(MetaNode):
         ]
 
     @classmethod
-    def _isVirtual(cls, obj, name, tag=NODEID, type=TYPE):
+    def _isVirtual(cls, obj, name, tag=constants.META_NODE_ID, type=constants.META_TYPE):
         """
          This actual creates the node. If a specific tag is found.
          If not it will create a default node.
@@ -654,9 +647,9 @@ class SubOpMetaNode(MetaNode):
     def _postCreateVirtual(
         cls,
         newNode,
-        type=TYPE,
+        type=constants.META_TYPE,
         god_meta_name="god_meta_0_METAND",
-        connection_types=DEFAULTCONNECTIONTYPES,
+        connection_types=constants.DEFAULT_CONNECTION_TYPES,
     ):
         """
         This is called after creation, pymel/cmds allowed.

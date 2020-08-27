@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 04
+# Date:       2020 / 08 / 06
 
 """
 Build a single control
@@ -47,7 +47,8 @@ class Main(main.component):
     LOCAL_ROTATION_AXES = False
     AXES = "X"
 
-    def __init__(self, name, side, index, main_operator_node=None):
+    def __init__(self, name=None, side=None, index=None,
+                 main_operator_node=None):
         """
         Init function.
 
@@ -55,28 +56,15 @@ class Main(main.component):
             main_operator_node(pmc.PyNode): The main operator node.
 
         """
-        main.component.__init__(self, main_operator_node)
-        self.main_operator_node = main_operator_node
-        self.name = name
-        self.side = side
-        self.index = index
+        main.component.__init__(self, name, self.COMP_TYPE, side, index,
+                                main_operator_node)
 
-    def _init_operator(self, name, side, index):
+    def _init_operator(self):
         """
         Init the operator creation.
-
-        Args:
-            name(str): Component name.
-            side(str): The component side.
-            index(str): Component index.
-
         """
         self.build_operator(
-            self.name,
-            self.COMP_TYPE,
-            self.side,
             self.AXES,
-            self.index,
             self.SUB_OPERATORS_COUNT,
             self.LOCAL_ROTATION_AXES,
         )

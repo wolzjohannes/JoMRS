@@ -20,13 +20,14 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 03
+# Date:       2020 / 08 / 26
 
 """
 JoMRS main operator module. Handles the operators creation.
 """
 
 import pymel.core as pmc
+import constants
 import logging
 import logger
 import attributes
@@ -34,31 +35,14 @@ import curves
 import mayautils
 import meta
 
+reload(meta)
+reload(constants)
+
 ##########################################################
 # GLOBALS
 ##########################################################
 
 _LOGGER = logging.getLogger(__name__ + ".py")
-OPROOTTAGNAME = "JOMRS_op_root"
-OPMAINTAGNAME = "JOMRS_op_main"
-OPSUBTAGNAME = "JOMRS_op_sub"
-OPROOTNAME = "M_MAIN_operators_0_GRP"
-MAINOPROOTNODENAME = "M_MAIN_op_0_CON"
-SUBOPROOTNODENAME = "M_SUB_op_0_CON"
-ROOTOPMETANODENAME = "M_ROOT_op_0"
-ROOTOPMETANDATTRNAME = "root_op_meta_nd"
-MAINOPMETANDATTRNAME = "main_op_meta_nd"
-SUBOPMETANDATTRNAME = "sub_op_meta_nd"
-MAINOPMESSAGEATTRNAME = "main_operator_nd"
-LINEARCURVENAME = "M_linear_op_0_CRV"
-DEFAULTOPERATORNAME = "component"
-DEFAULTSIDE = "M"
-DEFAULTINDEX = 0
-DEFAULTSUBOPERATORSCOUNT = 0
-DEFAULTAXES = "X"
-DEFAULTSPACING = 10
-DEFAULTSUBOPERATORSSCALE = [0.25, 0.25, 0.25]
-DEFAULTCONNECTIONTYPES = "translate;rotate;scale"
 ERRORMESSAGE = {
     "selection": "More then one parent not allowed",
     "selection1": "Parent of main operator is no JoMRS"
@@ -67,7 +51,60 @@ ERRORMESSAGE = {
     "get_comp_side": "Registered component side not valid",
     "set_comp_side": "Selected side not valid",
 }
-MAINOPMETAPARAMS = meta.MAINOPMETAPARAMS
+
+##########################################################
+# FUNCTIONS
+##########################################################
+
+
+def valid_node(node, typ):
+    """
+    Valid node check
+
+    Args:
+        node(pmc.PyNode()): Check if node is a valid JoMRS node.
+        typ(str): JoMRS node typ. Valid values are ['JoMRS_root',
+        'JoMRS_main', 'JoMRS_sub']
+
+    Return:
+        True if successful. False if not.
+
+    """
+    tag = None
+    error_message = None
+    if (
+        (
+            node.hasAttr(constants.OP_ROOT_TAG_NAME)
+            and node.attr(constants.OP_ROOT_TAG_NAME).get() is True
+        )
+        or (
+            node.hasAttr(constants.OP_MAIN_TAG_NAME)
+            and node.attr(constants.OP_MAIN_TAG_NAME).get() is True
+        )
+        or (
+            node.hasAttr(constants.OP_SUB_TAG_NAME)
+            and node.attr(constants.OP_SUB_TAG_NAME).get() is True
+        )
+    ):
+        error_message = True
+    if typ is "JoMRS_root":
+        tag = constants.OP_ROOT_TAG_NAME
+    elif typ is "JoMRS_main":
+        tag = constants.OP_MAIN_TAG_NAME
+    elif typ is "JoMRS_sub":
+        tag = constants.OP_SUB_TAG_NAME
+    if node.hasAttr(tag) and node.attr(tag).get() is True:
+        return True
+    else:
+        if not error_message:
+            logger.log(
+                level="error",
+                message="{} is no JoMRS root operator, main operator or sub "
+                "operator node.".format(str(node)),
+                logger=_LOGGER,
+            )
+        return False
+
 
 ##########################################################
 # CLASSES
@@ -79,113 +116,143 @@ class OperatorsRootNode(object):
     Create operators root node/god node.
     """
 
-    def __init__(
-        self,
-        op_root_tag_name=OPROOTTAGNAME,
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-    ):
+    def __init__(self, operators_root_node=None):
         """
-        Init the user defined attributes.
+        Init the OperatorsRootNode.
+
         Args:
-                op_root_tag_name(str): Tag name.
-                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+            operators_root_node(pmc.PyNode()): The operators root node.
+
+        Return:
+            None if given operators_root_node is not valid.
+
         """
+        self.op_root_nd = operators_root_node
+        if self.op_root_nd:
+            if not valid_node(self.op_root_nd, typ="JoMRS_root"):
+                self.op_root_nd = None
+        self.god_meta_nd = None
+        self.root_meta_nd = None
         self.root_op_attr = {
-            "name": op_root_tag_name,
+            "name": constants.OP_ROOT_TAG_NAME,
             "attrType": "bool",
             "keyable": False,
             "defaultValue": 1,
         }
 
-        self.root_op_meta_nd = {
-            "name": root_op_meta_nd_attr_name,
+        self.root_op_meta_nd_attr = {
+            "name": constants.ROOT_OP_META_ND_ATTR_NAME,
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
         }
 
-        self.root_node_param_list = [self.root_op_attr, self.root_op_meta_nd]
+        self.op_root_nd_param_list = [
+            self.root_op_attr,
+            self.root_op_meta_nd_attr,
+        ]
 
-    def create_node(
-        self,
-        op_root_name=OPROOTNAME,
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-        root_op_meta_nd_name=ROOTOPMETANODENAME,
-    ):
+    def create_root_op_node(self,):
         """
         Execute the operators root/god node creation.
-        Args:
-                op_root_name(str): Tag name.
-                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
-                root_op_meta_nd_name(str): Root meta node name.
+
         Return:
-                dagnode: The created dagnode.
+                pmc.PyNode(): The created dagnode.
+
         """
-        self.root_node = pmc.createNode("transform", n=op_root_name)
-        attributes.lock_and_hide_attributes(node=self.root_node)
-        for attr_ in self.root_node_param_list:
-            attributes.add_attr(node=self.root_node, **attr_)
-        self.meta_nd = meta.RootOpMetaNode(n=root_op_meta_nd_name)
-        self.meta_nd.message.connect(
-            self.root_node.attr(root_op_meta_nd_attr_name)
+        self.op_root_nd = pmc.createNode("dagContainer",
+                                         n=constants.OP_ROOT_NAME)
+        self.op_root_nd.iconName.set(constants.ROOT_OP_ICON_PATH)
+        attributes.lock_and_hide_attributes(node=self.op_root_nd)
+        for attr_ in self.op_root_nd_param_list:
+            attributes.add_attr(node=self.op_root_nd, **attr_)
+        self.root_meta_nd = meta.RootOpMetaNode(
+            n=constants.ROOT_OP_META_NODE_NAME
         )
-        return self.root_node
+        self.root_meta_nd.message.connect(
+            self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
+        )
+
+    def add_node_to_god_meta_nd(self, node):
+        """
+        Add a node to the operators root node. And add it to the god meta node.
+        Will raise an error and return False if node is not a valid JoMRS
+        main operator node.
+
+        Args:
+            node(pmc.PyNode()): The main operator node to add.
+
+        Return: True if successful.
+
+        """
+        if (
+            not node.hasAttr(constants.OP_MAIN_TAG_NAME)
+            or node.attr(constants.OP_MAIN_TAG_NAME).get() is False
+        ):
+            logger.log(
+                level="error",
+                message="{} is no JoMRS main operator "
+                "node".format(str(node)),
+                logger=_LOGGER,
+            )
+            return False
+        main_meta_nd = node.attr(constants.MAIN_OP_META_ND_ATTR_NAME).get()
+        self.root_meta_nd.add_main_meta_node(node=main_meta_nd)
+        return True
+
+    def get_root_meta_nd_from_op_root_nd(self):
+        """
+        Gives the root meta node from operators root node.
+
+        Return:
+            pmc.PyNode(): The meta network node.
+
+        """
+        self.root_meta_nd = self.op_root_nd.attr(
+            constants.ROOT_OP_META_ND_ATTR_NAME
+        ).get()
+        return self.root_meta_nd
 
 
-class mainOperatorNode(OperatorsRootNode):
+class MainOperatorNode(OperatorsRootNode):
     """
     Create a main operator node.
     """
 
-    def __init__(
-        self,
-        op_main_tag_name=OPMAINTAGNAME,
-        op_root_tag_name=OPROOTTAGNAME,
-        op_sub_tag_name=OPSUBTAGNAME,
-        error_message=ERRORMESSAGE["selection1"],
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-        main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
-    ):
+    COLOR_INDEX = 18
+
+    def __init__(self, operators_root_node=None, main_operator_node=None):
         """
-        Init the user defined attributes
+        Init the MainOperatorNode.
+
         Args:
-                op_main_tag_name(str): Tag name.
-                op_root_tag_name(str): Tag name.
-                op_sub_tag_name(str): Tag name.
-                error_message(str): User feedback message.
-                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
-                main_op_meta_nd_attr_name(str): Message attr to main op nd.
+                operators_root_node(pmc.PyNode(), optional): The operators root
+                node.
+                main_operator_node(pmc.PyNode(), optional): The
+                operators_root_node.
+
         """
-        super(mainOperatorNode, self).__init__()
+        OperatorsRootNode.__init__(self, operators_root_node)
 
-        self.selection = pmc.ls(sl=True, typ="transform")
-
-        for node in self.selection:
-            if (
-                node.hasAttr(op_root_tag_name)
-                or node.hasAttr(op_main_tag_name)
-                or node.hasAttr(op_sub_tag_name)
-            ):
-                continue
-            else:
-                logger.log(level="error", message=error_message, logger=_LOGGER)
+        self.main_op_nd = main_operator_node
+        if self.main_op_nd:
+            if not valid_node(self.main_op_nd, typ="JoMRS_main"):
+                self.main_op_nd = None
+        if self.main_op_nd:
+            self.get_main_meta_nd()
+        self.main_meta_nd = []
+        self.lra_node = []
+        self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME
 
         self.main_op_attr = {
-            "name": op_main_tag_name,
+            "name": constants.OP_MAIN_TAG_NAME,
             "attrType": "bool",
             "keyable": False,
             "defaultValue": 1,
         }
 
-        self.main_op_meta_nd = {
-            "name": main_op_meta_nd_attr_name,
-            "attrType": "message",
-            "keyable": False,
-            "channelBox": False,
-        }
-
-        self.root_op_meta_nd = {
-            "name": root_op_meta_nd_attr_name,
+        self.main_op_meta_nd_attr = {
+            "name": constants.MAIN_OP_META_ND_ATTR_NAME,
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
@@ -193,207 +260,219 @@ class mainOperatorNode(OperatorsRootNode):
 
         self.main_node_param_list = [
             self.main_op_attr,
-            self.main_op_meta_nd,
-            self.root_op_meta_nd,
+            self.main_op_meta_nd_attr,
+            self.root_op_meta_nd_attr,
         ]
 
-    def construct_node(
-        self,
-        color_index=18,
-        name=MAINOPROOTNODENAME,
-        local_rotate_axes=True,
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-    ):
+    def create_main_op_node(self, local_rotate_axes=True):
         """
         Execute the main operator node creation.
+
         Args:
-                color_index(int): Viewport color.
-                name(str): Operator name.
-                side(str): Operators side. Valid are M,L,R.
-                index(int): Operators index number.
-                local_rotate_axes(bool): Enabel local rotate axes.
-                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
+                local_rotate_axes(bool): Enable local rotate axes.
+
         Return:
-                dagnode: The created main operator node.
+
+                pmc.PyNode(): The created main operator node.
+
         """
-        if not self.selection:
-            self.op_root_nd = self.create_node()
-        else:
-            self.op_root_nd = self.selection[0]
-        self.main_op_curve = curves.DiamondControl()
-        self.main_op_nd = self.main_op_curve.create_curve(
-            color_index=color_index,
-            name=name,
-            match=self.op_root_nd,
+        main_op_curve = curves.DiamondControl()
+        main_op_node = main_op_curve.create_curve(
+            color_index=self.COLOR_INDEX,
+            name=self.main_op_nd_name,
             local_rotate_axes=local_rotate_axes,
+            buffer_grp=False,
         )
+        self.main_op_nd = main_op_node[0]
+        self.lra_node = main_op_node[1]
         for attr_ in self.main_node_param_list:
-            attributes.add_attr(node=self.main_op_nd[1], **attr_)
-        self.op_root_nd.addChild(self.main_op_nd[0])
-        meta_name = name.replace("_CON", "")
+            attributes.add_attr(node=self.main_op_nd, **attr_)
+        self.set_main_meta_nd()
+
+    def set_main_meta_nd(self):
+        """
+        Set the main meta nd.
+        """
+        meta_name = constants.MAIN_OP_ROOT_NODE_NAME.replace("_CON", "")
         self.main_meta_nd = meta.MainOpMetaNode(n=meta_name)
-        self.main_meta_nd.message.connect(self.main_op_nd[1].main_op_meta_nd)
-        self.main_op_nd[1].message.connect(self.main_meta_nd.main_operator_nd)
-        self.root_meta_nd = self.op_root_nd.attr(
-            root_op_meta_nd_attr_name
-        ).get()
-        self.root_meta_nd.message.connect(
-            self.main_op_nd[1].attr(root_op_meta_nd_attr_name)
+        self.main_meta_nd.message.connect(
+            self.main_op_nd.attr(constants.MAIN_OP_META_ND_ATTR_NAME)
         )
-        self.root_meta_nd.add_main_meta_node(node=self.main_meta_nd)
-        return self.main_op_nd
+        self.main_op_nd.message.connect(
+            self.main_meta_nd.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
+        )
+
+    def get_main_meta_nd(self):
+        """
+        Get main meta node.
+
+        Return:
+            pmc.PyNode(): The meta network node.
+
+        """
+        self.main_meta_nd = self.main_op_nd.attr(
+            constants.MAIN_OP_META_ND_ATTR_NAME
+        ).get()
+        return self.main_meta_nd
+
+    def get_root_meta_nd_from_main_op_nd(self):
+        """
+        Get root meta node from main operator node.
+
+        Return:
+            pmc.PyNode(): The meta network node.
+
+        """
+        self.root_meta_nd = self.main_op_nd.attr(
+            constants.ROOT_OP_META_ND_ATTR_NAME
+        ).get()
+        return self.root_meta_nd
+
+    def set_root_meta_nd(self):
+        """
+        Set the root meta node.
+        """
+        self.root_meta_nd.message.connect(
+            self.main_op_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
+        )
 
 
-class create_component_operator(mainOperatorNode):
+class ComponentOperator(MainOperatorNode):
     """
     Create the whole component operator.
     """
 
-    def __init__(self, main_operator_node=None):
+    SUB_ND_COLOR_INDEX = 21
+
+    def __init__(self, operators_root_node=None, main_operator_node=None):
         """
         Init all important data.
+
         Args:
+                operators_root_node(pmc.PyNode(), optional): The operators root
+                node.
                 main_operator_node(pmc.PyNode(), optional): The
                 operators_root_node.
+
         """
-        super(create_component_operator, self).__init__()
-        self.op_root_nd = None
+        MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
         self.result = []
         self.sub_operators = []
         self.joint_control = None
-        self.main_operator_node_name = None
-        self.main_operator_node = None
+        self.main_op_nd_name = None
         self.main_meta_nd = None
-        if main_operator_node:
-            self.main_operator_node = [
-                main_operator_node.getParent(),
-                main_operator_node,
-            ]
-            self.main_meta_nd = self.get_main_meta_node()
-        self.root_meta_nd = None
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
         self.linear_curve_name = None
+        self.parent = None
+        if self.op_root_nd:
+            self.parent = self.op_root_nd
+        if self.main_op_nd:
+            self.parent = self.main_op_nd
 
-    def init_operator(
+        self.sub_op_attr = {
+            "name": constants.OP_SUB_TAG_NAME,
+            "attrType": "bool",
+            "keyable": False,
+            "defaultValue": 1,
+        }
+
+        self.sub_op_meta_nd_attr = {
+            "name": constants.SUB_OP_META_ND_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+        }
+
+        self.main_op_nd_attr = {
+            "name": constants.MAIN_OP_MESSAGE_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+        }
+
+        self.sub_node_param_list = [
+            self.sub_op_attr,
+            self.sub_op_meta_nd_attr,
+            self.main_op_nd_attr,
+            self.root_op_meta_nd_attr,
+        ]
+
+    def create_sub_operator(self, name, side, index, scale, match):
+        instance = "_op_{}_{}".format(name, str(index))
+        sub_op_nd_name = constants.SUB_OP_ROOT_NODE_NAME.replace(
+            "M_", "{}_".format(side)
+        )
+        sub_op_nd_name = sub_op_nd_name.replace("_op_0", instance)
+        self.joint_control = curves.JointControl()
+        sub_op_node = self.joint_control.create_curve(
+            name=sub_op_nd_name,
+            match=match,
+            scale=scale,
+            buffer_grp=False,
+            color_index=self.SUB_ND_COLOR_INDEX,
+        )[0]
+        for attr_ in self.sub_node_param_list:
+            attributes.add_attr(node=sub_op_node, **attr_)
+        self.sub_meta_nd = meta.SubOpMetaNode(
+            n=sub_op_nd_name.replace("_CON", "")
+        )
+        self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
+        self.sub_operators.append(sub_op_node)
+
+    def create_component_op_node(
         self,
-        sub_operators_count=DEFAULTSUBOPERATORSCOUNT,
-        operator_name=DEFAULTOPERATORNAME,
-        side=DEFAULTSIDE,
-        main_operator_node_name=MAINOPROOTNODENAME,
-        sub_operators_node_name=SUBOPROOTNODENAME,
-        axes=DEFAULTAXES,
-        spacing=DEFAULTSPACING,
-        sub_operators_scale=DEFAULTSUBOPERATORSSCALE,
-        linear_curve_name=LINEARCURVENAME,
+        name,
+        side=constants.DEFAULT_SIDE,
+        axes=constants.DEFAULT_AXES,
+        sub_operators_count=constants.DEFAULT_SUB_OPERATORS_COUNT,
+        sub_operators_scale=constants.DEFAULT_SUB_OPERATORS_SCALE,
         local_rotate_axes=True,
-        op_sub_tag_name=OPSUBTAGNAME,
-        root_op_meta_nd_attr_name=ROOTOPMETANDATTRNAME,
-        sub_op_meta_nd_attr_name=SUBOPMETANDATTRNAME,
-        main_op_meta_nd_attr_name=MAINOPMETANDATTRNAME,
-        main_op_message_attr_name=MAINOPMESSAGEATTRNAME,
     ):
         """
         Init the operators creation.
+
         Args:
-                sub_operators_count(int): Sub operators count.
-                operator_name(str): Operators name.
-                side(str): Operators side. Valid are M,L,R
-                main_operator_node_name: Main Operators node name.
-                sub_operators_node_name: Sub Operators node name.
-                axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
-                spacing(int): Space between main and sub op nodes
-                sub_operators_scale(int): Sub operators node scale factor.
-                linear_curve_name(str): Operators visualisation curve name.
-                local_rotate_axes(bool): Enable local rotate axes.
-                op_sub_tag_name(str): Tag name.
-                root_op_meta_nd_attr_name(str): Message attr to root op meta nd.
-                sub_op_meta_nd_attr_name(str): Message attr to sub op meta nd.
-                main_op_meta_nd_attr_name(str): Message attr to main op meta nd.
-                main_op_message_attr_name(str): Message attr to operator root nd.
+            name(str): Operators name.
+            side(str): Operators side. Valid are M,L,R
+            axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
+            sub_operators_count(int): Sub operators count.
+            sub_operators_scale(int): Sub operators node scale factor.
+            local_rotate_axes(bool): Enable local rotate axes.
+
         Returns:
-                List: The operators root node.
+            List: The operators root node.
+
         """
+        vec = constants.DEFAULT_SPACING
         axes_ = axes
-        vec = spacing
         aim_vec = ()
         up_vec = ()
-        self.joint_control = curves.JointControl()
-        self.main_operator_node_name = main_operator_node_name.replace(
+        if self.main_op_nd:
+            self.get_root_meta_nd_from_main_op_nd()
+        self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
-        )
-        self.main_operator_node_name = self.main_operator_node_name.replace(
-            "_op_", "_op_{}_".format(operator_name)
-        )
-        self.main_operator_node = self.construct_node(
-            name=self.main_operator_node_name,
-            local_rotate_axes=local_rotate_axes,
-        )
-        self.result.append(self.main_operator_node[1])
-        self.root_meta_nd = (
-            self.main_operator_node[1].attr(root_op_meta_nd_attr_name).get()
-        )
-        self.main_meta_nd = (
-            self.main_operator_node[1].attr(main_op_meta_nd_attr_name).get()
-        )
-        self.main_meta_nd.component_side.set(side)
-        for sub in range(sub_operators_count):
-            instance = "_op_{}_{}".format(operator_name, str(sub))
-            self.sub_op_nd_name = sub_operators_node_name.replace(
-                "M_", "{}_".format(side)
-            )
-            self.sub_op_nd_name = self.sub_op_nd_name.replace("_op_0", instance)
-            self.sub_meta_nd = meta.SubOpMetaNode(
-                n=self.sub_op_nd_name.replace("_CON", "")
-            )
-            self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
-            sub_op_node = self.joint_control.create_curve(
-                name=self.sub_op_nd_name,
-                match=self.result[-1],
-                scale=sub_operators_scale,
-                buffer_grp=False,
-                color_index=21,
-            )
-
-            attributes.add_attr(
-                node=sub_op_node[0],
-                name=op_sub_tag_name,
-                attrType="bool",
-                keyable=False,
-                channelBox=False,
-                defaultValue=1,
-            )
-
-            attributes.add_attr(
-                node=sub_op_node[0],
-                name=sub_op_meta_nd_attr_name,
-                attrType="message",
-                keyable=False,
-                channelBox=False,
-                input=self.sub_meta_nd.message,
-            )
-
-            attributes.add_attr(
-                node=sub_op_node[0],
-                name=root_op_meta_nd_attr_name,
-                attrType="message",
-                keyable=False,
-                channelBox=False,
-                input=self.root_meta_nd.message,
-            )
-
-            attributes.add_attr(
-                node=sub_op_node[0],
-                name=main_op_message_attr_name,
-                attrType="message",
-                keyable=False,
-                channelBox=False,
-                input=self.main_operator_node[1].message,
-            )
-
-            sub_op_node[0].message.connect(self.sub_meta_nd.sub_operator_nd)
-            self.sub_operators.extend(sub_op_node)
-            self.result[-1].addChild(sub_op_node[0])
+        ).replace("_op_", "_op_{}_".format(name))
+        self.create_main_op_node(local_rotate_axes=local_rotate_axes)
+        if not self.parent:
+            self.create_root_op_node()
+            self.op_root_nd.addChild(self.main_op_nd)
+        else:
+            self.parent.addChild(self.main_op_nd)
+        if self.op_root_nd:
+            self.get_root_meta_nd_from_op_root_nd()
+        self.set_root_meta_nd()
+        self.get_main_meta_nd()
+        self.set_component_side(side)
+        self.set_component_name(name)
+        self.add_node_to_god_meta_nd(self.main_op_nd)
+        if sub_operators_count:
+            for index in range(sub_operators_count):
+                self.create_sub_operator(
+                    name, side, index, sub_operators_scale, self.main_op_nd
+                )
+            if sub_operators_count > 1:
+                print self.sub_operators
+                mayautils.create_hierarchy(self.sub_operators)
+            self.main_op_nd.addChild(self.sub_operators[0])
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 vec = vec * -1
             if axes == "-X":
@@ -402,9 +481,6 @@ class create_component_operator(mainOperatorNode):
                 axes_ = "Y"
             elif axes == "-Z":
                 axes_ = "Z"
-            sub_op_node[0].attr("translate" + axes_).set(vec)
-            self.result.append(sub_op_node[-1])
-        if self.sub_operators:
             if axes == "X":
                 aim_vec = (1, 0, 0)
                 up_vec = (0, 1, 0)
@@ -423,72 +499,166 @@ class create_component_operator(mainOperatorNode):
             elif axes == "-Z":
                 aim_vec = (0, 0, -1)
                 up_vec = (0, 1, 0)
-            pmc.aimConstraint(
-                self.sub_operators[0],
-                self.main_operator_node[2],
-                aim=aim_vec,
-                u=up_vec,
-                wut="object",
-                worldUpObject=self.main_operator_node[1],
-                mo=True,
-            )
-        if sub_operators_count:
-            self.linear_curve_name = linear_curve_name.replace(
-                "M_", "{}_".format(side)
-            )
-            self.linear_curve_name = self.linear_curve_name.replace(
-                "_op_", "_op_{}_".format(operator_name)
-            )
-            linear_curve = curves.linear_curve(
-                driver_nodes=self.result, name=self.linear_curve_name
-            )
-            linear_curve.inheritsTransform.set(0)
-            self.main_operator_node[0].addChild(linear_curve)
-        self.op_root_nd = mayautils.ancestors(self.result[-1])[-1]
-        return self.main_operator_node[1]
+            for sub in self.sub_operators:
+                sub.attr("translate" + axes_).set(vec)
 
-    def set_component_type(self, type, plug=MAINOPMETAPARAMS[1]):
+        # for sub in range(sub_operators_count):
+        #     instance = "_op_{}_{}".format(name, str(sub))
+        #     self.sub_op_nd_name = constants.SUB_OP_ROOT_NODE_NAME.replace(
+        #         "M_", "{}_".format(side)
+        #     )
+        #     self.sub_op_nd_name = self.sub_op_nd_name.replace("_op_0", instance)
+        #     self.sub_meta_nd = meta.SubOpMetaNode(
+        #         n=self.sub_op_nd_name.replace("_CON", "")
+        #     )
+        #     self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
+        #     sub_op_node = self.joint_control.create_curve(
+        #         name=self.sub_op_nd_name,
+        #         match=self.result[-1],
+        #         scale=sub_operators_scale,
+        #         buffer_grp=False,
+        #         color_index=21,
+        #     )
+        #
+        #     attributes.add_attr(
+        #         node=sub_op_node[0],
+        #         name=constants.constants.constants.OP_ROOT_NAME,
+        #         attrType="bool",
+        #         keyable=False,
+        #         channelBox=False,
+        #         defaultValue=1,
+        #     )
+        #
+        #     attributes.add_attr(
+        #         node=sub_op_node[0],
+        #         name=constants.SUB_OP_META_ND_ATTR_NAME,
+        #         attrType="message",
+        #         keyable=False,
+        #         channelBox=False,
+        #         input=self.sub_meta_nd.message,
+        #     )
+        #
+        #     attributes.add_attr(
+        #         node=sub_op_node[0],
+        #         name=constants.ROOT_OP_META_ND_ATTR_NAME,
+        #         attrType="message",
+        #         keyable=False,
+        #         channelBox=False,
+        #         input=self.god_meta_nd.message,
+        #     )
+        #
+        #     attributes.add_attr(
+        #         node=sub_op_node[0],
+        #         name=constants.MAIN_OP_MESSAGE_ATTR_NAME,
+        #         attrType="message",
+        #         keyable=False,
+        #         channelBox=False,
+        #         input=self.main_op_nd.message,
+        #     )
+
+    #
+    #
+    #             self.sub_operators.extend(sub_op_node)
+    #             self.result[-1].addChild(sub_op_node[0])
+    #             if axes == "-X" or axes == "-Y" or axes == "-Z":
+    #                 vec = vec * -1
+    #             if axes == "-X":
+    #                 axes_ = "X"
+    #             elif axes == "-Y":
+    #                 axes_ = "Y"
+    #             elif axes == "-Z":
+    #                 axes_ = "Z"
+    #             sub_op_node[0].attr("translate" + axes_).set(vec)
+    #             self.result.append(sub_op_node[-1])
+    #         if self.sub_operators:
+    #             if axes == "X":
+    #                 aim_vec = (1, 0, 0)
+    #                 up_vec = (0, 1, 0)
+    #             elif axes == "Y":
+    #                 aim_vec = (0, 1, 0)
+    #                 up_vec = (1, 0, 0)
+    #             elif axes == "Z":
+    #                 aim_vec = (0, 0, 1)
+    #                 up_vec = (0, 1, 0)
+    #             elif axes == "-X":
+    #                 aim_vec = (-1, 0, 0)
+    #                 up_vec = (0, 1, 0)
+    #             elif axes == "-Y":
+    #                 aim_vec = (0, -1, 0)
+    #                 up_vec = (1, 0, 0)
+    #             elif axes == "-Z":
+    #                 aim_vec = (0, 0, -1)
+    #                 up_vec = (0, 1, 0)
+    #             pmc.aimConstraint(
+    #                 self.sub_operators[0],
+    #                 self.main_op_nd[2],
+    #                 aim=aim_vec,
+    #                 u=up_vec,
+    #                 wut="object",
+    #                 worldUpObject=self.main_op_nd,
+    #                 mo=True,
+    #             )
+    #         if sub_operators_count:
+    #             self.constants.LINEAR_CURVE_NAME = constants.LINEAR_CURVE_NAME.replace(
+    #                 "M_", "{}_".format(side)
+    #             )
+    #             self.constants.LINEAR_CURVE_NAME = self.constants.LINEAR_CURVE_NAME.replace(
+    #                 "_op_", "_op_{}_".format(name)
+    #             )
+    #             linear_curve = curves.linear_curve(
+    #                 driver_nodes=self.result, name=self.constants.LINEAR_CURVE_NAME
+    #             )
+    #             linear_curve.inheritsTransform.set(0)
+    #             self.main_op_nd[0].addChild(linear_curve)
+    #         return self.main_op_nd
+    #
+    def set_component_type(self, type):
         """
         Set the component type.
+
         Args:
                 type(str): The component type.
-                plug(str): Plug name.
-        """
-        self.main_meta_nd.attr(plug).set(type)
 
-    def set_component_name(self, name, plug=MAINOPMETAPARAMS[0]):
+        """
+        self.main_meta_nd.attr(constants.META_MAIN_COMP_TYPE).set(type)
+
+    def set_component_name(self, name):
         """
         Set the component name.
+
         Args:
                 name(str): The component name.
-                plug(str): Plug name.
-        """
-        self.main_meta_nd.attr(plug).set(name)
 
-    def set_component_side(self, side, plug=MAINOPMETAPARAMS[2]):
+        """
+        self.main_meta_nd.attr(constants.META_MAIN_COMP_NAME).set(name)
+
+    def set_component_side(self, side):
         """
         Set the component side.
+
         Args:
                 side(str): The component side.
-                plug(str): Plug name.
-        """
-        self.main_meta_nd.attr(plug).set(side)
 
-    def set_component_index(self, index, plug=MAINOPMETAPARAMS[3]):
+        """
+        self.main_meta_nd.attr(constants.META_MAIN_COMP_SIDE).set(side)
+
+    def set_component_index(self, index):
         """
         Set the component index.
+
         Args:
                 index(int): The component index.
-                plug(str): Plug name.
-        """
-        self.main_meta_nd.attr(plug).set(index)
 
-    def set_ik_spaces_ref(self, spaces, plug=MAINOPMETAPARAMS[5]):
+        """
+        self.main_meta_nd.attr(constants.META_MAIN_COMP_INDEX).set(index)
+
+    def set_ik_spaces_ref(self, spaces):
         """
         Set the ik_spaces_reference nodes. Will fail if spaces attr is no list.
+
         Args:
                 spaces(list): The references for the ik spaces.
-                plug(str): Plug name.
+
         """
         if not isinstance(spaces, list):
             logger.log(
@@ -498,70 +668,108 @@ class create_component_operator(mainOperatorNode):
                 logger=_LOGGER,
             )
             return
-        self.main_meta_nd.attr(plug).set(";".join(spaces))
+        self.main_meta_nd.attr(constants.META_MAIN_IK_SPACES).set(
+            ";".join(spaces)
+        )
 
-    def set_connect_nd(self, node, plug=MAINOPMETAPARAMS[9]):
+    def set_connect_nd(self, node):
         """
         Set the element connect node for build process.
-        Args:
-                plug(str): The connect nodes name.
-        """
-        self.main_meta_nd.attr(plug).set(node)
 
-    def get_component_type(self, plug=MAINOPMETAPARAMS[1]):
+        Args:
+                node(str): The connect nodes name.
+
+        """
+        self.main_meta_nd.attr(constants.META_MAIN_CONNECT_ND).set(node)
+
+    def set_parent_nd(self, parent_main_operator_node):
+        """
+        Set the parent for the operator.
+
+        Args:
+            parent_main_operator_node(pmc.PyNode()): The main operator node
+            of the parent.
+
+        """
+        parent_main_meta_nd = parent_main_operator_node.attr(
+            constants.MAIN_OP_META_ND_ATTR_NAME
+        ).get()
+        self.main_meta_nd.attr(constants.META_MAIN_CHILD_ND).connect(
+            parent_main_meta_nd.attr(constants.META_MAIN_PARENT_ND)
+        )
+
+    def get_component_type(self):
         """
         Get component type.
-        Args:
-                plug(str): Plug name.
+
         Return:
                 string: Component type.
-        """
-        return self.main_meta_nd.attr(plug).get()
 
-    def get_component_name(self, plug=MAINOPMETAPARAMS[0]):
+        """
+        return self.main_meta_nd.attr(constants.META_MAIN_COMP_TYPE).get()
+
+    def get_component_name(self):
         """
         Get component name.
-        Args:
-                plug(str): Plug name.
+
         Return:
                 string: Component name.
         """
-        return self.main_meta_nd.attr(plug).get()
+        return self.main_meta_nd.attr(constants.META_MAIN_COMP_NAME).get()
 
-    def get_component_side(self, plug=MAINOPMETAPARAMS[2]):
+    def get_component_side(self):
         """
         Get component side.
-        Args:
-                plug(str): Plug name.
+
         Return:
                 string: Component side.
         """
-        return self.main_meta_nd.attr(plug).get()
+        return self.main_meta_nd.attr(constants.META_MAIN_COMP_SIDE).get()
 
-    def get_component_index(self, plug=MAINOPMETAPARAMS[3]):
+    def get_component_index(self):
         """
         Get component index.
-        Args:
-                plug(str): Plug name.
+
         Return:
                 string: Component side.
         """
-        return self.main_meta_nd.attr(plug).get()
+        return self.main_meta_nd.attr(constants.META_MAIN_COMP_INDEX).get()
 
-    def get_ik_spaces_ref(self, plug=MAINOPMETAPARAMS[5]):
+    def get_ik_spaces_ref(self):
         """
         Get ik spaces.
-        Args:
-                plug(str): Plug name.
+
         Return:
                 string: Ik spaces.
         """
-        return self.main_meta_nd.attr(plug).get()
+        return self.main_meta_nd.attr(constants.META_MAIN_IK_SPACES).get()
 
-    def get_main_meta_node(self, plug=MAINOPMETANDATTRNAME):
+    def get_main_meta_node(self):
         """
         Get main meta node from main operator node.
+
         Return:
                 pmc.PyNode(): The meta main node.
+
         """
-        return self.main_operator_node[1].attr(plug).get()
+        return self.main_op_nd.attr(constants.MAIN_OP_META_ND_ATTR_NAME).get()
+
+    def get_parent_nd(self):
+        """
+        Get parent node form meta node.
+
+        Return:
+            pmc.PyNode(): The parent node.
+
+        """
+        return self.main_meta_nd.attr(constants.META_MAIN_PARENT_ND).get()
+
+    def get_child_nd(self):
+        """
+        Get child node form meta node.
+
+        Return:
+            pmc.PyNode(): The child node.
+
+        """
+        return self.main_meta_nd.attr(constants.META_MAIN_CHILD_ND).get()

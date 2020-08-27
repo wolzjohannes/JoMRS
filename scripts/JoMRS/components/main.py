@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 04
+# Date:       2020 / 08 / 06
 
 """
 Rig components main module. This class is the template to create a rig
@@ -133,7 +133,7 @@ class component(operators.create_component_operator):
         )
         self.set_component_name(self.name)
         self.set_component_type(self.component_type)
-        self.set_component_side(self.component_side)
+        self.set_component_side(self.side)
         self.set_component_index(self.index)
         if connect_node:
             self.set_connect_nd(connect_node)
