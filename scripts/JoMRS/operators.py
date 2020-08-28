@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 26
+# Date:       2020 / 08 / 28
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -35,22 +35,11 @@ import curves
 import mayautils
 import meta
 
-reload(meta)
-reload(constants)
-
 ##########################################################
 # GLOBALS
 ##########################################################
 
 _LOGGER = logging.getLogger(__name__ + ".py")
-ERRORMESSAGE = {
-    "selection": "More then one parent not allowed",
-    "selection1": "Parent of main operator is no JoMRS"
-    " operator main/sub node or operators root node",
-    "get_attr": "attribute from main param list not on node.",
-    "get_comp_side": "Registered component side not valid",
-    "set_comp_side": "Selected side not valid",
-}
 
 ##########################################################
 # FUNCTIONS
@@ -160,8 +149,9 @@ class OperatorsRootNode(object):
                 pmc.PyNode(): The created dagnode.
 
         """
-        self.op_root_nd = pmc.createNode("dagContainer",
-                                         n=constants.OP_ROOT_NAME)
+        self.op_root_nd = pmc.createNode(
+            "dagContainer", n=constants.OP_ROOT_NAME
+        )
         self.op_root_nd.iconName.set(constants.ROOT_OP_ICON_PATH)
         attributes.lock_and_hide_attributes(node=self.op_root_nd)
         for attr_ in self.op_root_nd_param_list:
@@ -241,6 +231,7 @@ class MainOperatorNode(OperatorsRootNode):
         if self.main_op_nd:
             self.get_main_meta_nd()
         self.main_meta_nd = []
+        self.lra_node_buffer_grp = []
         self.lra_node = []
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME
 
@@ -284,7 +275,8 @@ class MainOperatorNode(OperatorsRootNode):
             buffer_grp=False,
         )
         self.main_op_nd = main_op_node[0]
-        self.lra_node = main_op_node[1]
+        self.lra_node_buffer_grp = main_op_node[1]
+        self.lra_node = main_op_node[2]
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd, **attr_)
         self.set_main_meta_nd()
@@ -369,6 +361,7 @@ class ComponentOperator(MainOperatorNode):
             self.parent = self.op_root_nd
         if self.main_op_nd:
             self.parent = self.main_op_nd
+        self.linear_curve_drivers = []
 
         self.sub_op_attr = {
             "name": constants.OP_SUB_TAG_NAME,
@@ -417,6 +410,7 @@ class ComponentOperator(MainOperatorNode):
         )
         self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
         self.sub_operators.append(sub_op_node)
+        self.linear_curve_drivers.append(sub_op_node)
 
     def create_component_op_node(
         self,
@@ -444,8 +438,8 @@ class ComponentOperator(MainOperatorNode):
         """
         vec = constants.DEFAULT_SPACING
         axes_ = axes
-        aim_vec = ()
-        up_vec = ()
+        aim_vec = None
+        up_vec = None
         if self.main_op_nd:
             self.get_root_meta_nd_from_main_op_nd()
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
@@ -465,14 +459,7 @@ class ComponentOperator(MainOperatorNode):
         self.set_component_name(name)
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:
-            for index in range(sub_operators_count):
-                self.create_sub_operator(
-                    name, side, index, sub_operators_scale, self.main_op_nd
-                )
-            if sub_operators_count > 1:
-                print self.sub_operators
-                mayautils.create_hierarchy(self.sub_operators)
-            self.main_op_nd.addChild(self.sub_operators[0])
+            self.linear_curve_drivers.append(self.main_op_nd)
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 vec = vec * -1
             if axes == "-X":
@@ -481,137 +468,54 @@ class ComponentOperator(MainOperatorNode):
                 axes_ = "Y"
             elif axes == "-Z":
                 axes_ = "Z"
-            if axes == "X":
-                aim_vec = (1, 0, 0)
-                up_vec = (0, 1, 0)
-            elif axes == "Y":
-                aim_vec = (0, 1, 0)
-                up_vec = (1, 0, 0)
-            elif axes == "Z":
-                aim_vec = (0, 0, 1)
-                up_vec = (0, 1, 0)
-            elif axes == "-X":
-                aim_vec = (-1, 0, 0)
-                up_vec = (0, 1, 0)
-            elif axes == "-Y":
-                aim_vec = (0, -1, 0)
-                up_vec = (1, 0, 0)
-            elif axes == "-Z":
-                aim_vec = (0, 0, -1)
-                up_vec = (0, 1, 0)
+            for index in range(sub_operators_count):
+                self.create_sub_operator(
+                    name, side, index, sub_operators_scale, self.main_op_nd
+                )
+            self.main_op_nd.addChild(self.sub_operators[0])
+            if sub_operators_count > 1:
+                if axes == "X":
+                    aim_vec = (1, 0, 0)
+                    up_vec = (0, 1, 0)
+                elif axes == "Y":
+                    aim_vec = (0, 1, 0)
+                    up_vec = (1, 0, 0)
+                elif axes == "Z":
+                    aim_vec = (0, 0, 1)
+                    up_vec = (0, 1, 0)
+                elif axes == "-X":
+                    aim_vec = (-1, 0, 0)
+                    up_vec = (0, 1, 0)
+                elif axes == "-Y":
+                    aim_vec = (0, -1, 0)
+                    up_vec = (1, 0, 0)
+                elif axes == "-Z":
+                    aim_vec = (0, 0, -1)
+                    up_vec = (0, 1, 0)
+                mayautils.create_hierarchy(self.sub_operators)
             for sub in self.sub_operators:
                 sub.attr("translate" + axes_).set(vec)
+            pmc.aimConstraint(
+                self.sub_operators[0],
+                self.lra_node_buffer_grp,
+                aim=aim_vec,
+                u=up_vec,
+                wut="object",
+                worldUpObject=self.main_op_nd,
+                mo=True,
+            )
+            linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
+                "M_", "{}_".format(side)
+            )
+            linear_curve_name = linear_curve_name.replace(
+                "_op_", "_op_{}_".format(name)
+            )
+            linear_curve = curves.linear_curve(
+                driver_nodes=self.linear_curve_drivers, name=linear_curve_name
+            )
+            linear_curve.inheritsTransform.set(0)
+            self.main_op_nd.addChild(linear_curve)
 
-        # for sub in range(sub_operators_count):
-        #     instance = "_op_{}_{}".format(name, str(sub))
-        #     self.sub_op_nd_name = constants.SUB_OP_ROOT_NODE_NAME.replace(
-        #         "M_", "{}_".format(side)
-        #     )
-        #     self.sub_op_nd_name = self.sub_op_nd_name.replace("_op_0", instance)
-        #     self.sub_meta_nd = meta.SubOpMetaNode(
-        #         n=self.sub_op_nd_name.replace("_CON", "")
-        #     )
-        #     self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
-        #     sub_op_node = self.joint_control.create_curve(
-        #         name=self.sub_op_nd_name,
-        #         match=self.result[-1],
-        #         scale=sub_operators_scale,
-        #         buffer_grp=False,
-        #         color_index=21,
-        #     )
-        #
-        #     attributes.add_attr(
-        #         node=sub_op_node[0],
-        #         name=constants.constants.constants.OP_ROOT_NAME,
-        #         attrType="bool",
-        #         keyable=False,
-        #         channelBox=False,
-        #         defaultValue=1,
-        #     )
-        #
-        #     attributes.add_attr(
-        #         node=sub_op_node[0],
-        #         name=constants.SUB_OP_META_ND_ATTR_NAME,
-        #         attrType="message",
-        #         keyable=False,
-        #         channelBox=False,
-        #         input=self.sub_meta_nd.message,
-        #     )
-        #
-        #     attributes.add_attr(
-        #         node=sub_op_node[0],
-        #         name=constants.ROOT_OP_META_ND_ATTR_NAME,
-        #         attrType="message",
-        #         keyable=False,
-        #         channelBox=False,
-        #         input=self.god_meta_nd.message,
-        #     )
-        #
-        #     attributes.add_attr(
-        #         node=sub_op_node[0],
-        #         name=constants.MAIN_OP_MESSAGE_ATTR_NAME,
-        #         attrType="message",
-        #         keyable=False,
-        #         channelBox=False,
-        #         input=self.main_op_nd.message,
-        #     )
-
-    #
-    #
-    #             self.sub_operators.extend(sub_op_node)
-    #             self.result[-1].addChild(sub_op_node[0])
-    #             if axes == "-X" or axes == "-Y" or axes == "-Z":
-    #                 vec = vec * -1
-    #             if axes == "-X":
-    #                 axes_ = "X"
-    #             elif axes == "-Y":
-    #                 axes_ = "Y"
-    #             elif axes == "-Z":
-    #                 axes_ = "Z"
-    #             sub_op_node[0].attr("translate" + axes_).set(vec)
-    #             self.result.append(sub_op_node[-1])
-    #         if self.sub_operators:
-    #             if axes == "X":
-    #                 aim_vec = (1, 0, 0)
-    #                 up_vec = (0, 1, 0)
-    #             elif axes == "Y":
-    #                 aim_vec = (0, 1, 0)
-    #                 up_vec = (1, 0, 0)
-    #             elif axes == "Z":
-    #                 aim_vec = (0, 0, 1)
-    #                 up_vec = (0, 1, 0)
-    #             elif axes == "-X":
-    #                 aim_vec = (-1, 0, 0)
-    #                 up_vec = (0, 1, 0)
-    #             elif axes == "-Y":
-    #                 aim_vec = (0, -1, 0)
-    #                 up_vec = (1, 0, 0)
-    #             elif axes == "-Z":
-    #                 aim_vec = (0, 0, -1)
-    #                 up_vec = (0, 1, 0)
-    #             pmc.aimConstraint(
-    #                 self.sub_operators[0],
-    #                 self.main_op_nd[2],
-    #                 aim=aim_vec,
-    #                 u=up_vec,
-    #                 wut="object",
-    #                 worldUpObject=self.main_op_nd,
-    #                 mo=True,
-    #             )
-    #         if sub_operators_count:
-    #             self.constants.LINEAR_CURVE_NAME = constants.LINEAR_CURVE_NAME.replace(
-    #                 "M_", "{}_".format(side)
-    #             )
-    #             self.constants.LINEAR_CURVE_NAME = self.constants.LINEAR_CURVE_NAME.replace(
-    #                 "_op_", "_op_{}_".format(name)
-    #             )
-    #             linear_curve = curves.linear_curve(
-    #                 driver_nodes=self.result, name=self.constants.LINEAR_CURVE_NAME
-    #             )
-    #             linear_curve.inheritsTransform.set(0)
-    #             self.main_op_nd[0].addChild(linear_curve)
-    #         return self.main_op_nd
-    #
     def set_component_type(self, type):
         """
         Set the component type.
