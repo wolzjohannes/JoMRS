@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 28
+# Date:       2020 / 08 / 31
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -117,6 +117,7 @@ class OperatorsRootNode(object):
 
         """
         self.op_root_nd = operators_root_node
+        # Check if node is a valid root node.
         if self.op_root_nd:
             if not valid_node(self.op_root_nd, typ="JoMRS_root"):
                 self.op_root_nd = None
@@ -149,19 +150,30 @@ class OperatorsRootNode(object):
                 pmc.PyNode(): The created dagnode.
 
         """
-        self.op_root_nd = pmc.createNode(
-            "dagContainer", n=constants.OP_ROOT_NAME
-        )
+        # Create a asset container as root node.
+        self.op_root_nd = pmc.createNode("container", n=constants.OP_ROOT_NAME)
         self.op_root_nd.iconName.set(constants.ROOT_OP_ICON_PATH)
-        attributes.lock_and_hide_attributes(node=self.op_root_nd)
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
+        # Create the meta node for the root node.
         self.root_meta_nd = meta.RootOpMetaNode(
             n=constants.ROOT_OP_META_NODE_NAME
         )
+        # Connect root meta node with root node and visa versa.
         self.root_meta_nd.message.connect(
             self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
         )
+        self.root_meta_nd.set_root_op_nd(self.op_root_nd)
+
+    def add_node(self, node):
+        """
+        Add node to root operator node.
+
+        Args:
+            node(pmc.PyNode()): Node to add.
+
+        """
+        self.op_root_nd.addNode(node, ish=True, ihb=True, iha=True, inc=True)
 
     def add_node_to_god_meta_nd(self, node):
         """
@@ -202,6 +214,19 @@ class OperatorsRootNode(object):
             constants.ROOT_OP_META_ND_ATTR_NAME
         ).get()
         return self.root_meta_nd
+
+    def get_root_nd_from_root_meta_nd(self):
+        """
+        Gives the root operator node form root meta node.
+
+        Return:
+             pmc.PyNode(): The meta network node.
+
+        """
+        self.op_root_nd = self.root_meta_nd.attr(
+            constants.ROOT_OP_MESSAGE_ATTR_NAME
+        ).get()
+        return self.op_root_nd
 
 
 class MainOperatorNode(OperatorsRootNode):
@@ -279,6 +304,7 @@ class MainOperatorNode(OperatorsRootNode):
         self.lra_node = main_op_node[2]
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd, **attr_)
+        # Connect main operator node with main meta node.
         self.set_main_meta_nd()
 
     def set_main_meta_nd(self):
@@ -338,17 +364,31 @@ class ComponentOperator(MainOperatorNode):
 
     def __init__(self, operators_root_node=None, main_operator_node=None):
         """
-        Init all important data.
+        Init all important data. Set attributes and check if a
+        parent node is passed. Parent node could be operators_root or
+        main_operator node.
 
         Args:
-                operators_root_node(pmc.PyNode(), optional): The operators root
-                node.
-                main_operator_node(pmc.PyNode(), optional): The
-                operators_root_node.
+            operators_root_node(pmc.PyNode(), optional): The operators root
+            node.
+            main_operator_node(pmc.PyNode(), optional): The
+            operators_root_node.
+
+        Example:
+            (1)
+            Example without selection.
+            >>> import operators
+            >>> component_op.create_component_op_node('test', sub_operators_count=2)
+            (2)
+            Example with selection.
+            >>> import pymel.core as pmc
+            >>> import operators
+            >>> selection = pmc.ls(sl=True)[0]
+            >>> component_op = operators.ComponentOperator(selection, selection)
+            >>> component_op.create_component_op_node('test', sub_operators_count=2)
 
         """
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
-        self.result = []
         self.sub_operators = []
         self.joint_control = None
         self.main_op_nd_name = None
@@ -357,9 +397,16 @@ class ComponentOperator(MainOperatorNode):
         self.sub_meta_nd = None
         self.linear_curve_name = None
         self.parent = None
+        # Check at init if a root operator/main operator node is passed into
+        # the class. If so and if the node is valid will use it as parent node.
         if self.op_root_nd:
+            # If a valid root op node is passed take this as parent.
             self.parent = self.op_root_nd
         if self.main_op_nd:
+            # If a valid main op node is passed take it as parent and get the
+            # operator root node from meta data.
+            self.get_root_meta_nd_from_main_op_nd()
+            self.get_root_nd_from_root_meta_nd()
             self.parent = self.main_op_nd
         self.linear_curve_drivers = []
 
@@ -390,6 +437,17 @@ class ComponentOperator(MainOperatorNode):
         ]
 
     def create_sub_operator(self, name, side, index, scale, match):
+        """
+        Create the sub operators node.
+
+        Args:
+            name(str): Operators name.
+            side(str): Side. Valid values are [L, R, M]
+            index(int): Operators index.
+            scale(float): Scale value.
+            match(pmc.PyNode()): Object to snap for.
+
+        """
         instance = "_op_{}_{}".format(name, str(index))
         sub_op_nd_name = constants.SUB_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
@@ -409,6 +467,7 @@ class ComponentOperator(MainOperatorNode):
             n=sub_op_nd_name.replace("_CON", "")
         )
         self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
+        self.sub_meta_nd.set_operator_nd(sub_op_node)
         self.sub_operators.append(sub_op_node)
         self.linear_curve_drivers.append(sub_op_node)
 
@@ -432,11 +491,9 @@ class ComponentOperator(MainOperatorNode):
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
 
-        Returns:
-            List: The operators root node.
-
         """
         vec = constants.DEFAULT_SPACING
+        # Bypass axes for later refactoring.
         axes_ = axes
         aim_vec = None
         up_vec = None
@@ -445,21 +502,24 @@ class ComponentOperator(MainOperatorNode):
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
         ).replace("_op_", "_op_{}_".format(name))
+        # create the actual main operator node.
         self.create_main_op_node(local_rotate_axes=local_rotate_axes)
+        # check if a parent is set at the init.
+        # If not create a new root operator node.
         if not self.parent:
             self.create_root_op_node()
-            self.op_root_nd.addChild(self.main_op_nd)
-        else:
-            self.parent.addChild(self.main_op_nd)
         if self.op_root_nd:
             self.get_root_meta_nd_from_op_root_nd()
+        # Set all meta datas.
         self.set_root_meta_nd()
         self.get_main_meta_nd()
         self.set_component_side(side)
         self.set_component_name(name)
+        # Add main meta node to god meta node.
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:
             self.linear_curve_drivers.append(self.main_op_nd)
+            # remap the vector to move each sub operator in a minus axes
             if axes == "-X" or axes == "-Y" or axes == "-Z":
                 vec = vec * -1
             if axes == "-X":
@@ -468,11 +528,15 @@ class ComponentOperator(MainOperatorNode):
                 axes_ = "Y"
             elif axes == "-Z":
                 axes_ = "Z"
+            # create the sub operators by count
             for index in range(sub_operators_count):
                 self.create_sub_operator(
                     name, side, index, sub_operators_scale, self.main_op_nd
                 )
+            # parent the first sub op to the main op because the first sub op is
+            # always the master for each sub op.
             self.main_op_nd.addChild(self.sub_operators[0])
+            # remap section for aim constraint setup for the lra node.
             if sub_operators_count > 1:
                 if axes == "X":
                     aim_vec = (1, 0, 0)
@@ -492,7 +556,9 @@ class ComponentOperator(MainOperatorNode):
                 elif axes == "-Z":
                     aim_vec = (0, 0, -1)
                     up_vec = (0, 1, 0)
+                # create the real sub op hierarchy if more then 1 sub op needed.
                 mayautils.create_hierarchy(self.sub_operators)
+            # move each sub op for the same value.
             for sub in self.sub_operators:
                 sub.attr("translate" + axes_).set(vec)
             pmc.aimConstraint(
@@ -504,6 +570,7 @@ class ComponentOperator(MainOperatorNode):
                 worldUpObject=self.main_op_nd,
                 mo=True,
             )
+            # linear curve section for visualisation purposes.
             linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
                 "M_", "{}_".format(side)
             )
@@ -515,6 +582,11 @@ class ComponentOperator(MainOperatorNode):
             )
             linear_curve.inheritsTransform.set(0)
             self.main_op_nd.addChild(linear_curve)
+        # add the main operator node always to the root operator node.
+        self.add_node(self.main_op_nd)
+        # if a parent is specified in the init parent the main op node.
+        if self.parent:
+            self.parent.addChild(self.main_op_nd)
 
     def set_component_type(self, type):
         """
@@ -558,7 +630,7 @@ class ComponentOperator(MainOperatorNode):
 
     def set_ik_spaces_ref(self, spaces):
         """
-        Set the ik_spaces_reference nodes. Will fail if spaces attr is no list.
+        Set the ik_spaces_reference nodes. Will fail if spaces attr is not list.
 
         Args:
                 spaces(list): The references for the ik spaces.
