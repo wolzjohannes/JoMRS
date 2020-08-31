@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 27
+# Date:       2020 / 08 / 30
 
 """
 JoMRS constants module for global values.
@@ -53,6 +53,10 @@ MAIN_OP_META_ND_ATTR_NAME = "main_op_meta_nd"
 SUB_OP_META_ND_ATTR_NAME = "sub_op_meta_nd"
 
 MAIN_OP_MESSAGE_ATTR_NAME = "main_operator_nd"
+
+ROOT_OP_MESSAGE_ATTR_NAME = "root_operator_nd"
+
+SUB_OP_MESSAGE_ATTR_NAME = "sub_operator_nd"
 
 LINEAR_CURVE_NAME = "M_linear_op_0_CRV"
 
@@ -127,3 +131,5 @@ META_MAIN_PARENT_ND = "parent_nd"
 META_MAIN_CHILD_ND = "child_nd"
 
 MAIN_META_ND_PLUG = "main_meta_nd"
+
+SUB_META_ND_PLUG = "sub_meta_nd"
