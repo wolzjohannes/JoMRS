@@ -178,22 +178,38 @@ class GodMetaNode(MetaNode):
         newNode.attr(type).set(cls.SUBNODE_TYPE)
         newNode.rename(name)
 
-    def add_meta_node(self, node, plug="meta_nd"):
+    def add_meta_node(self, node):
         """
         Add a meta node to the god meta node as message attr connection.
+
         Args:
                 node(dagnode): The node to add.
-                plug(str): The attributes name for message connection.
+
         """
         new_attribute = {}
         ud_attr = self.listAttr(ud=True)
         ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, attr_)]
+        dirty_plugs = []
+        meta_plug = [
+            attr_
+            for attr_ in ud_attr
+            if re.search(constants.META_GOD_META_ND_ATTR, attr_)
+        ]
         if not meta_plug:
             count = "0"
         else:
-            count = str(int(meta_plug[-1][-1]) + 1)
-        new_attribute["name"] = "{}_{}".format(plug, count)
+            for plug in meta_plug:
+                if not self.attr(plug).get():
+                    self.attr(plug).delete()
+                else:
+                    dirty_plugs.append(plug)
+            integer = dirty_plugs[-1].split(
+                "{}_".format(constants.META_GOD_META_ND_ATTR)
+            )[1]
+            count = str(int(integer) + 1)
+        new_attribute["name"] = "{}_{}".format(
+            constants.MAIN_META_ND_PLUG, count
+        )
         new_attribute["attrType"] = "message"
         new_attribute["keyable"] = False
         new_attribute["channelBox"] = False
@@ -380,22 +396,38 @@ class RootOpMetaNode(MetaNode):
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
-    def add_main_meta_node(self, node, plug=constants.MAIN_META_ND_PLUG):
+    def add_main_meta_node(self, node):
         """
         Add a main meta node to the root meta node as message attr connection.
+
         Args:
                 node(dagnode): The node to add.
-                plug(str): The attributes name for message connection.
+
         """
         new_attribute = {}
+        dirty_plugs = []
         ud_attr = self.listAttr(ud=True)
         ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, attr_)]
+        meta_plug = [
+            attr_
+            for attr_ in ud_attr
+            if re.search(constants.MAIN_META_ND_PLUG, attr_)
+        ]
         if not meta_plug:
             count = "0"
         else:
-            count = str(int(meta_plug[-1][-1]) + 1)
-        new_attribute["name"] = "{}_{}".format(plug, count)
+            for plug in meta_plug:
+                if not self.attr(plug).get():
+                    self.attr(plug).delete()
+                else:
+                    dirty_plugs.append(plug)
+            integer = dirty_plugs[-1].split(
+                "{}_".format(constants.MAIN_META_ND_PLUG)
+            )[1]
+            count = str(int(integer) + 1)
+        new_attribute["name"] = "{}_{}".format(
+            constants.MAIN_META_ND_PLUG, count
+        )
         new_attribute["attrType"] = "message"
         new_attribute["keyable"] = False
         new_attribute["channelBox"] = False
@@ -410,7 +442,9 @@ class RootOpMetaNode(MetaNode):
             node(pmc.PyNode()): Root operator node.
 
         """
-        node.message.connect(self.attr(constants.ROOT_OP_MESSAGE_ATTR_NAME))
+        root_op_node.message.connect(
+            self.attr(constants.ROOT_OP_MESSAGE_ATTR_NAME)
+        )
 
 
 class MainOpMetaNode(MetaNode):
@@ -610,12 +644,18 @@ class MainOpMetaNode(MetaNode):
         new_attribute = {}
         ud_attr = self.listAttr(ud=True)
         ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        meta_plug = [attr_ for attr_ in ud_attr if re.search(constants.SUB_META_ND_PLUG, attr_)]
+        meta_plug = [
+            attr_
+            for attr_ in ud_attr
+            if re.search(constants.SUB_META_ND_PLUG, attr_)
+        ]
         if not meta_plug:
             count = "0"
         else:
             count = str(int(meta_plug[-1][-1]) + 1)
-        new_attribute["name"] = "{}_{}".format(constants.SUB_META_ND_PLUG, count)
+        new_attribute["name"] = "{}_{}".format(
+            constants.SUB_META_ND_PLUG, count
+        )
         new_attribute["attrType"] = "message"
         new_attribute["keyable"] = False
         new_attribute["channelBox"] = False

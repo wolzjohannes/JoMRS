@@ -130,6 +130,8 @@ META_MAIN_PARENT_ND = "parent_nd"
 
 META_MAIN_CHILD_ND = "child_nd"
 
+META_GOD_META_ND_ATTR = 'meta_nd'
+
 MAIN_META_ND_PLUG = "main_meta_nd"
 
 SUB_META_ND_PLUG = "sub_meta_nd"

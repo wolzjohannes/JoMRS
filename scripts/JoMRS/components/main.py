@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 06
+# Date:       2020 / 09 / 01
 
 """
 Rig components main module. This class is the template to create a rig
@@ -69,7 +69,7 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 
 class component(operators.create_component_operator):
     """
-    Handles all component operations.
+    Component template class.
     """
 
     def __init__(
@@ -78,6 +78,7 @@ class component(operators.create_component_operator):
         component_type=None,
         side=None,
         index=None,
+        operators_root_node=None,
         main_operator_node=None,
     ):
         """
@@ -88,10 +89,15 @@ class component(operators.create_component_operator):
             component_type(str, optional): Component type.
             side(str, optional): The component side.
             index(int, optional): The component index.
-            main_operator_node(pmc.PyNode(), optional): Operators main node.
+            operators_root_node(pmc.PyNode(), optional): The operators root
+            node.
+            main_operator_node(pmc.PyNode(), optional): The
+            operators_root_node.
+
         """
-        operators.create_component_operator.__init__(self, main_operator_node)
-        self.operator = main_operator_node
+        operators.create_component_operator.__init__(self,
+                                                     operators_root_node,
+                                                     main_operator_node)
         self.name = name
         self.component_type = component_type
         self.side = side
@@ -125,10 +131,9 @@ class component(operators.create_component_operator):
                 local_rotate_axes(bool): Enable/Disable
 
         """
-        self.operator = self.init_operator(
-            operator_name=self.name,
+        self.create_component_op_node(
+            name=self.name, side=self.side, axes=axes,
             sub_operators_count=sub_operators_count,
-            axes=axes,
             local_rotate_axes=local_rotate_axes,
         )
         self.set_component_name(self.name)
@@ -140,7 +145,7 @@ class component(operators.create_component_operator):
         if ik_space_ref:
             self.set_ik_spaces_ref(ik_space_ref)
         logger.log(level='info', message='{} component operator '
-                                         'build named: {}'.format(
+                                         'build with the name: {}'.format(
             self.component_type, self.name),
                    logger=_LOGGER)
 

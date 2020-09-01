@@ -35,6 +35,8 @@ import curves
 import mayautils
 import meta
 
+reload(meta)
+
 ##########################################################
 # GLOBALS
 ##########################################################
@@ -142,7 +144,7 @@ class OperatorsRootNode(object):
             self.root_op_meta_nd_attr,
         ]
 
-    def create_root_op_node(self,):
+    def create_root_op_node(self):
         """
         Execute the operators root/god node creation.
 
@@ -159,6 +161,8 @@ class OperatorsRootNode(object):
         self.root_meta_nd = meta.RootOpMetaNode(
             n=constants.ROOT_OP_META_NODE_NAME
         )
+        # add root meta nd to container node.
+        self.op_root_nd.addNode(self.root_meta_nd)
         # Connect root meta node with root node and visa versa.
         self.root_meta_nd.message.connect(
             self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
@@ -510,7 +514,7 @@ class ComponentOperator(MainOperatorNode):
             self.create_root_op_node()
         if self.op_root_nd:
             self.get_root_meta_nd_from_op_root_nd()
-        # Set all meta datas.
+        # Set meta data.
         self.set_root_meta_nd()
         self.get_main_meta_nd()
         self.set_component_side(side)
@@ -580,13 +584,15 @@ class ComponentOperator(MainOperatorNode):
             linear_curve = curves.linear_curve(
                 driver_nodes=self.linear_curve_drivers, name=linear_curve_name
             )
-            linear_curve.inheritsTransform.set(0)
+            linear_curve.inheritsransform.set(0)
             self.main_op_nd.addChild(linear_curve)
         # add the main operator node always to the root operator node.
         self.add_node(self.main_op_nd)
-        # if a parent is specified in the init parent the main op node.
-        if self.parent:
-            self.parent.addChild(self.main_op_nd)
+        # if main op node is passed parent the new operator under the
+        # specified parent node.
+        if self.main_op_nd:
+            if self.parent:
+                self.parent.addChild(self.main_op_nd)
 
     def set_component_type(self, type):
         """
