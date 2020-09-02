@@ -284,12 +284,13 @@ class MainOperatorNode(OperatorsRootNode):
             self.root_op_meta_nd_attr,
         ]
 
-    def create_main_op_node(self, local_rotate_axes=True):
+    def create_main_op_node(self, local_rotate_axes=True, match=None):
         """
         Execute the main operator node creation.
 
         Args:
                 local_rotate_axes(bool): Enable local rotate axes.
+                match(pmc.PyNode): Node to snap for
 
         Return:
 
@@ -302,6 +303,7 @@ class MainOperatorNode(OperatorsRootNode):
             name=self.main_op_nd_name,
             local_rotate_axes=local_rotate_axes,
             buffer_grp=False,
+            match=match
         )
         self.main_op_nd = main_op_node[0]
         self.lra_node_buffer_grp = main_op_node[1]
@@ -403,9 +405,9 @@ class ComponentOperator(MainOperatorNode):
         self.parent = None
         # Check at init if a root operator/main operator node is passed into
         # the class. If so and if the node is valid will use it as parent node.
-        if self.op_root_nd:
-            # If a valid root op node is passed take this as parent.
-            self.parent = self.op_root_nd
+        # if self.op_root_nd:
+        #     # If a valid root op node is passed take this as parent.
+        #     self.parent = self.op_root_nd
         if self.main_op_nd:
             # If a valid main op node is passed take it as parent and get the
             # operator root node from meta data.
@@ -506,13 +508,13 @@ class ComponentOperator(MainOperatorNode):
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
         ).replace("_op_", "_op_{}_".format(name))
-        # create the actual main operator node.
+        # Create the actual main operator node.
         self.create_main_op_node(local_rotate_axes=local_rotate_axes)
-        # check if a parent is set at the init.
+        # Check if a root operator node is passed and valid.
         # If not create a new root operator node.
-        if not self.parent:
+        if not self.op_root_nd:
             self.create_root_op_node()
-        if self.op_root_nd:
+        else:
             self.get_root_meta_nd_from_op_root_nd()
         # Set meta data.
         self.set_root_meta_nd()
@@ -584,15 +586,14 @@ class ComponentOperator(MainOperatorNode):
             linear_curve = curves.linear_curve(
                 driver_nodes=self.linear_curve_drivers, name=linear_curve_name
             )
-            linear_curve.inheritsransform.set(0)
+            linear_curve.inheritsTransform.set(0)
             self.main_op_nd.addChild(linear_curve)
         # add the main operator node always to the root operator node.
         self.add_node(self.main_op_nd)
         # if main op node is passed parent the new operator under the
         # specified parent node.
-        if self.main_op_nd:
-            if self.parent:
-                self.parent.addChild(self.main_op_nd)
+        if self.parent:
+            self.parent.addChild(self.main_op_nd)
 
     def set_component_type(self, type):
         """
