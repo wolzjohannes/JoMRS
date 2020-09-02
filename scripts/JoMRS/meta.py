@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 30
+# Date:       2020 / 09 / 02
 
 """
 Meta node creation module.
@@ -770,7 +770,23 @@ class SubOpMetaNode(MetaNode):
             attributes.add_attr(node=newNode, **attr_)
 
     def set_operator_nd(self, node):
+        """
+        Connect sub node with meta node.
+
+        Args:
+            node(pmc.PyNode()): The sub operator node.
+
+        """
         node.message.connect(self.attr(constants.SUB_OP_MESSAGE_ATTR_NAME))
+
+    def set_main_op_nd(self, main_op_nd):
+        """
+        Connect the main op node with the sub op meta node.
+
+        main_op_nd(pmc:PyNode()): The main operator node.
+
+        """
+        main_op_nd.message.connect(self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME))
 
 
 pmc.factories.registerVirtualClass(MetaNode, nameRequired=False)

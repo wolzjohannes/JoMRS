@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 31
+# Date:       2020 / 09 / 02
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -303,7 +303,7 @@ class MainOperatorNode(OperatorsRootNode):
             name=self.main_op_nd_name,
             local_rotate_axes=local_rotate_axes,
             buffer_grp=False,
-            match=match
+            match=match,
         )
         self.main_op_nd = main_op_node[0]
         self.lra_node_buffer_grp = main_op_node[1]
@@ -368,7 +368,12 @@ class ComponentOperator(MainOperatorNode):
 
     SUB_ND_COLOR_INDEX = 21
 
-    def __init__(self, operators_root_node=None, main_operator_node=None):
+    def __init__(
+        self,
+        operators_root_node=None,
+        main_operator_node=None,
+        sub_operator_node=None,
+    ):
         """
         Init all important data. Set attributes and check if a
         parent node is passed. Parent node could be operators_root or
@@ -377,8 +382,8 @@ class ComponentOperator(MainOperatorNode):
         Args:
             operators_root_node(pmc.PyNode(), optional): The operators root
             node.
-            main_operator_node(pmc.PyNode(), optional): The
-            operators_root_node.
+            main_operator_node(pmc.PyNode(), optional): The main operator_node.
+            sub_operator_node(pmc.PyNode(), optional)): The sub operator node.
 
         Example:
             (1)
@@ -389,8 +394,11 @@ class ComponentOperator(MainOperatorNode):
             Example with selection.
             >>> import pymel.core as pmc
             >>> import operators
-            >>> selection = pmc.ls(sl=True)[0]
-            >>> component_op = operators.ComponentOperator(selection, selection)
+            >>> selection = []
+            >>> selection.extend(pmc.ls(sl=True, containers=True))
+            >>> selection.extend(pmc.ls(sl=True, tr=True))
+            >>> component_op = operators.ComponentOperator(selection[0],
+            >>> selection[0], selection[0])
             >>> component_op.create_component_op_node('test', sub_operators_count=2)
 
         """
@@ -403,17 +411,27 @@ class ComponentOperator(MainOperatorNode):
         self.sub_meta_nd = None
         self.linear_curve_name = None
         self.parent = None
-        # Check at init if a root operator/main operator node is passed into
-        # the class. If so and if the node is valid will use it as parent node.
-        # if self.op_root_nd:
-        #     # If a valid root op node is passed take this as parent.
-        #     self.parent = self.op_root_nd
+        # Check at init if a root operator/main operator/sub operator node is
+        # passed into the class. If so and if the node is valid will use it
+        # as parent node.
         if self.main_op_nd:
             # If a valid main op node is passed take it as parent and get the
             # operator root node from meta data.
             self.get_root_meta_nd_from_main_op_nd()
             self.get_root_nd_from_root_meta_nd()
             self.parent = self.main_op_nd
+        if sub_operator_node:
+            if valid_node(sub_operator_node, "JoMRS_sub"):
+                # If a valid sub op node is passed take it as parent and get the
+                # main op node from meta data and then the operator root node
+                # form meta data as well.
+                self.main_op_nd = self.get_main_op_node_from_sub(
+                    sub_operator_node
+                )
+                self.get_root_meta_nd_from_main_op_nd()
+                self.get_root_nd_from_root_meta_nd()
+                self.parent = sub_operator_node
+
         self.linear_curve_drivers = []
 
         self.sub_op_attr = {
@@ -429,16 +447,9 @@ class ComponentOperator(MainOperatorNode):
             "keyable": False,
         }
 
-        self.main_op_nd_attr = {
-            "name": constants.MAIN_OP_MESSAGE_ATTR_NAME,
-            "attrType": "message",
-            "keyable": False,
-        }
-
         self.sub_node_param_list = [
             self.sub_op_attr,
             self.sub_op_meta_nd_attr,
-            self.main_op_nd_attr,
             self.root_op_meta_nd_attr,
         ]
 
@@ -473,7 +484,17 @@ class ComponentOperator(MainOperatorNode):
             n=sub_op_nd_name.replace("_CON", "")
         )
         self.main_meta_nd.add_sub_meta_node(node=self.sub_meta_nd)
+        # Section to set meta data connections.
         self.sub_meta_nd.set_operator_nd(sub_op_node)
+        self.sub_meta_nd.message.connect(
+            sub_op_node.attr(constants.SUB_OP_META_ND_ATTR_NAME)
+        )
+        if self.main_op_nd:
+            self.sub_meta_nd.set_main_op_nd(self.main_op_nd)
+        if self.root_meta_nd:
+            self.root_meta_nd.message.connect(
+                sub_op_node.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
+            )
         self.sub_operators.append(sub_op_node)
         self.linear_curve_drivers.append(sub_op_node)
 
@@ -756,3 +777,21 @@ class ComponentOperator(MainOperatorNode):
 
         """
         return self.main_meta_nd.attr(constants.META_MAIN_CHILD_ND).get()
+
+    def get_main_op_node_from_sub(self, sub_op_nd):
+        """
+        Get main op node from sub op node.
+
+        Args:
+            sub_op_nd(pmc.PyNode()):
+
+        Return:
+            pmc.PyNode(): The main op node
+
+        """
+        return (
+            sub_op_nd.attr(constants.SUB_OP_META_ND_ATTR_NAME)
+            .get()
+            .attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
+            .get()
+        )
