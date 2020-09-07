@@ -20,13 +20,14 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 06
+# Date:       2020 / 09 / 07
 
 """
 Build a single control
 """
 
 import pymel.core as pmc
+import curves
 from components import main
 
 reload(main)
@@ -47,8 +48,15 @@ class Main(main.component):
     LOCAL_ROTATION_AXES = False
     AXES = "X"
 
-    def __init__(self, name=None, side=None, index=None,
-                 main_operator_node=None):
+    def __init__(
+        self,
+        name=None,
+        side=None,
+        index=None,
+        operators_root_node=None,
+        main_operator_node=None,
+        sub_operator_node=None,
+    ):
         """
         Init function.
 
@@ -56,22 +64,32 @@ class Main(main.component):
             main_operator_node(pmc.PyNode): The main operator node.
 
         """
-        main.component.__init__(self, name, self.COMP_TYPE, side, index,
-                                main_operator_node)
+        main.component.__init__(
+            self,
+            name,
+            self.COMP_TYPE,
+            side,
+            index,
+            operators_root_node,
+            main_operator_node,
+            sub_operator_node,
+        )
 
     def _init_operator(self):
         """
         Init the operator creation.
         """
         self.build_operator(
-            self.AXES,
-            self.SUB_OPERATORS_COUNT,
-            self.LOCAL_ROTATION_AXES,
+            self.AXES, self.SUB_OPERATORS_COUNT, self.LOCAL_ROTATION_AXES
         )
 
     def build_component_logic(self):
         """
         Build component logic. It is derivative method
         """
-        jnt = pmc.createNode('joint')
-        self.component.addChild(jnt)
+        curve_instance = curves.BoxControl()
+        curve = curve_instance.create_curve(name=self.name)
+        self.controls.append(curve[1])
+        self.component_rig_list.append(curve[0])
+        self.input_matrix_offset_grp.append(curve[0])
+        self.bnd_output_matrix.append(curve[1])
