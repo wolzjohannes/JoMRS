@@ -34,6 +34,7 @@ import attributes
 import curves
 import mayautils
 import meta
+import os
 
 reload(meta)
 
@@ -154,7 +155,10 @@ class OperatorsRootNode(object):
         """
         # Create a asset container as root node.
         self.op_root_nd = pmc.createNode("container", n=constants.OP_ROOT_NAME)
-        self.op_root_nd.iconName.set(constants.ROOT_OP_ICON_PATH)
+        icon = os.path.normpath(
+            "{}/root_operator_logo.png".format(constants.ICONS_PATH)
+        )
+        self.op_root_nd.iconName.set(icon)
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
         # Create the meta node for the root node.
@@ -778,7 +782,8 @@ class ComponentOperator(MainOperatorNode):
         """
         return self.main_meta_nd.attr(constants.META_MAIN_CHILD_ND).get()
 
-    def get_main_op_node_from_sub(self, sub_op_nd):
+    @staticmethod
+    def get_main_op_node_from_sub(sub_op_nd):
         """
         Get main op node from sub op node.
 

@@ -599,7 +599,8 @@ def create_aim_constraint(
 
 
 def decompose_matrix_constraint(
-    source, target, translation=True, rotation=True, scale=True
+    source, target, translation=True, rotation=True, scale=True,
+    target_plug=None
 ):
     """
     Create decompose matrix constraint.
@@ -609,11 +610,15 @@ def decompose_matrix_constraint(
             translation(bool): Envelope to connect the translation.
             rotation(bool): Envelope to connect the rotation.
             scale(bool): Envelope to connect the scale.
+            target_plug(string): Target plug for world matrix connection.
+            If none will take "worldMatrix[0]" as default.
     Return:
             tuple: Created decompose matrix node.
     """
-    decomp = pmc.creatNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
-    target.worldMatrix[0].connect(decomp.inputMatrix)
+    decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
+    if not target_plug:
+        target_plug = 'worldMatrix[0]'
+    target.attr(target_plug).connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
     if rotation:

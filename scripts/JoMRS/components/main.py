@@ -20,20 +20,24 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 01
+# Date:       2020 / 09 / 07
 
 """
 Rig components main module. This class is the template to create a rig
 component. Every rig component should inherit this class as template.
 """
+import os
 import pymel.core as pmc
 import strings
 import attributes
 import operators
 import logger
 import logging
+import constants
+import mayautils
 
-reload(operators)
+reload(constants)
+reload(mayautils)
 
 ##########################################################
 # Methods
@@ -67,19 +71,21 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 # CLASSES
 ##########################################################
 
-class component(operators.create_component_operator):
+
+class component(operators.ComponentOperator):
     """
     Component template class.
     """
 
     def __init__(
         self,
-        name=None,
-        component_type=None,
-        side=None,
-        index=None,
+        name=constants.DEFAULT_OPERATOR_NAME,
+        component_type=constants.DEFAULT_COMPONENT_TYPE,
+        side=constants.DEFAULT_SIDE,
+        index=constants.DEFAULT_INDEX,
         operators_root_node=None,
         main_operator_node=None,
+        sub_operator_node=None,
     ):
         """
         Init important data.
@@ -95,9 +101,9 @@ class component(operators.create_component_operator):
             operators_root_node.
 
         """
-        operators.create_component_operator.__init__(self,
-                                                     operators_root_node,
-                                                     main_operator_node)
+        operators.ComponentOperator.__init__(
+            self, operators_root_node, main_operator_node, sub_operator_node
+        )
         self.name = name
         self.component_type = component_type
         self.side = side
@@ -107,6 +113,10 @@ class component(operators.create_component_operator):
         self.output = []
         self.component = []
         self.spaces = []
+        self.component_rig_list = []
+        self.bnd_output_matrix = []
+        self.input_matrix_offset_grp = []
+        self.controls = []
         if main_operator_node:
             self.name = self.get_component_name()
             self.component_type = self.get_component_type()
@@ -121,18 +131,21 @@ class component(operators.create_component_operator):
         connect_node=None,
         ik_space_ref=None,
     ):
-        """Build component operator.
+        """
+        Build component operator.
 
         Args:
-                axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
-                sub_operators_count(int): Sub operators count.
-                connect_node(str): The connect node .
-                ik_space_ref(list): Spaces given as nodes in a string
-                local_rotate_axes(bool): Enable/Disable
+            axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
+            sub_operators_count(int): Sub operators count.
+            connect_node(str): The connect node .
+            ik_space_ref(list): Spaces given as nodes in a string
+            local_rotate_axes(bool): Enable/Disable
 
         """
         self.create_component_op_node(
-            name=self.name, side=self.side, axes=axes,
+            name=self.name,
+            side=self.side,
+            axes=axes,
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,
         )
@@ -144,34 +157,34 @@ class component(operators.create_component_operator):
             self.set_connect_nd(connect_node)
         if ik_space_ref:
             self.set_ik_spaces_ref(ik_space_ref)
-        logger.log(level='info', message='{} component operator '
-                                         'build with the name: {}'.format(
-            self.component_type, self.name),
-                   logger=_LOGGER)
+        logger.log(
+            level="info",
+            message="{} component operator "
+            "build with the name: {}".format(self.component_type, self.name),
+            logger=_LOGGER,
+        )
 
-    def init_hierarchy(self, component_root):
+    def init_component_hierarchy(self):
         """
         Init rig component base hierarchy.
-        Args:
-            component_root(dagnode): Component parent node.
         """
-        component_root_name = "{}_RIG_{}_component_0_GRP".format(
+        component_root_name = "{}_ROOT_{}_component_0_GRP".format(
             self.side, self.name.lower()
         )
         component_root_name = strings.string_checkup(component_root_name)
-        self.component_root = pmc.createNode("transform", n=component_root_name)
-        attributes.lock_and_hide_attributes(self.component_root)
+        self.component_root = pmc.createNode("container", n=component_root_name)
+        icon = os.path.normpath(
+            "{}/components_logo.png".format(constants.ICONS_PATH)
+        )
+        self.component_root.iconName.set(icon)
         self.input = pmc.createNode("transform", n="input")
         self.output = pmc.createNode("transform", n="output")
         self.component = pmc.createNode("transform", n="component")
         self.spaces = pmc.createNode("transform", n="spaces")
         temp = [self.input, self.output, self.component, self.spaces]
-        for node in temp:
-            self.component_root.addChild(node)
-            attributes.lock_and_hide_attributes(node)
         attributes.add_attr(
             self.input,
-            name="input_ws_matrix",
+            name=constants.INPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
             keyable=False,
@@ -179,7 +192,7 @@ class component(operators.create_component_operator):
         )
         attributes.add_attr(
             self.output,
-            name="output_ws_matrix",
+            name=constants.OUTPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
             keyable=False,
@@ -187,20 +200,22 @@ class component(operators.create_component_operator):
         )
         attributes.add_attr(
             self.output,
-            name="BND_output_ws_matrix",
+            name=constants.BND_OUTPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
             keyable=False,
             hidden=True,
         )
-        if component_root:
-            component_root.addChild(self.component_root)
+        for node in temp:
+            self.component_root.addNode(node)
 
     def create_input_ws_matrix_port(self, name):
         """
         Create a input port for ws matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.input,
@@ -213,8 +228,10 @@ class component(operators.create_component_operator):
     def create_input_os_matrix_port(self, name):
         """
         Create a input port for os matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.input,
@@ -227,8 +244,10 @@ class component(operators.create_component_operator):
     def create_output_ws_matrix_port(self, name):
         """
         Create a output port for ws matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.output,
@@ -241,8 +260,10 @@ class component(operators.create_component_operator):
     def create_output_os_matrix_port(self, name):
         """
         Create a output port for os matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.output,
@@ -265,13 +286,15 @@ class component(operators.create_component_operator):
         Add user defined port to the input or output port of a rig component.
         By Default it add a float value to the input port with a given
         name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
+
         Args:
-                component_port(str): The rig components port.
-                name(str): The port name.
-                type_(str): The port typ.
-                minValue(float or int): The minimal port value.
-                maxValue(float or int): The maximum port value.
-                value(float or int or str): The port value.
+            component_port(str): The rig components port.
+            name(str): The port name.
+            type_(str): The port typ.
+            minValue(float or int): The minimal port value.
+            maxValue(float or int): The maximum port value.
+            value(float or int or str): The port value.
+
         """
         valid_ports = ["input", "output"]
         if component_port not in valid_ports:
@@ -292,34 +315,58 @@ class component(operators.create_component_operator):
         )
 
     def build_component_logic(
-        self,
-        main_operator_ws_matrix=None,
-        sub_operator_ws_matrix=None,
-        joint_count=1,
+        self, main_operator_ws_matrix=None, sub_operator_ws_matrix=None
     ):
         """
-        Method for building a component.
+        Method for building a component. Use the list variables
+        self.component_rig_list, self.bnd_output_matrix,
+        self.input_matrix_offset_grp to define input and output connections
+        of the component
 
         Args:
             main_operator_ws_matrix(matrix): World space position of main
             operator.
             sub_operator_ws_matrix(list): List of sub operators world space
             position.
-            joint(int): Count of rig joints.
-
-        Return:
-            True
 
         """
         return True
 
-    def build_from_operator(self, component_root=None):
+    def connect_component_edges(self):
+        """
+        Method to connect the input and output of a component.
+        """
+        if self.component_rig_list:
+            for node in self.component_rig_list:
+                if self.component_root:
+                    self.component_root.addNode(
+                        node, ish=True, ihb=True, iha=True, inc=True
+                    )
+                    self.component.addChild(node)
+        for index, bnd_node in enumerate(self.bnd_output_matrix):
+            bnd_node.worldMatrix[0].connect(
+                self.output.attr(
+                    "{}[{}]".format(constants.BND_OUTPUT_WS_PORT_NAME, str(index)),
+                )
+            )
+        for index, input_node in enumerate(self.input_matrix_offset_grp):
+            mayautils.decompose_matrix_constraint(
+                source=input_node,
+                target=self.input,
+                target_plug="{}[{}]".format(
+                    constants.INPUT_WS_PORT_NAME, str(index)
+                ),
+            )
+
+    def build_from_operator(self):
         """
         Build the whole component rig from operator.
         With initial hierarchy.
 
         Args:
-            component_root(pmc.PyNode()): The component root node.)
+            root_node(pmc.PyNode()): The component root node.
+
         """
-        self.init_hierarchy(component_root)
+        self.init_component_hierarchy()
         self.build_component_logic()
+        self.connect_component_edges()

@@ -28,7 +28,7 @@ JoMRS constants module for global values.
 
 import os
 
-ROOT_OP_ICON_PATH = os.path.normpath('{}/icons/root_operator_logo.png'.format(
+ICONS_PATH = os.path.normpath('{}/icons'.format(
     os.environ.get("JoMRS").split("scripts")[0])
 )
 
@@ -75,6 +75,8 @@ DEFAULT_SPACING = 10
 DEFAULT_SUB_OPERATORS_SCALE = [0.25, 0.25, 0.25]
 
 DEFAULT_CONNECTION_TYPES = "translate;rotate;scale"
+
+DEFAULT_COMPONENT_TYPE = 'None'
 
 META_NODE_ID = "meta_node"
 
@@ -135,3 +137,9 @@ META_GOD_META_ND_ATTR = 'meta_nd'
 MAIN_META_ND_PLUG = "main_meta_nd"
 
 SUB_META_ND_PLUG = "sub_meta_nd"
+
+BND_OUTPUT_WS_PORT_NAME = "BND_output_ws_matrix"
+
+OUTPUT_WS_PORT_NAME = "output_ws_matrix"
+
+INPUT_WS_PORT_NAME = "input_ws_matrix"
