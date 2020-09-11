@@ -38,6 +38,7 @@ import mayautils
 
 reload(constants)
 reload(mayautils)
+reload(operators)
 
 ##########################################################
 # Methods
@@ -97,8 +98,8 @@ class component(operators.ComponentOperator):
             index(int, optional): The component index.
             operators_root_node(pmc.PyNode(), optional): The operators root
             node.
-            main_operator_node(pmc.PyNode(), optional): The
-            operators_root_node.
+            main_operator_node(pmc.PyNode(), optional): The main operator_node.
+            sub_operator_node(pmc.PyNode(), optional)): The sub operator node.
 
         """
         operators.ComponentOperator.__init__(
@@ -117,7 +118,7 @@ class component(operators.ComponentOperator):
         self.bnd_output_matrix = []
         self.input_matrix_offset_grp = []
         self.controls = []
-        if main_operator_node:
+        if self.main_op_nd:
             self.name = self.get_component_name()
             self.component_type = self.get_component_type()
             self.side = self.get_component_side()
@@ -336,13 +337,6 @@ class component(operators.ComponentOperator):
         """
         Method to connect the input and output of a component.
         """
-        if self.component_rig_list:
-            for node in self.component_rig_list:
-                if self.component_root:
-                    self.component_root.addNode(
-                        node, ish=True, ihb=True, iha=True, inc=True
-                    )
-                    self.component.addChild(node)
         for index, bnd_node in enumerate(self.bnd_output_matrix):
             bnd_node.worldMatrix[0].connect(
                 self.output.attr(
@@ -357,6 +351,13 @@ class component(operators.ComponentOperator):
                     constants.INPUT_WS_PORT_NAME, str(index)
                 ),
             )
+        if self.component_rig_list:
+            for node in self.component_rig_list:
+                if self.component_root:
+                    self.component_root.addNode(
+                        node, ish=True, ihb=True, iha=True, inc=True
+                    )
+                    self.component.addChild(node)
 
     def build_from_operator(self):
         """

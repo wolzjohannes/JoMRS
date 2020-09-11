@@ -28,6 +28,8 @@ JoMRS constants module for global values.
 
 import os
 
+DEFAULT_CONTROL_NAME_PATTERN = 'M_name_index_CON'
+
 ICONS_PATH = os.path.normpath('{}/icons'.format(
     os.environ.get("JoMRS").split("scripts")[0])
 )

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 02
+# Date:       2020 / 09 / 08
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -35,8 +35,10 @@ import curves
 import mayautils
 import meta
 import os
+import re
 
 reload(meta)
+reload(curves)
 
 ##########################################################
 # GLOBALS
@@ -261,12 +263,12 @@ class MainOperatorNode(OperatorsRootNode):
         if self.main_op_nd:
             if not valid_node(self.main_op_nd, typ="JoMRS_main"):
                 self.main_op_nd = None
-        if self.main_op_nd:
-            self.get_main_meta_nd()
         self.main_meta_nd = []
         self.lra_node_buffer_grp = []
         self.lra_node = []
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME
+        if self.main_op_nd:
+            self.get_main_meta_nd()
 
         self.main_op_attr = {
             "name": constants.OP_MAIN_TAG_NAME,
@@ -410,7 +412,6 @@ class ComponentOperator(MainOperatorNode):
         self.sub_operators = []
         self.joint_control = None
         self.main_op_nd_name = None
-        self.main_meta_nd = None
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
         self.linear_curve_name = None
@@ -423,6 +424,7 @@ class ComponentOperator(MainOperatorNode):
             # operator root node from meta data.
             self.get_root_meta_nd_from_main_op_nd()
             self.get_root_nd_from_root_meta_nd()
+            self.get_sub_op_nodes_from_main_op_nd()
             self.parent = self.main_op_nd
         if sub_operator_node:
             if valid_node(sub_operator_node, "JoMRS_sub"):
@@ -543,7 +545,6 @@ class ComponentOperator(MainOperatorNode):
             self.get_root_meta_nd_from_op_root_nd()
         # Set meta data.
         self.set_root_meta_nd()
-        self.get_main_meta_nd()
         self.set_component_side(side)
         self.set_component_name(name)
         # Add main meta node to god meta node.
@@ -800,3 +801,42 @@ class ComponentOperator(MainOperatorNode):
             .attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
             .get()
         )
+
+    def get_sub_op_nodes_from_main_op_nd(self):
+        """
+        Gives the corresponding sub operators from main_op_nd.
+        """
+        sub_op_nd = self.main_meta_nd.listAttr(ud=True)
+        sub_op_nd = [
+            sub_nd
+            for sub_nd in sub_op_nd
+            if re.search(constants.SUB_META_ND_PLUG, str(sub_nd))
+        ]
+        if sub_op_nd:
+            self.sub_operators = [
+                sub.get().attr(constants.SUB_OP_MESSAGE_ATTR_NAME).get()
+                for sub in sub_op_nd
+            ]
+
+    def get_main_op_ws_matrix(self):
+        """
+        Get the world matrix of the main_op_nd.
+
+        Return:
+            World Matrix object.
+
+        """
+        return self.main_op_nd.getMatrix(worldSpace=True)
+
+    def get_sub_op_nodes_ws_matrix(self):
+        """
+        Gives the world matrix for each sup_op_nd.
+
+        Return:
+            List: With the world matrix objects.
+
+        """
+        result = []
+        for sub_op in self.sub_operators:
+            result.append(sub_op.getMatrix(worldSpace=True))
+        return result
