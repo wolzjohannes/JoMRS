@@ -248,9 +248,7 @@ def add_enum_attribute(
 
     node.addAttr(name, **data_dic)
 
-    node.attr(name).set(
-        lock=lock, keyable=keyable, channelBox=True, value=value
-    )
+    node.attr(name).set(value, lock=lock, keyable=keyable, channelBox=True)
     if not channelBox:
         node.attr(name).set(lock=lock, keyable=False, channelBox=False)
 

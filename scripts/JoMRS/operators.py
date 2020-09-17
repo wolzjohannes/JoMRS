@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 08
+# Date:       2020 / 09 / 17
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -416,6 +416,7 @@ class ComponentOperator(MainOperatorNode):
         self.sub_meta_nd = None
         self.linear_curve_name = None
         self.parent = None
+        self.parent_main_op_nd = None
         # Check at init if a root operator/main operator/sub operator node is
         # passed into the class. If so and if the node is valid will use it
         # as parent node.
@@ -437,6 +438,8 @@ class ComponentOperator(MainOperatorNode):
                 self.get_root_meta_nd_from_main_op_nd()
                 self.get_root_nd_from_root_meta_nd()
                 self.parent = sub_operator_node
+        if self.parent:
+            self.parent_main_op_nd = self.main_op_nd
 
         self.linear_curve_drivers = []
 
@@ -620,6 +623,7 @@ class ComponentOperator(MainOperatorNode):
         # specified parent node.
         if self.parent:
             self.parent.addChild(self.main_op_nd)
+            self.set_parent_nd(self.parent_main_op_nd)
 
     def set_component_type(self, type):
         """
@@ -703,8 +707,8 @@ class ComponentOperator(MainOperatorNode):
         parent_main_meta_nd = parent_main_operator_node.attr(
             constants.MAIN_OP_META_ND_ATTR_NAME
         ).get()
-        self.main_meta_nd.attr(constants.META_MAIN_CHILD_ND).connect(
-            parent_main_meta_nd.attr(constants.META_MAIN_PARENT_ND)
+        self.main_meta_nd.attr(constants.META_MAIN_PARENT_ND).connect(
+            parent_main_meta_nd.attr(constants.META_MAIN_CHILD_ND)
         )
 
     def get_component_type(self):

@@ -69,6 +69,28 @@ reload(operators)
 _LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
+# FUNCTIONS
+##########################################################
+
+
+def selected():
+    """
+    Gets back a selected transform or container node.
+
+    Returns:
+       pmc.PyNode if successful. None if fail.
+
+    """
+    containers = pmc.ls(sl=True, containers=True)
+    transforms = pmc.ls(sl=True, tr=True)
+    if containers:
+        return containers[0]
+    if transforms:
+        return transforms[0]
+    return None
+
+
+##########################################################
 # CLASSES
 ##########################################################
 
@@ -170,7 +192,7 @@ class component(operators.ComponentOperator):
         Init rig component base hierarchy.
         """
         component_root_name = "{}_ROOT_{}_component_0_GRP".format(
-            self.side, self.name.lower()
+            self.side, self.name
         )
         component_root_name = strings.string_checkup(component_root_name)
         self.component_root = pmc.createNode("container", n=component_root_name)
@@ -340,7 +362,9 @@ class component(operators.ComponentOperator):
         for index, bnd_node in enumerate(self.bnd_output_matrix):
             bnd_node.worldMatrix[0].connect(
                 self.output.attr(
-                    "{}[{}]".format(constants.BND_OUTPUT_WS_PORT_NAME, str(index)),
+                    "{}[{}]".format(
+                        constants.BND_OUTPUT_WS_PORT_NAME, str(index)
+                    )
                 )
             )
         for index, input_node in enumerate(self.input_matrix_offset_grp):
@@ -363,10 +387,6 @@ class component(operators.ComponentOperator):
         """
         Build the whole component rig from operator.
         With initial hierarchy.
-
-        Args:
-            root_node(pmc.PyNode()): The component root node.
-
         """
         self.init_component_hierarchy()
         self.build_component_logic()

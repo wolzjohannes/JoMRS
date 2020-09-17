@@ -145,3 +145,5 @@ BND_OUTPUT_WS_PORT_NAME = "BND_output_ws_matrix"
 OUTPUT_WS_PORT_NAME = "output_ws_matrix"
 
 INPUT_WS_PORT_NAME = "input_ws_matrix"
+
+CONTROL_SHAPE_ATTR_NAME = "control_shape"

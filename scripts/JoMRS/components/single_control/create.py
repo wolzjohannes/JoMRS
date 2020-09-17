@@ -20,19 +20,29 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 11
+# Date:       2020 / 09 / 17
 
 """
 Build a single single_control
 """
 
 import pymel.core as pmc
+import attributes
 import constants
 import curves
 from components import main
+import logging
+import logger
 
 reload(main)
 reload(curves)
+reload(attributes)
+
+##########################################################
+# GLOBALS
+##########################################################
+
+_LOGGER = logging.getLogger(__name__ + ".py")
 
 ##########################################################
 # CLASSES
@@ -42,12 +52,36 @@ reload(curves)
 class Main(main.component):
     """
     Single single_control component class
+
+    Example:
+        Create the operator.
+        >>> import pymel.core as pmc
+        >>> import components.main as main
+        >>> import components.single_control.create as create
+        >>> selected = main.selected()
+        >>> control = create.Main('Test', 'L', 0, selected, selected, selected)
+        >>> control._init_operator()
+        >>> control.set_control_shape('pyramide')
+        Create the single_control component based on the selected operator.
+        >>> selected = main.selected()
+        >>> component = create.Main(main_operator_node=selected)
+        >>> component.build_from_operator()
+
     """
 
     COMP_TYPE = "single_control"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = True
     AXES = "X"
+    CONTROL_SHAPES = [
+        {"shape": "box", "instance": curves.BoxControl()},
+        {"shape": "sphere", "instance": curves.SphereControl()},
+        {"shape": "pyramide", "instance": curves.PyramideControl()},
+        {"shape": "quader", "instance": curves.QuaderControl()},
+        {"shape": "square", "instance": curves.SquareControl()},
+        {"shape": "circle", "instance": curves.CircleControl()},
+        {"shape": "hexagon", "instance": curves.HexagonControl()},
+    ]
 
     def __init__(
         self,
@@ -83,12 +117,25 @@ class Main(main.component):
             sub_operator_node,
         )
 
+        self.control_shapes_attr = {
+            "name": constants.CONTROL_SHAPE_ATTR_NAME,
+            "enum": [data["shape"] for data in self.CONTROL_SHAPES],
+            "keyable": False,
+            "hidden": False,
+            "writable": True,
+            "channelBox": False,
+        }
+
     def _init_operator(self):
         """
         Init the operator creation.
         """
         self.build_operator(
             self.AXES, self.SUB_OPERATORS_COUNT, self.LOCAL_ROTATION_AXES
+        )
+
+        attributes.add_enum_attribute(
+            node=self.main_meta_nd, **self.control_shapes_attr
         )
 
     def build_component_logic(self, main_operator_ws_matrix=None):
@@ -101,8 +148,8 @@ class Main(main.component):
         control_name = control_name.replace("M_", self.side + "_")
         control_name = control_name.replace("name", self.name)
         control_name = control_name.replace("index", str(self.index))
-        offset_grp = pmc.createNode('transform', n=control_name + '_offset_GRP')
-        curve_instance = curves.BoxControl()
+        offset_grp = pmc.createNode("transform", n=control_name + "_offset_GRP")
+        curve_instance = self.get_control_shape_instance()
         curve = curve_instance.create_curve(
             name=control_name, match=main_operator_ws_matrix
         )
@@ -111,3 +158,42 @@ class Main(main.component):
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         self.bnd_output_matrix.append(curve[1])
+
+    def set_control_shape(self, control_shape):
+        """
+        Set the control shape for the component.
+
+        Args:
+            control_shape(str): The controls shapes.
+            Valid values are ['box', 'sphere', 'pyramide', 'quader', 'square',
+            'hexagon', 'circle']
+
+        """
+        for index, data in enumerate(self.CONTROL_SHAPES):
+            if control_shape is data["shape"]:
+                self.main_meta_nd.attr(constants.CONTROL_SHAPE_ATTR_NAME).set(
+                    index
+                )
+                return
+        logger.log(
+            level="error",
+            message='"{}" is not a valid shape.\nValid is {}'.format(
+                control_shape, self.CONTROL_SHAPES
+            ),
+        )
+
+    def get_control_shape_instance(self):
+        """
+        Gives back the control shape instance based on set
+        control shape meta data.
+
+        Return:
+            Python object from curves module.
+
+        """
+        shape = self.main_meta_nd.attr(constants.CONTROL_SHAPE_ATTR_NAME).get(
+            asString=True
+        )
+        for data in self.CONTROL_SHAPES:
+            if shape == data["shape"]:
+                return data["instance"]
