@@ -140,6 +140,8 @@ class component(operators.ComponentOperator):
         self.bnd_output_matrix = []
         self.input_matrix_offset_grp = []
         self.controls = []
+        # This is overwriting all! Need to solve this design.
+        # Needed is because to create the rig.
         if self.main_op_nd:
             self.name = self.get_component_name()
             self.component_type = self.get_component_type()

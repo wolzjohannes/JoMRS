@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 17
+# Date:       2020 / 09 / 21
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -36,6 +36,7 @@ import mayautils
 import meta
 import os
 import re
+import strings
 
 reload(meta)
 reload(curves)
@@ -284,10 +285,19 @@ class MainOperatorNode(OperatorsRootNode):
             "channelBox": False,
         }
 
+        self.node_list_attr = {
+            "name": constants.NODE_LIST_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+            "multi": True,
+        }
+
         self.main_node_param_list = [
             self.main_op_attr,
             self.main_op_meta_nd_attr,
             self.root_op_meta_nd_attr,
+            self.node_list_attr,
         ]
 
     def create_main_op_node(self, local_rotate_axes=True, match=None):
@@ -409,11 +419,13 @@ class ComponentOperator(MainOperatorNode):
 
         """
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
+        self.all_container_nodes = []
         self.sub_operators = []
         self.joint_control = None
         self.main_op_nd_name = None
         self.sub_op_nd_name = None
         self.sub_meta_nd = None
+        self.linear_curve = None
         self.linear_curve_name = None
         self.parent = None
         self.parent_main_op_nd = None
@@ -426,6 +438,7 @@ class ComponentOperator(MainOperatorNode):
             self.get_root_meta_nd_from_main_op_nd()
             self.get_root_nd_from_root_meta_nd()
             self.get_sub_op_nodes_from_main_op_nd()
+            self.get_node_list()
             self.parent = self.main_op_nd
         if sub_operator_node:
             if valid_node(sub_operator_node, "JoMRS_sub"):
@@ -437,6 +450,7 @@ class ComponentOperator(MainOperatorNode):
                 )
                 self.get_root_meta_nd_from_main_op_nd()
                 self.get_root_nd_from_root_meta_nd()
+                self.get_node_list()
                 self.parent = sub_operator_node
         if self.parent:
             self.parent_main_op_nd = self.main_op_nd
@@ -612,11 +626,11 @@ class ComponentOperator(MainOperatorNode):
             linear_curve_name = linear_curve_name.replace(
                 "_op_", "_op_{}_".format(name)
             )
-            linear_curve = curves.linear_curve(
+            self.linear_curve = curves.linear_curve(
                 driver_nodes=self.linear_curve_drivers, name=linear_curve_name
             )
-            linear_curve.inheritsTransform.set(0)
-            self.main_op_nd.addChild(linear_curve)
+            self.linear_curve.inheritsTransform.set(0)
+            self.main_op_nd.addChild(self.linear_curve)
         # add the main operator node always to the root operator node.
         self.add_node(self.main_op_nd)
         # if main op node is passed parent the new operator under the
@@ -624,6 +638,8 @@ class ComponentOperator(MainOperatorNode):
         if self.parent:
             self.parent.addChild(self.main_op_nd)
             self.set_parent_nd(self.parent_main_op_nd)
+        self.set_node_list()
+        self.get_node_list()
 
     def set_component_type(self, type):
         """
@@ -710,6 +726,32 @@ class ComponentOperator(MainOperatorNode):
         self.main_meta_nd.attr(constants.META_MAIN_PARENT_ND).connect(
             parent_main_meta_nd.attr(constants.META_MAIN_CHILD_ND)
         )
+
+    def set_node_list(self):
+        """
+        Connect all corresponding nodes of the main operator to
+        the node list of the operator.
+        """
+        node_list = []
+        node_list.extend(self.main_op_nd.getChildren(ad=True, typ="transform"))
+        node_list.append(self.main_meta_nd)
+        if self.sub_operators:
+            for num in range(len(self.sub_operators)):
+                node_list.append(
+                    self.main_meta_nd.attr(
+                        "{}_{}".format(constants.SUB_META_ND_PLUG, str(num))
+                    ).get()
+                )
+        if self.linear_curve:
+            node_list.extend(
+                self.linear_curve.getShape().controlPoints.connections()
+            )
+        for index, node in enumerate(node_list):
+            node.message.connect(
+                self.main_op_nd.attr(
+                    "{}[{}]".format(constants.NODE_LIST_ATTR_NAME, str(index))
+                )
+            )
 
     def get_component_type(self):
         """
@@ -844,3 +886,55 @@ class ComponentOperator(MainOperatorNode):
         for sub_op in self.sub_operators:
             result.append(sub_op.getMatrix(worldSpace=True))
         return result
+
+    def get_node_list(self):
+        """
+        Get all corresponding nodes from operator
+
+        Return:
+             List: All operator nodes.
+
+        """
+        self.all_container_nodes.append(self.main_op_nd)
+        self.all_container_nodes.extend(self.main_op_nd.attr(
+            constants.NODE_LIST_ATTR_NAME
+        ).get())
+        return self.all_container_nodes
+
+    def rename_operator_nodes(self, name):
+        """
+        Change operator and component name. Search string is the component
+        name in the meta data.
+
+        Args:
+            name(str): String to replace.
+
+        """
+        component_name = self.get_component_name()
+        search = "_{}_".format(component_name)
+        replace = "_{}_".format(name)
+        if component_name:
+            for node in self.all_container_nodes:
+                new_name = str(node).replace(search, replace)
+                strings.string_checkup(new_name, _LOGGER)
+                node.rename(new_name)
+        self.set_component_name(name)
+
+    def change_operator_side(self, side):
+        """
+        Change the operator side. Search string is the component
+        side in the meta data.
+
+        Args:
+            side(str): String to replace.
+
+        """
+        component_side = self.get_component_side()
+        search = "{}_".format(component_side)
+        replace = "{}_".format(side)
+        if component_side:
+            for node in self.all_container_nodes:
+                new_name = str(node).replace(search, replace)
+                strings.string_checkup(new_name, _LOGGER)
+                node.rename(new_name)
+        self.set_component_side(side)
