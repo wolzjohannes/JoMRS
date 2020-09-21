@@ -587,6 +587,12 @@ class ComponentOperator(MainOperatorNode):
             self.main_op_nd.addChild(self.sub_operators[0])
             # remap section for aim constraint setup for the lra node.
             if sub_operators_count > 1:
+                # create the real sub op hierarchy if more then 1 sub op needed.
+                mayautils.create_hierarchy(self.sub_operators)
+            # move each sub op for the same value.
+            for sub in self.sub_operators:
+                sub.attr("translate" + axes_).set(vec)
+            if sub_operators_count:
                 if axes == "X":
                     aim_vec = (1, 0, 0)
                     up_vec = (0, 1, 0)
@@ -605,20 +611,15 @@ class ComponentOperator(MainOperatorNode):
                 elif axes == "-Z":
                     aim_vec = (0, 0, -1)
                     up_vec = (0, 1, 0)
-                # create the real sub op hierarchy if more then 1 sub op needed.
-                mayautils.create_hierarchy(self.sub_operators)
-            # move each sub op for the same value.
-            for sub in self.sub_operators:
-                sub.attr("translate" + axes_).set(vec)
-            pmc.aimConstraint(
-                self.sub_operators[0],
-                self.lra_node_buffer_grp,
-                aim=aim_vec,
-                u=up_vec,
-                wut="object",
-                worldUpObject=self.main_op_nd,
-                mo=True,
-            )
+                pmc.aimConstraint(
+                    self.sub_operators[0],
+                    self.lra_node_buffer_grp,
+                    aim=aim_vec,
+                    u=up_vec,
+                    wut="object",
+                    worldUpObject=self.main_op_nd,
+                    mo=True,
+                )
             # linear curve section for visualisation purposes.
             linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
                 "M_", "{}_".format(side)
