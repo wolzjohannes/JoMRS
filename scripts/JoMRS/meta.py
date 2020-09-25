@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 02
+# Date:       2020 / 09 / 25
 
 """
 Meta node creation module.
@@ -33,12 +33,13 @@ import strings
 import constants
 
 reload(constants)
+reload(attributes)
 
 ##########################################################
 # GLOBALS
 #########################################################
+
 _LOGGER = logging.getLogger(__name__ + ".py")
-constants.MAIN_META_ND_PLUG = "main_meta_nd"
 
 ##########################################################
 # CLASSES
@@ -614,6 +615,7 @@ class MainOpMetaNode(MetaNode):
             "attrType": "message",
             "keyable": False,
             "channelBox": False,
+            "multi": True,
         }
 
         main_node_param_list = [
@@ -661,6 +663,21 @@ class MainOpMetaNode(MetaNode):
         new_attribute["channelBox"] = False
         new_attribute["input"] = node.message
         attributes.add_attr(node=self, **new_attribute)
+
+    def add_child_node(self, parent_node):
+        """
+        Add a node to the child node plug.
+
+        Args:
+            parent_node(pmc.PyNode()): Parent to add.
+
+        """
+        attributes.connect_next_available(
+            parent_node,
+            self,
+            constants.META_MAIN_PARENT_ND,
+            constants.META_MAIN_CHILD_ND,
+        )
 
 
 class SubOpMetaNode(MetaNode):
@@ -786,7 +803,9 @@ class SubOpMetaNode(MetaNode):
         main_op_nd(pmc:PyNode()): The main operator node.
 
         """
-        main_op_nd.message.connect(self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME))
+        main_op_nd.message.connect(
+            self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
+        )
 
 
 pmc.factories.registerVirtualClass(MetaNode, nameRequired=False)

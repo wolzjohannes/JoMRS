@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 21
+# Date:       2020 / 09 / 25
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -35,11 +35,13 @@ import curves
 import mayautils
 import meta
 import os
-import re
 import strings
+import re
 
 reload(meta)
 reload(curves)
+reload(strings)
+reload(attributes)
 
 ##########################################################
 # GLOBALS
@@ -268,6 +270,7 @@ class MainOperatorNode(OperatorsRootNode):
         self.lra_node_buffer_grp = []
         self.lra_node = []
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME
+        self.main_meta_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace("_CON", "")
         if self.main_op_nd:
             self.get_main_meta_nd()
 
@@ -332,9 +335,11 @@ class MainOperatorNode(OperatorsRootNode):
     def set_main_meta_nd(self):
         """
         Set the main meta nd.
+
+        Args:
+            name(str): The operator name.
         """
-        meta_name = constants.MAIN_OP_ROOT_NODE_NAME.replace("_CON", "")
-        self.main_meta_nd = meta.MainOpMetaNode(n=meta_name)
+        self.main_meta_nd = meta.MainOpMetaNode(n=self.main_meta_nd_name)
         self.main_meta_nd.message.connect(
             self.main_op_nd.attr(constants.MAIN_OP_META_ND_ATTR_NAME)
         )
@@ -383,6 +388,7 @@ class ComponentOperator(MainOperatorNode):
     """
 
     SUB_ND_COLOR_INDEX = 21
+    NEXT_AVAILABLE_COUNT = 1000
 
     def __init__(
         self,
@@ -547,11 +553,13 @@ class ComponentOperator(MainOperatorNode):
         axes_ = axes
         aim_vec = None
         up_vec = None
+        name = strings.normalize_string(name, _LOGGER)
         if self.main_op_nd:
             self.get_root_meta_nd_from_main_op_nd()
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
         ).replace("_op_", "_op_{}_".format(name))
+        self.main_meta_nd_name = self.main_op_nd_name.replace("_CON", "")
         # Create the actual main operator node.
         self.create_main_op_node(local_rotate_axes=local_rotate_axes)
         # Check if a root operator node is passed and valid.
@@ -639,6 +647,7 @@ class ComponentOperator(MainOperatorNode):
         if self.parent:
             self.parent.addChild(self.main_op_nd)
             self.set_parent_nd(self.parent_main_op_nd)
+        # fill the all_container_nodes list.
         self.set_node_list()
         self.get_node_list()
 
@@ -660,6 +669,7 @@ class ComponentOperator(MainOperatorNode):
                 name(str): The component name.
 
         """
+        name = strings.normalize_string(name, _LOGGER)
         self.main_meta_nd.attr(constants.META_MAIN_COMP_NAME).set(name)
 
     def set_component_side(self, side):
@@ -724,9 +734,7 @@ class ComponentOperator(MainOperatorNode):
         parent_main_meta_nd = parent_main_operator_node.attr(
             constants.MAIN_OP_META_ND_ATTR_NAME
         ).get()
-        self.main_meta_nd.attr(constants.META_MAIN_PARENT_ND).connect(
-            parent_main_meta_nd.attr(constants.META_MAIN_CHILD_ND)
-        )
+        parent_main_meta_nd.add_child_node(self.main_meta_nd)
 
     def set_node_list(self):
         """
@@ -897,9 +905,9 @@ class ComponentOperator(MainOperatorNode):
 
         """
         self.all_container_nodes.append(self.main_op_nd)
-        self.all_container_nodes.extend(self.main_op_nd.attr(
-            constants.NODE_LIST_ATTR_NAME
-        ).get())
+        self.all_container_nodes.extend(
+            self.main_op_nd.attr(constants.NODE_LIST_ATTR_NAME).get()
+        )
         return self.all_container_nodes
 
     def rename_operator_nodes(self, name):
@@ -911,6 +919,7 @@ class ComponentOperator(MainOperatorNode):
             name(str): String to replace.
 
         """
+        name = strings.normalize_string(name, _LOGGER)
         component_name = self.get_component_name()
         search = "_{}_".format(component_name)
         replace = "_{}_".format(name)
@@ -931,11 +940,13 @@ class ComponentOperator(MainOperatorNode):
 
         """
         component_side = self.get_component_side()
-        search = "{}_".format(component_side)
+        search = "^{}_".format(component_side)
         replace = "{}_".format(side)
         if component_side:
             for node in self.all_container_nodes:
-                new_name = str(node).replace(search, replace)
+                new_name = strings.regex_search_and_replace(
+                    str(node), search, replace
+                )
                 strings.string_checkup(new_name, _LOGGER)
                 node.rename(new_name)
         self.set_component_side(side)

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 07
+# Date:       2020 / 09 / 23
 
 """
 Rig components main module. This class is the template to create a rig
@@ -39,6 +39,7 @@ import mayautils
 reload(constants)
 reload(mayautils)
 reload(operators)
+reload(strings)
 
 ##########################################################
 # Methods
@@ -140,13 +141,11 @@ class component(operators.ComponentOperator):
         self.bnd_output_matrix = []
         self.input_matrix_offset_grp = []
         self.controls = []
-        # This is overwriting all! Need to solve this design.
-        # Needed is because to create the rig.
         if self.main_op_nd:
-            self.name = self.get_component_name()
-            self.component_type = self.get_component_type()
-            self.side = self.get_component_side()
-            self.index = self.get_component_index()
+            self.drawn_name = self.get_component_name()
+            self.drawn_component_type = self.get_component_type()
+            self.drawn_side = self.get_component_side()
+            self.drawn_index = self.get_component_index()
 
     def build_operator(
         self,
@@ -189,12 +188,13 @@ class component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
+
     def init_component_hierarchy(self):
         """
         Init rig component base hierarchy.
         """
         component_root_name = "{}_ROOT_{}_component_0_GRP".format(
-            self.side, self.name
+            self.drawn_side, self.drawn_name
         )
         component_root_name = strings.string_checkup(component_root_name)
         self.component_root = pmc.createNode("container", n=component_root_name)

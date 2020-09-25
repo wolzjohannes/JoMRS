@@ -63,10 +63,10 @@ def create_buffer_grp(node, name=None):
             tuple: The created buffer dagnode.
     """
     parent = node.getParent()
-    if name:
-        name = strings.string_checkup(name + "_buffer_GRP", _LOGGER)
+    if not name:
+        name = name + "_buffer_GRP"
     else:
-        name = strings.string_checkup(str(node) + "_buffer_GRP", _LOGGER)
+        name = str(node) + "_buffer_GRP"
     buffer_grp = pmc.createNode("transform", n=name)
     buffer_grp.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     buffer_grp.addChild(node)

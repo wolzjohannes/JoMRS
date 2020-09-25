@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 17
+# Date:       2020 / 09 / 23
 
 """
 Build a single single_control
@@ -33,10 +33,11 @@ import curves
 from components import main
 import logging
 import logger
+import strings
 
-reload(main)
 reload(curves)
 reload(attributes)
+reload(main)
 
 ##########################################################
 # GLOBALS
@@ -145,10 +146,18 @@ class Main(main.component):
         if not main_operator_ws_matrix:
             main_operator_ws_matrix = self.get_main_op_ws_matrix()
         control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
-        control_name = control_name.replace("M_", self.side + "_")
-        control_name = control_name.replace("name", self.name)
-        control_name = control_name.replace("index", str(self.index))
-        offset_grp = pmc.createNode("transform", n=control_name + "_offset_GRP")
+        control_name = strings.search_and_replace(
+            control_name, "M_", "{}_".format(self.drawn_side)
+        )
+        control_name = strings.search_and_replace(
+            control_name, "name", self.drawn_name
+        )
+        control_name = strings.search_and_replace(
+            control_name, "index", str(self.drawn_index)
+        )
+        offset_grp = pmc.createNode(
+            "transform", n="{}_offset_GRP".format(control_name)
+        )
         curve_instance = self.get_control_shape_instance()
         curve = curve_instance.create_curve(
             name=control_name, match=main_operator_ws_matrix

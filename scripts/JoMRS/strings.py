@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 03
+# Date:       2020 / 05 / 23
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -40,6 +40,7 @@ import logger
 ##########################################################
 
 _LOGGER = logging.getLogger(__name__ + ".py")
+
 
 ##########################################################
 # FUNCTIONS
@@ -85,9 +86,7 @@ def replace_invalid_prefix(string, logger_=_LOGGER):
     if not re.match("^[MRL]_", string):
         logger.log(
             level="warning",
-            message='The string prefix "'
-            + string
-            + '" should specifie a side',
+            message='The string prefix "' + string + '" should specifie a side',
             logger=logger_,
         )
     numbers_match = re.match("^[0-9]", string)
@@ -172,11 +171,11 @@ def normalize_suffix(string, logger_=_LOGGER):
             logger=logger_,
         )
         instance = numbers.group(0)
-        string = string[0: string.find(instance)]
+        string = string[0 : string.find(instance)]
     lower_case = re.search("_[a-z]{1,}$", string)
     if lower_case:
         instance_ = lower_case.group(0)
-        string = string[0: string.find(instance_)] + instance_.upper()
+        string = string[0 : string.find(instance_)] + instance_.upper()
     return string
 
 
@@ -196,9 +195,9 @@ def normalize_numbers(string, logger_=_LOGGER):
     numbers = re.search("_[0-9]{1,}_", string)
     if numbers:
         instance = numbers.group(0)
-        string_end = string[string.find(instance) + len(instance) :].split(
-            "_"
-        )[-1]
+        string_end = string[string.find(instance) + len(instance) :].split("_")[
+            -1
+        ]
         string = string.replace(instance, "_")
         string = string.replace("_" + string_end, instance + string_end)
     else:
@@ -293,14 +292,56 @@ def search_and_replace(string, search, replace):
     """
     Search and replace a pattern in string.
     Args:
-            string(str): String to search for.
-            search(str): Search string.
-            replace(str): Replace string.
+        string(str): String to search for.
+        search(str): Search string.
+        replace(str): Replace string.
+        
     Return:
-            list: The new created string.
+        list: The new created string.
+
     """
-    result = []
     if re.search(search, string):
         string_ = string.replace(search, replace)
-        result.append(string_)
-    return result
+        return string_
+
+
+def regex_search_and_replace(string, regex, replace):
+    """
+    Search about a regular expression and replace it.
+
+    Args:
+        string(str): String to search for.
+        regex(str): Regex string.
+        replace(str): String for replacement.
+
+    Return:
+        String: New string.
+
+    """
+    return re.sub(regex, replace, string)
+
+
+def normalize_string(string, logger_):
+    """
+    Normalize given string. Only letters accepted.
+
+    Args:
+        string(str): String to normalize.
+        logger_(instance): The logging instance of
+        a module.
+
+    Return:
+        String: Normalized string.
+
+    """
+    regex = r"[a-zA-Z]"
+    invalid_regex = r"[\W_\d+]"
+    search_pattern = re.search(invalid_regex, string)
+    if search_pattern:
+        logger.log(
+            level="warning",
+            message='"{}" String has invalid ' "characters".format(string),
+            logger=logger_,
+        )
+    matches = re.finditer(regex, string, re.MULTILINE)
+    return "".join(match.group() for match in matches)

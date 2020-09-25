@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 10
+# Date:       2020 / 09 / 21
 
 """
 JoMRS nurbsCurve modification module.
@@ -37,6 +37,9 @@ import logging
 import logger
 import attributes
 
+reload(utils)
+reload(strings)
+
 
 ##########################################################
 # GLOBALS
@@ -44,7 +47,7 @@ import attributes
 
 _LOGGER = logging.getLogger(__name__ + ".py")
 
-##########################################################linux
+##########################################################
 # CLASSES
 ##########################################################
 
@@ -129,7 +132,7 @@ class ControlCurves(object):
             )
         if lock_visibility:
             attributes.lock_and_hide_attributes(
-                self.control, attributes='visibility'
+                self.control, attributes="visibility"
             )
         result.append(self.control)
         return result
@@ -1525,25 +1528,13 @@ class DoubleCurvedCircleControl(ControlCurves):
             n=name,
         )[0]
         for v in values0:
-            circle0.getShape().controlPoints[v["cv"]].xValue.set(
-                v["value"][0]
-            )
-            circle0.getShape().controlPoints[v["cv"]].yValue.set(
-                v["value"][1]
-            )
-            circle0.getShape().controlPoints[v["cv"]].zValue.set(
-                v["value"][2]
-            )
+            circle0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
+            circle0.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
+            circle0.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
         for v in values1:
-            circle1.getShape().controlPoints[v["cv"]].xValue.set(
-                v["value"][0]
-            )
-            circle1.getShape().controlPoints[v["cv"]].yValue.set(
-                v["value"][1]
-            )
-            circle1.getShape().controlPoints[v["cv"]].zValue.set(
-                v["value"][2]
-            )
+            circle1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
+            circle1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
+            circle1.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
         pmc.parent(circle1.getShape(), circle0, r=True, shape=True)
         pmc.delete(circle1)
         return circle0
@@ -1654,12 +1645,15 @@ class RotateAxesControl:
             color_index=14,
         )[0]
         for v in arrowValue0:
-            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(v[
-                                                                      "value"][0])
-            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(v[
-                                                                      "value"][1])
-            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(v[
-                                                                      "value"][2])
+            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
         for v in arrowValue1:
             arrow1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
             arrow1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
@@ -1755,9 +1749,9 @@ class DiamondControl:
                 name=axes_name,
                 scale=scale,
                 buffer_grp=True,
-                lock_translate=['tx','ty','tz'],
-                lock_scale=['sx','sy','sz'],
-                lock_rotate=['ry','rz']
+                lock_translate=["tx", "ty", "tz"],
+                lock_scale=["sx", "sy", "sz"],
+                lock_rotate=["ry", "rz"],
             )
             spear0[-1].addChild(rotate_axes_con[0])
             rotate_axes_con[0].rotate.set(0, 0, 0)
@@ -1810,7 +1804,7 @@ def linear_curve(
     result = pmc.curve(**data)
     attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
-        decomp_name = '{}_{}_DEMAND'.format(name, str(y))
+        decomp_name = "{}_{}_DEMAND".format(name, str(y))
         decomp = pmc.createNode("decomposeMatrix", n=decomp_name)
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
@@ -1903,8 +1897,6 @@ def mirror_curve(
         result.append(dupl_curve)
     else:
         logger.log(
-            level="error",
-            message="mirror only for nurbsCurves",
-            logger=_LOGGER,
+            level="error", message="mirror only for nurbsCurves", logger=_LOGGER
         )
     return result
