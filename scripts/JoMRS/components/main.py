@@ -169,6 +169,7 @@ class component(operators.ComponentOperator):
         self.create_component_op_node(
             name=self.name,
             side=self.side,
+            index=self.index,
             axes=axes,
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,

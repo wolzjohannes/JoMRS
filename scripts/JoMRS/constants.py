@@ -40,6 +40,8 @@ OP_MAIN_TAG_NAME = "JOMRS_op_main"
 
 OP_SUB_TAG_NAME = "JOMRS_op_sub"
 
+OP_LRA_TAG_NAME = "JOMRS_op_lra"
+
 OP_ROOT_NAME = "M_MAIN_operators_0_GRP"
 
 MAIN_OP_ROOT_NODE_NAME = "M_MAIN_op_0_CON"

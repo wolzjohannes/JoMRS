@@ -219,7 +219,8 @@ def valid_suffix(string, logger_=_LOGGER):
     Return:
             string: The passed string.
     """
-    valid = "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND"
+    valid = "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND" \
+            "|_CONST"
     suffix_pattern = re.compile(valid)
     if not re.search(suffix_pattern, string):
         logger.log(

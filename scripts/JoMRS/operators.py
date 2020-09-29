@@ -270,7 +270,9 @@ class MainOperatorNode(OperatorsRootNode):
         self.lra_node_buffer_grp = []
         self.lra_node = []
         self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME
-        self.main_meta_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace("_CON", "")
+        self.main_meta_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
+            "_CON", ""
+        )
         if self.main_op_nd:
             self.get_main_meta_nd()
 
@@ -294,6 +296,13 @@ class MainOperatorNode(OperatorsRootNode):
             "keyable": False,
             "channelBox": False,
             "multi": True,
+        }
+
+        self.lra_op_attr = {
+            "name": constants.OP_LRA_TAG_NAME,
+            "attrType": "bool",
+            "keyable": False,
+            "defaultValue": 1,
         }
 
         self.main_node_param_list = [
@@ -327,6 +336,8 @@ class MainOperatorNode(OperatorsRootNode):
         self.main_op_nd = main_op_node[0]
         self.lra_node_buffer_grp = main_op_node[1]
         self.lra_node = main_op_node[2]
+        attributes.add_attr(node=self.lra_node, **self.lra_op_attr)
+        attributes.add_attr(node=self.lra_node_buffer_grp, **self.lra_op_attr)
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd, **attr_)
         # Connect main operator node with main meta node.
@@ -532,6 +543,7 @@ class ComponentOperator(MainOperatorNode):
         name,
         side=constants.DEFAULT_SIDE,
         axes=constants.DEFAULT_AXES,
+        index=constants.DEFAULT_INDEX,
         sub_operators_count=constants.DEFAULT_SUB_OPERATORS_COUNT,
         sub_operators_scale=constants.DEFAULT_SUB_OPERATORS_SCALE,
         local_rotate_axes=True,
@@ -543,6 +555,7 @@ class ComponentOperator(MainOperatorNode):
             name(str): Operators name.
             side(str): Operators side. Valid are M,L,R
             axes(str): Operators creation axe. Valid are X,Y,Z-X,-Y,-Z
+            index(int): Operators index.
             sub_operators_count(int): Sub operators count.
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
@@ -556,9 +569,11 @@ class ComponentOperator(MainOperatorNode):
         name = strings.normalize_string(name, _LOGGER)
         if self.main_op_nd:
             self.get_root_meta_nd_from_main_op_nd()
-        self.main_op_nd_name = constants.MAIN_OP_ROOT_NODE_NAME.replace(
-            "M_", "{}_".format(side)
-        ).replace("_op_", "_op_{}_".format(name))
+        self.main_op_nd_name = (
+            constants.MAIN_OP_ROOT_NODE_NAME.replace("M_", "{}_".format(side))
+            .replace("_op_", "_op_{}_".format(name))
+            .replace("_0_", "_{}_".format(str(index)))
+        )
         self.main_meta_nd_name = self.main_op_nd_name.replace("_CON", "")
         # Create the actual main operator node.
         self.create_main_op_node(local_rotate_axes=local_rotate_axes)
@@ -575,6 +590,7 @@ class ComponentOperator(MainOperatorNode):
         # Add main meta node to god meta node.
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:
+            del self.sub_operators[:]
             self.linear_curve_drivers.append(self.main_op_nd)
             # remap the vector to move each sub operator in a minus axes
             if axes == "-X" or axes == "-Y" or axes == "-Z":
@@ -619,7 +635,8 @@ class ComponentOperator(MainOperatorNode):
                 elif axes == "-Z":
                     aim_vec = (0, 0, -1)
                     up_vec = (0, 1, 0)
-                pmc.aimConstraint(
+                aim_con_name = "{}_CONST".format(str(self.lra_node_buffer_grp))
+                aim_con = pmc.aimConstraint(
                     self.sub_operators[0],
                     self.lra_node_buffer_grp,
                     aim=aim_vec,
@@ -627,7 +644,9 @@ class ComponentOperator(MainOperatorNode):
                     wut="object",
                     worldUpObject=self.main_op_nd,
                     mo=True,
+                    n=aim_con_name,
                 )
+                self.all_container_nodes.append(aim_con)
             # linear curve section for visualisation purposes.
             linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
                 "M_", "{}_".format(side)
@@ -755,11 +774,9 @@ class ComponentOperator(MainOperatorNode):
             node_list.extend(
                 self.linear_curve.getShape().controlPoints.connections()
             )
-        for index, node in enumerate(node_list):
-            node.message.connect(
-                self.main_op_nd.attr(
-                    "{}[{}]".format(constants.NODE_LIST_ATTR_NAME, str(index))
-                )
+        for node in node_list:
+            attributes.connect_next_available(
+                node, self.main_op_nd, "message", constants.NODE_LIST_ATTR_NAME
             )
 
     def get_component_type(self):
@@ -904,6 +921,7 @@ class ComponentOperator(MainOperatorNode):
              List: All operator nodes.
 
         """
+        self.all_container_nodes = []
         self.all_container_nodes.append(self.main_op_nd)
         self.all_container_nodes.extend(
             self.main_op_nd.attr(constants.NODE_LIST_ATTR_NAME).get()
@@ -932,21 +950,53 @@ class ComponentOperator(MainOperatorNode):
 
     def change_operator_side(self, side):
         """
-        Change the operator side. Search string is the component
-        side in the meta data.
+        Change the operator side.
 
         Args:
             side(str): String to replace.
 
         """
-        component_side = self.get_component_side()
-        search = "^{}_".format(component_side)
+        search = "^[MRL]_"
         replace = "{}_".format(side)
-        if component_side:
-            for node in self.all_container_nodes:
-                new_name = strings.regex_search_and_replace(
-                    str(node), search, replace
-                )
-                strings.string_checkup(new_name, _LOGGER)
-                node.rename(new_name)
+        for node in self.all_container_nodes:
+            new_name = strings.regex_search_and_replace(
+                str(node), search, replace
+            )
+            strings.string_checkup(new_name, _LOGGER)
+            node.rename(new_name)
         self.set_component_side(side)
+
+    def change_operator_index(self, index):
+        """
+        Change the operator index.
+
+        Args:
+            index(int): The index.
+
+        """
+        search = r"(_\d+_)"
+        replace = "_{}_".format(str(index))
+        rename_nodes = []
+        for node in self.all_container_nodes:
+            if node.hasAttr(constants.OP_MAIN_TAG_NAME):
+                if node.attr(constants.OP_MAIN_TAG_NAME).get():
+                    rename_nodes.append(node)
+            if node.hasAttr(constants.META_NODE_ID):
+                if node.attr(constants.META_NODE_ID).get():
+                    if (
+                        node.attr(constants.META_TYPE).get()
+                        == constants.META_TYPE_B
+                    ):
+                        rename_nodes.append(node)
+            if node.hasAttr(constants.OP_LRA_TAG_NAME):
+                if node.attr(constants.OP_LRA_TAG_NAME).get():
+                    rename_nodes.append(node)
+            if node.type() == "aimConstraint":
+                rename_nodes.append(node)
+        for node in rename_nodes:
+            new_name = strings.regex_search_and_replace(
+                str(node), search, replace
+            )
+            strings.string_checkup(new_name, _LOGGER)
+            node.rename(new_name)
+        self.set_component_index(index)
