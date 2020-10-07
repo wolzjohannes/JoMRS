@@ -1804,7 +1804,9 @@ def linear_curve(
     result = pmc.curve(**data)
     attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
-        decomp_name = "{}_{}_DEMAND".format(name, str(y))
+        decomp_name = strings.search_and_replace(
+            name, "_CRV", "_{}_CRV_DEMAND".format(str(y))
+        )
         decomp = pmc.createNode("decomposeMatrix", n=decomp_name)
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])

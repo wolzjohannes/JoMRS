@@ -179,34 +179,41 @@ def normalize_suffix(string, logger_=_LOGGER):
     return string
 
 
-def normalize_numbers(string, logger_=_LOGGER):
+def numbers_check(string, logger_=_LOGGER):
     """
-    Finds the numbers in the string and move them to the correct
-    position in the string.
+    Check the string for numbers at all and for the valid expression.
+
     Args:
-            string(str): The string to work with.
-            logger_(instance): The logging instance of
-            a module.
+        string(str): Given string.
+        logger_(instance): The logging instance of
+        a module.
+
     Return:
-            The new created string.
+         Given String.
+
     """
-    if re.search("_[0-9]{1,}_[A-Za-z]{1,}$", string):
-        return string
-    numbers = re.search("_[0-9]{1,}_", string)
-    if numbers:
-        instance = numbers.group(0)
-        string_end = string[string.find(instance) + len(instance) :].split("_")[
-            -1
-        ]
-        string = string.replace(instance, "_")
-        string = string.replace("_" + string_end, instance + string_end)
-    else:
+    valid_regex_0 = r"\d"
+    valid_regex_1 = r"_\d+_\d+_"
+    valid_regex_2 = r"_\d+_"
+    if not re.search(valid_regex_0, string):
         logger.log(
             level="warning",
             message='There are no numbers in the string "' + string + '"',
             logger=logger_,
         )
-    return string
+        return string
+    if re.search(valid_regex_1, string):
+        return string
+    elif re.search(valid_regex_2, string):
+        return string
+    else:
+        logger.log(
+            level="warning",
+            message='Numbers not in valid expression. Valid values are "_(['
+            '0-9]+)_([0-9]+)_" or "_([0-9]+)_"',
+            logger=logger_,
+        )
+        return string
 
 
 def valid_suffix(string, logger_=_LOGGER):
@@ -219,8 +226,10 @@ def valid_suffix(string, logger_=_LOGGER):
     Return:
             string: The passed string.
     """
-    valid = "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND" \
-            "|_CONST"
+    valid = (
+        "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND"
+        "|_CONST"
+    )
     suffix_pattern = re.compile(valid)
     if not re.search(suffix_pattern, string):
         logger.log(
@@ -269,7 +278,7 @@ def string_checkup(string, logger_=_LOGGER):
     string = valid_string_separator(string, logger_)
     string = replace_invalid_prefix(string, logger_)
     string = valid_suffix(string, logger_)
-    string = normalize_numbers(string, logger_)
+    string = numbers_check(string, logger_)
     string = normalize_suffix(string, logger_)
     return string
 
@@ -346,3 +355,24 @@ def normalize_string(string, logger_):
         )
     matches = re.finditer(regex, string, re.MULTILINE)
     return "".join(match.group() for match in matches)
+
+
+def replace_index_numbers(string, replace):
+    """
+    Find the index numbers in the string. Will cut out all numbers with this
+    ["a-zA-Z_00000_"] expression.
+
+    Args:
+        string(str): String to compile.
+        replace(int): New index number.
+
+    Returns:
+        Compiled string.
+
+    """
+    regex = r"(\w_\d+_)"
+    match = re.search(regex, string)
+    instance = match.groups()[0]
+    numbers = re.sub(r"[a-zA-Z]", "", instance)
+    return regex_search_and_replace(string, numbers, '_{}_'.format(str(
+        replace)))

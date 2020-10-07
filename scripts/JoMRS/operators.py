@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 25
+# Date:       2020 / 10 / 7
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -371,15 +371,20 @@ class MainOperatorNode(OperatorsRootNode):
         ).get()
         return self.main_meta_nd
 
-    def get_root_meta_nd_from_main_op_nd(self):
+    def get_root_meta_nd_from_main_op_nd(self, main_op_nd=None):
         """
         Get root meta node from main operator node.
+
+        Args:
+            main_op_nd(pmc.PyNode()): The given main_op_nd.
 
         Return:
             pmc.PyNode(): The meta network node.
 
         """
-        self.root_meta_nd = self.main_op_nd.attr(
+        if not main_op_nd:
+            main_op_nd = self.main_op_nd
+        self.root_meta_nd = main_op_nd.attr(
             constants.ROOT_OP_META_ND_ATTR_NAME
         ).get()
         return self.root_meta_nd
@@ -447,30 +452,23 @@ class ComponentOperator(MainOperatorNode):
         self.parent = None
         self.parent_main_op_nd = None
         # Check at init if a root operator/main operator/sub operator node is
-        # passed into the class. If so and if the node is valid will use it
-        # as parent node.
+        # passed into the class.
         if self.main_op_nd:
-            # If a valid main op node is passed take it as parent and get the
-            # operator root node from meta data.
+            # If a valid main op node is passed get all important meta data.
             self.get_root_meta_nd_from_main_op_nd()
             self.get_root_nd_from_root_meta_nd()
             self.get_sub_op_nodes_from_main_op_nd()
             self.get_node_list()
-            self.parent = self.main_op_nd
         if sub_operator_node:
             if valid_node(sub_operator_node, "JoMRS_sub"):
-                # If a valid sub op node is passed take it as parent and get the
-                # main op node from meta data and then the operator root node
-                # form meta data as well.
+                # If a valid sub op node is passed get the main_op_nd form
+                # sub node and get all meta data.
                 self.main_op_nd = self.get_main_op_node_from_sub(
                     sub_operator_node
                 )
                 self.get_root_meta_nd_from_main_op_nd()
                 self.get_root_nd_from_root_meta_nd()
                 self.get_node_list()
-                self.parent = sub_operator_node
-        if self.parent:
-            self.parent_main_op_nd = self.main_op_nd
 
         self.linear_curve_drivers = []
 
@@ -493,7 +491,7 @@ class ComponentOperator(MainOperatorNode):
             self.root_op_meta_nd_attr,
         ]
 
-    def create_sub_operator(self, name, side, index, scale, match):
+    def create_sub_operator(self, name, side, index, count, scale, match):
         """
         Create the sub operators node.
 
@@ -501,11 +499,12 @@ class ComponentOperator(MainOperatorNode):
             name(str): Operators name.
             side(str): Side. Valid values are [L, R, M]
             index(int): Operators index.
+            count(int): The sub_op_nd count.
             scale(float): Scale value.
             match(pmc.PyNode()): Object to snap for.
 
         """
-        instance = "_op_{}_{}".format(name, str(index))
+        instance = "_op_{}_{}_{}".format(name, str(index), str(count))
         sub_op_nd_name = constants.SUB_OP_ROOT_NODE_NAME.replace(
             "M_", "{}_".format(side)
         )
@@ -547,6 +546,7 @@ class ComponentOperator(MainOperatorNode):
         sub_operators_count=constants.DEFAULT_SUB_OPERATORS_COUNT,
         sub_operators_scale=constants.DEFAULT_SUB_OPERATORS_SCALE,
         local_rotate_axes=True,
+        parent=None,
     ):
         """
         Init the operators creation.
@@ -559,16 +559,30 @@ class ComponentOperator(MainOperatorNode):
             sub_operators_count(int): Sub operators count.
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
+            parent(pmc.PyNode): The parent node.
 
         """
-        vec = constants.DEFAULT_SPACING
+        # Check at start if a parent node is passed. If it is not a valid not
+        # method will break.
+        if parent:
+            if valid_node(parent, "JoMRS_main"):
+                self.parent = parent
+                self.parent_main_op_nd = parent
+                self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
+                self.get_root_nd_from_root_meta_nd()
+            elif valid_node(parent, "JoMRS_sub"):
+                self.parent = parent
+                self.parent_main_op_nd = self.get_main_op_node_from_sub(parent)
+                self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
+                self.get_root_nd_from_root_meta_nd()
+            else:
+                return
         # Bypass axes for later refactoring.
+        vec = constants.DEFAULT_SPACING
         axes_ = axes
         aim_vec = None
         up_vec = None
         name = strings.normalize_string(name, _LOGGER)
-        if self.main_op_nd:
-            self.get_root_meta_nd_from_main_op_nd()
         self.main_op_nd_name = (
             constants.MAIN_OP_ROOT_NODE_NAME.replace("M_", "{}_".format(side))
             .replace("_op_", "_op_{}_".format(name))
@@ -590,7 +604,9 @@ class ComponentOperator(MainOperatorNode):
         # Add main meta node to god meta node.
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:
+            # clear self.sub_operators list for safety.
             del self.sub_operators[:]
+            # add the main_op_nd as first linear curve driver.
             self.linear_curve_drivers.append(self.main_op_nd)
             # remap the vector to move each sub operator in a minus axes
             if axes == "-X" or axes == "-Y" or axes == "-Z":
@@ -602,16 +618,22 @@ class ComponentOperator(MainOperatorNode):
             elif axes == "-Z":
                 axes_ = "Z"
             # create the sub operators by count
-            for index in range(sub_operators_count):
+            for count in range(sub_operators_count):
                 self.create_sub_operator(
-                    name, side, index, sub_operators_scale, self.main_op_nd
+                    name,
+                    side,
+                    index,
+                    count,
+                    sub_operators_scale,
+                    self.main_op_nd,
                 )
             # parent the first sub op to the main op because the first sub op is
             # always the master for each sub op.
             self.main_op_nd.addChild(self.sub_operators[0])
             # remap section for aim constraint setup for the lra node.
             if sub_operators_count > 1:
-                # create the real sub op hierarchy if more then 1 sub op needed.
+                # create the real sub op hierarchy
+                # if more then 1 sub_op_nd needed.
                 mayautils.create_hierarchy(self.sub_operators)
             # move each sub op for the same value.
             for sub in self.sub_operators:
@@ -635,6 +657,7 @@ class ComponentOperator(MainOperatorNode):
                 elif axes == "-Z":
                     aim_vec = (0, 0, -1)
                     up_vec = (0, 1, 0)
+                # create the aim constraint name based on the lra node name.
                 aim_con_name = "{}_CONST".format(str(self.lra_node_buffer_grp))
                 aim_con = pmc.aimConstraint(
                     self.sub_operators[0],
@@ -646,6 +669,7 @@ class ComponentOperator(MainOperatorNode):
                     mo=True,
                     n=aim_con_name,
                 )
+                # at the constraint to the container node list
                 self.all_container_nodes.append(aim_con)
             # linear curve section for visualisation purposes.
             linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
@@ -654,6 +678,9 @@ class ComponentOperator(MainOperatorNode):
             linear_curve_name = linear_curve_name.replace(
                 "_op_", "_op_{}_".format(name)
             )
+            linear_curve_name = linear_curve_name.replace(
+                "_0_", "_{}_".format(str(index))
+            )
             self.linear_curve = curves.linear_curve(
                 driver_nodes=self.linear_curve_drivers, name=linear_curve_name
             )
@@ -661,7 +688,7 @@ class ComponentOperator(MainOperatorNode):
             self.main_op_nd.addChild(self.linear_curve)
         # add the main operator node always to the root operator node.
         self.add_node(self.main_op_nd)
-        # if main op node is passed parent the new operator under the
+        # if valid parent is passed parent the new operator under the
         # specified parent node.
         if self.parent:
             self.parent.addChild(self.main_op_nd)
@@ -815,6 +842,15 @@ class ComponentOperator(MainOperatorNode):
                 string: Component side.
         """
         return self.main_meta_nd.attr(constants.META_MAIN_COMP_INDEX).get()
+
+    def get_connect_nd(self):
+        """
+        Get connect node.
+
+        Return:
+                string: Component node.
+        """
+        return self.main_meta_nd.attr(constants.META_MAIN_CONNECT_ND).get()
 
     def get_ik_spaces_ref(self):
         """
@@ -974,29 +1010,8 @@ class ComponentOperator(MainOperatorNode):
             index(int): The index.
 
         """
-        search = r"(_\d+_)"
-        replace = "_{}_".format(str(index))
-        rename_nodes = []
         for node in self.all_container_nodes:
-            if node.hasAttr(constants.OP_MAIN_TAG_NAME):
-                if node.attr(constants.OP_MAIN_TAG_NAME).get():
-                    rename_nodes.append(node)
-            if node.hasAttr(constants.META_NODE_ID):
-                if node.attr(constants.META_NODE_ID).get():
-                    if (
-                        node.attr(constants.META_TYPE).get()
-                        == constants.META_TYPE_B
-                    ):
-                        rename_nodes.append(node)
-            if node.hasAttr(constants.OP_LRA_TAG_NAME):
-                if node.attr(constants.OP_LRA_TAG_NAME).get():
-                    rename_nodes.append(node)
-            if node.type() == "aimConstraint":
-                rename_nodes.append(node)
-        for node in rename_nodes:
-            new_name = strings.regex_search_and_replace(
-                str(node), search, replace
-            )
+            new_name = strings.replace_index_numbers(str(node), index)
             strings.string_checkup(new_name, _LOGGER)
             node.rename(new_name)
         self.set_component_index(index)

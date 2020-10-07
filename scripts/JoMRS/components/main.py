@@ -151,6 +151,7 @@ class component(operators.ComponentOperator):
         self,
         axes,
         sub_operators_count,
+        parent=None,
         local_rotate_axes=True,
         connect_node=None,
         ik_space_ref=None,
@@ -161,11 +162,14 @@ class component(operators.ComponentOperator):
         Args:
             axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
             sub_operators_count(int): Sub operators count.
+            parent(pmc.PyNode): The parent node.
             connect_node(str): The connect node .
             ik_space_ref(list): Spaces given as nodes in a string
-            local_rotate_axes(bool): Enable/Disable
+            local_rotate_axes(bool): Enable/Disable.
 
         """
+        if not parent:
+            parent = selected()
         self.create_component_op_node(
             name=self.name,
             side=self.side,
@@ -173,6 +177,7 @@ class component(operators.ComponentOperator):
             axes=axes,
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,
+            parent=parent
         )
         self.set_component_name(self.name)
         self.set_component_type(self.component_type)

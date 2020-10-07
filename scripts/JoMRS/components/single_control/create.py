@@ -127,12 +127,13 @@ class Main(main.component):
             "channelBox": False,
         }
 
-    def _init_operator(self):
+    def _init_operator(self, parent=None):
         """
         Init the operator creation.
         """
         self.build_operator(
-            self.AXES, self.SUB_OPERATORS_COUNT, self.LOCAL_ROTATION_AXES
+            self.AXES, self.SUB_OPERATORS_COUNT, self.LOCAL_ROTATION_AXES,
+            parent
         )
 
         attributes.add_enum_attribute(
