@@ -1,3 +1,27 @@
+# Copyright (c) 2018 Johannes Wolz
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission
+# notice shall be included in all.
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Author:     Johannes Wolz / Rigging TD
+# Date:       2020 / 10 / 11
+
 """
 JoMRS operator unittest module
 """
@@ -5,8 +29,6 @@ import operators
 import pymel.core as pmc
 import pymel.core.datatypes as datatypes
 from tests.mayaunittest import TestCase
-
-reload(operators)
 
 
 class TestOperators(TestCase):
@@ -52,9 +74,9 @@ class TestOperators(TestCase):
         Test the world space position in translate and rotate.
         """
         ws_matrix_test_op_1 = datatypes.TransformationMatrix(
-            self.test_op_1.main_op_nd.getMatrix(worldSpace=True)
+            self.test_op_1.get_main_op_ws_matrix()
         )
-        test_ws_pos = datatypes.Vector(
+        test_ws_vec = datatypes.Vector(
             [27.820655082060398, -0.7524801847300928, -4.0237613976076]
         )
         test_ws_rotation = datatypes.EulerRotation(
@@ -62,11 +84,32 @@ class TestOperators(TestCase):
             unit="radians",
         )
 
+        ws_matrix_test_op_1_subs = [
+            datatypes.TransformationMatrix(matrix)
+            for matrix in self.test_op_1.get_sub_op_nodes_ws_matrix()
+        ]
+
+        ws_vec_test_op_1_subs = [
+            ts_matrix.getTranslation("world")
+            for ts_matrix in ws_matrix_test_op_1_subs
+        ]
+
+        test_ws_vec_subs = [
+            datatypes.Vector(
+                [31.42623634611877, 8.432088910758539, -2.397884932907285]
+            ),
+            datatypes.Vector(
+                [35.03181761017714, 17.61665800624717, -0.7720084682069708]
+            ),
+            datatypes.Vector(
+                [38.637398874235515, 26.801227101735805, 0.8538679964933436]
+            ),
+        ]
+
+        self.assertEqual(ws_vec_test_op_1_subs, test_ws_vec_subs)
+
         self.assertEqual(
-            ws_matrix_test_op_1.getTranslation("world"),
-            test_ws_pos,
-            msg="{} has not the correct ws position. Maybe the position of "
-            "the parent node is wrong".format(self.test_op_1),
+            ws_matrix_test_op_1.getTranslation("world"), test_ws_vec
         )
 
         self.assertEqual(ws_matrix_test_op_1.getRotation(), test_ws_rotation)
@@ -98,3 +141,9 @@ class TestOperators(TestCase):
         self.assertEqual(parent_node, self.test_op_0.main_meta_nd)
         child_nodes = self.test_op_0.get_child_nd()
         self.assertEqual(child_nodes, list([self.test_op_1.main_meta_nd]))
+        main_op_nd = self.test_op_1.get_main_op_node_from_sub(
+            self.test_op_1.sub_operators[-1]
+        )
+        self.assertEqual(self.test_op_1.main_op_nd, main_op_nd)
+        sub_operators = self.test_op_1.get_sub_op_nodes_from_main_op_nd()
+        self.assertEqual(sub_operators, self.test_op_1.sub_operators)

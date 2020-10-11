@@ -921,10 +921,12 @@ class ComponentOperator(MainOperatorNode):
             if re.search(constants.SUB_META_ND_PLUG, str(sub_nd))
         ]
         if sub_op_nd:
-            self.sub_operators = [
+            result = [
                 sub.get().attr(constants.SUB_OP_MESSAGE_ATTR_NAME).get()
                 for sub in sub_op_nd
             ]
+            self.sub_operators = result
+            return result
 
     def get_main_op_ws_matrix(self):
         """
