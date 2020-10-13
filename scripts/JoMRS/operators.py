@@ -601,6 +601,7 @@ class ComponentOperator(MainOperatorNode):
         self.set_root_meta_nd()
         self.set_component_side(side)
         self.set_component_name(name)
+        self.set_component_index(index)
         # Add main meta node to god meta node.
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:

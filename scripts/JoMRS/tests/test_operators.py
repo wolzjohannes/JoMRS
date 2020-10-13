@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 11
+# Date:       2020 / 10 / 13
 
 """
 JoMRS operator unittest module
@@ -29,6 +29,8 @@ import operators
 import pymel.core as pmc
 import pymel.core.datatypes as datatypes
 from tests.mayaunittest import TestCase
+import re
+reload(operators)
 
 
 class TestOperators(TestCase):
@@ -36,13 +38,26 @@ class TestOperators(TestCase):
     Test the operators module.
     """
 
+    TEST_0_OP_SUB_COUNT = 2
+    TEST_0_OP_NAME = "test"
+    TEST_0_OP_INDEX = 0
+    TEST_0_OP_SIDE = "L"
+
+    TEST_1_OP_SUB_COUNT = 3
+    TEST_1_OP_NAME = "TEST"
+    TEST_1_OP_INDEX = 1
+    TEST_1_OP_SIDE = "L"
+
     def setUp(self):
         """
         Setup variables for all other tests.
         """
         self.test_op_0 = operators.ComponentOperator()
         self.test_op_0.create_component_op_node(
-            name="test", side="L", index=0, sub_operators_count=2
+            name=self.TEST_0_OP_NAME,
+            side=self.TEST_0_OP_SIDE,
+            index=self.TEST_0_OP_INDEX,
+            sub_operators_count=self.TEST_0_OP_SUB_COUNT,
         )
 
         self.test_op_0.main_op_nd.translate.set(10, 5, 3)
@@ -50,10 +65,10 @@ class TestOperators(TestCase):
 
         self.test_op_1 = operators.ComponentOperator()
         self.test_op_1.create_component_op_node(
-            name="test",
-            side="L",
-            index=1,
-            sub_operators_count=3,
+            name=self.TEST_1_OP_NAME,
+            side=self.TEST_1_OP_SIDE,
+            index=self.TEST_1_OP_INDEX,
+            sub_operators_count=self.TEST_1_OP_SUB_COUNT,
             parent=self.test_op_0.sub_operators[-1],
         )
 
@@ -119,12 +134,24 @@ class TestOperators(TestCase):
         Test all setter and getter methods.
         Mainly testing the meta data creation.
         """
+        self.assertEqual(
+            self.test_op_0.get_component_name(), self.TEST_0_OP_NAME
+        )
+        self.assertEqual(
+            self.test_op_1.get_component_name(), self.TEST_1_OP_NAME
+        )
+        self.assertEqual(
+            self.test_op_0.get_component_index(), self.TEST_0_OP_INDEX
+        )
+        self.assertEqual(
+            self.test_op_1.get_component_index(), self.TEST_1_OP_INDEX
+        )
         self.test_op_1.set_component_name("MUM")
         comp_name = self.test_op_1.get_component_name()
         self.assertEqual(comp_name, "MUM")
-        self.test_op_1.set_component_side("L")
+        self.test_op_1.set_component_side("M")
         comp_side = self.test_op_1.get_component_side()
-        self.assertEqual(comp_side, "L")
+        self.assertEqual(comp_side, "M")
         self.test_op_1.set_component_index(10)
         comp_index = self.test_op_1.get_component_index()
         self.assertEqual(comp_index, 10)
@@ -147,3 +174,44 @@ class TestOperators(TestCase):
         self.assertEqual(self.test_op_1.main_op_nd, main_op_nd)
         sub_operators = self.test_op_1.get_sub_op_nodes_from_main_op_nd()
         self.assertEqual(sub_operators, self.test_op_1.sub_operators)
+
+    def test_change_naming_convention(self):
+        index_regex = r"(\w_\d+_)"
+        for node in self.test_op_1.get_node_list():
+            self.assertEqual(str(node)[0], self.TEST_1_OP_SIDE)
+        self.test_op_1.change_operator_side("M")
+        for node in self.test_op_1.get_node_list():
+            self.assertEqual(str(node)[0], "M")
+        self.assertEqual(self.test_op_1.get_component_side(), "M")
+        for node in self.test_op_1.get_node_list():
+            match = re.search(index_regex, str(node))
+            instance = match.groups()[0]
+            index = re.sub(r"[a-zA-Z]", "", instance)
+            self.assertEqual(index, "_{}_".format(str(self.TEST_1_OP_INDEX)))
+        self.test_op_1.change_operator_index(10)
+        for node in self.test_op_1.get_node_list():
+            match = re.search(index_regex, str(node))
+            instance = match.groups()[0]
+            index = re.sub(r"[a-zA-Z]", "", instance)
+            self.assertEqual(index, "_10_")
+        for node in self.test_op_1.get_node_list():
+            match = re.search(self.TEST_1_OP_NAME, str(node))
+            self.assertTrue(match)
+        self.test_op_1.rename_operator_nodes("PeterParker")
+        for node in self.test_op_1.get_node_list():
+            match = re.search("PeterParker", str(node))
+            self.assertTrue(match)
+
+    def test_lra_node(self):
+        self.test_op_0.main_op_nd.rotate.set(0, 0, 0)
+        sub_nodes = self.test_op_0.get_sub_op_nodes_from_main_op_nd()
+        sub_nodes[0].translate.set(10, 3, -4)
+        lra_buffer_rotation = self.test_op_0.lra_node_buffer_grp.rotate.get()
+        lra_buffer_rotation = datatypes.Vector([round(value, 4) for value in
+                                                lra_buffer_rotation])
+        lra_buffer_test_rotation = datatypes.Vector([3.1108,
+                                                     20.9634,
+                                                     16.6992])
+        self.assertEqual(lra_buffer_rotation, lra_buffer_test_rotation)
+        # check constraint nameL_MAIN_op_test_0_LRA_CON_buffer_GRP_CONST
+
