@@ -749,12 +749,9 @@ class ComponentOperator(MainOperatorNode):
         """
         if not isinstance(spaces, list):
             logger.log(
-                level="error",
-                message="Argument is no list",
-                func=self.set_ik_spaces_ref,
-                logger=_LOGGER,
+                "error", "Argument is no list", self.set_ik_spaces_ref, _LOGGER
             )
-            return
+            return False
         self.main_meta_nd.attr(constants.META_MAIN_IK_SPACES).set(
             ";".join(spaces)
         )
@@ -806,6 +803,26 @@ class ComponentOperator(MainOperatorNode):
             attributes.connect_next_available(
                 node, self.main_op_nd, "message", constants.NODE_LIST_ATTR_NAME
             )
+
+    def set_connection_type(self, types):
+        """
+        Set the connection type.
+
+        Args:
+            types(list): List of strings.
+            Valid values are ['translate', 'rotate', 'scale']
+
+        """
+        if not isinstance(types, list):
+            logger.log(
+                "error",
+                "Argument is no list",
+                self.set_connection_type,
+                _LOGGER,
+            )
+            return False
+        types = ";".join(types)
+        self.main_meta_nd.attr(constants.META_MAIN_CONNECTION_TYPES).set(types)
 
     def get_component_type(self):
         """
@@ -966,6 +983,19 @@ class ComponentOperator(MainOperatorNode):
             self.main_op_nd.attr(constants.NODE_LIST_ATTR_NAME).get()
         )
         return self.all_container_nodes
+
+    def get_connection_types(self):
+        """
+        Get the connection types.
+
+        Return:
+             List: Types as string.
+        """
+        return (
+            self.main_meta_nd.attr(constants.META_MAIN_CONNECTION_TYPES)
+            .get()
+            .split(";")
+        )
 
     def rename_operator_nodes(self, name):
         """
