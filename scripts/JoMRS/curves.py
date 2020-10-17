@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 03
+# Date:       2020 / 09 / 21
 
 """
 JoMRS nurbsCurve modification module.
@@ -36,6 +36,9 @@ import strings
 import logging
 import logger
 import attributes
+
+reload(utils)
+reload(strings)
 
 
 ##########################################################
@@ -70,12 +73,12 @@ class ControlCurves(object):
         """
         Create curve method.
         Args:
-            name(str): The control name. You should follow the
+            name(str): The single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            color_index(integer): The color of the control.
+            color_index(integer): The color of the single_control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -83,14 +86,14 @@ class ControlCurves(object):
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            buffer_grp(bool): Create buffer_grp for the control.
-            child(dagnode): The child of the control.
+            buffer_grp(bool): Create buffer_grp for the single_control.
+            child(dagnode): The child of the single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
             lock_visibility(bool): Lock/Hide the visibility channels.
         Return:
-                list: The buffer group, the control curve node.
+                list: The buffer group, the single_control curve node.
         """
         result = []
         name = strings.string_checkup(name, _LOGGER)
@@ -102,7 +105,10 @@ class ControlCurves(object):
             for shape_ in shapes:
                 pmc.scale(shape_.cv[0:], scale[0], scale[1], scale[2])
         if match:
-            pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
+            if isinstance(match, pmc.datatypes.Matrix) is False:
+                pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
+            else:
+                self.control.setMatrix(match, worldSpace=True)
         if color_index:
             for shape__ in shapes:
                 shape__.overrideEnabled.set(1)
@@ -126,7 +132,7 @@ class ControlCurves(object):
             )
         if lock_visibility:
             attributes.lock_and_hide_attributes(
-                self.control, attributes='visibility'
+                self.control, attributes="visibility"
             )
         result.append(self.control)
         return result
@@ -1522,25 +1528,13 @@ class DoubleCurvedCircleControl(ControlCurves):
             n=name,
         )[0]
         for v in values0:
-            circle0.getShape().controlPoints[v["cv"]].xValue.set(
-                v["value"][0]
-            )
-            circle0.getShape().controlPoints[v["cv"]].yValue.set(
-                v["value"][1]
-            )
-            circle0.getShape().controlPoints[v["cv"]].zValue.set(
-                v["value"][2]
-            )
+            circle0.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
+            circle0.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
+            circle0.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
         for v in values1:
-            circle1.getShape().controlPoints[v["cv"]].xValue.set(
-                v["value"][0]
-            )
-            circle1.getShape().controlPoints[v["cv"]].yValue.set(
-                v["value"][1]
-            )
-            circle1.getShape().controlPoints[v["cv"]].zValue.set(
-                v["value"][2]
-            )
+            circle1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
+            circle1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
+            circle1.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
         pmc.parent(circle1.getShape(), circle0, r=True, shape=True)
         pmc.delete(circle1)
         return circle0
@@ -1595,12 +1589,12 @@ class RotateAxesControl:
         """
         Creates LRA Control Curve. By Default with a buffer group.
         Args:
-            name(str): The control name. You should follow the
+            name(str): The single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            buffer_grp(bool): Create bufferGRP for the control.
+            buffer_grp(bool): Create bufferGRP for the single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
@@ -1651,12 +1645,15 @@ class RotateAxesControl:
             color_index=14,
         )[0]
         for v in arrowValue0:
-            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(v[
-                                                                      "value"][0])
-            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(v[
-                                                                      "value"][1])
-            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(v[
-                                                                      "value"][2])
+            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
         for v in arrowValue1:
             arrow1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
             arrow1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
@@ -1692,13 +1689,13 @@ class DiamondControl:
         """
         Creates Diamond Control Curve. By Default with a buffer group.
         Args:
-            name(str): The control name. You should follow the
+            name(str): The single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             scale(list): The scale values.
             match(dagnode): The node for transform match.
-            color_index(integer): The color of the control.
-            local_rotate_axes(bool): Enable a LRA curve control.
+            color_index(integer): The color of the single_control.
+            local_rotate_axes(bool): Enable a LRA curve single_control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -1706,7 +1703,7 @@ class DiamondControl:
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            buffer_grp(bool): Create buffer_grp for the control.
+            buffer_grp(bool): Create buffer_grp for the single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
@@ -1752,9 +1749,9 @@ class DiamondControl:
                 name=axes_name,
                 scale=scale,
                 buffer_grp=True,
-                lock_translate=['tx','ty','tz'],
-                lock_scale=['sx','sy','sz'],
-                lock_rotate=['ry','rz']
+                lock_translate=["tx", "ty", "tz"],
+                lock_scale=["sx", "sy", "sz"],
+                lock_rotate=["ry", "rz"],
             )
             spear0[-1].addChild(rotate_axes_con[0])
             rotate_axes_con[0].rotate.set(0, 0, 0)
@@ -1807,7 +1804,10 @@ def linear_curve(
     result = pmc.curve(**data)
     attributes.lock_and_hide_attributes(result)
     for y in range(len(driver_nodes)):
-        decomp = pmc.createNode("decomposeMatrix", n=name + "_DEMAND")
+        decomp_name = strings.search_and_replace(
+            name, "_CRV", "_{}_CRV_DEMAND".format(str(y))
+        )
+        decomp = pmc.createNode("decomposeMatrix", n=decomp_name)
         driver_nodes[y].worldMatrix[0].connect(decomp.inputMatrix)
         decomp.outputTranslate.connect(result.controlPoints[y])
     if template:
@@ -1899,8 +1899,6 @@ def mirror_curve(
         result.append(dupl_curve)
     else:
         logger.log(
-            level="error",
-            message="mirror only for nurbsCurves",
-            logger=_LOGGER,
+            level="error", message="mirror only for nurbsCurves", logger=_LOGGER
         )
     return result

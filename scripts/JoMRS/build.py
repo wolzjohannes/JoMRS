@@ -53,8 +53,8 @@ STEPS = [
     "collect_main_operators_data",
     "collect_components_inputs_outputs" "create_main_ops_dic",
     "create_init_hierarchy",
-    "create_rig_elements",
-    "connect_rig_elements",
+    "create_rig_components",
+    "connect_rig_components",
     "build_bind_skeleton",
 ]
 OVERALLRIGPARAMS = meta.ROOTOPMETAPARAMS

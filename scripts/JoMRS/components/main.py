@@ -20,25 +20,26 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 09
+# Date:       2020 / 09 / 23
 
 """
 Rig components main module. This class is the template to create a rig
 component. Every rig component should inherit this class as template.
 """
+import os
 import pymel.core as pmc
-import logging
-import logger
 import strings
 import attributes
-import mayautils
 import operators
+import logger
+import logging
+import constants
+import mayautils
 
-##########################################################
-# GLOBALS
-##########################################################
-
-_LOGGER = logging.getLogger(__name__ + ".py")
+reload(constants)
+reload(mayautils)
+reload(operators)
+reload(strings)
 
 ##########################################################
 # Methods
@@ -59,112 +60,162 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 # Connect output matrix.
 # Connect ud attributes with output node.
 # Create BND joints.
+# Add entry in ref rig build class attr
+##########################################################
+
+##########################################################
+# GLOBALS
+##########################################################
+
+_LOGGER = logging.getLogger(__name__ + ".py")
+
+##########################################################
+# FUNCTIONS
 ##########################################################
 
 
-class build_component_operator(operators.create_component_operator):
+def selected():
     """
-    Build component operator template class.
+    Gets back a selected transform or container node.
+
+    Returns:
+       pmc.PyNode if successful. None if fail.
+
     """
-    def __init__(self, main_operator_node=None):
-        """
-        Init of important data.
+    containers = pmc.ls(sl=True, containers=True)
+    transforms = pmc.ls(sl=True, tr=True)
+    if containers:
+        return containers[0]
+    if transforms:
+        return transforms[0]
+    return None
 
-        Args:
-                main_operator_node(pmc.PyNode(), optional): Operators main node.
-        """
-        operators.create_component_operator.__init__(self, main_operator_node)
-        self.operator = None
 
-    def build(
+##########################################################
+# CLASSES
+##########################################################
+
+
+class component(operators.ComponentOperator):
+    """
+    Component template class.
+    """
+
+    def __init__(
         self,
-        operator_name,
-        comp_typ,
-        side=None,
-        axes=None,
-        index=None,
-        connect_node=None,
-        ik_space_ref=None,
-        sub_operators_count=None,
-        local_rotate_axes=True,
+        name=constants.DEFAULT_OPERATOR_NAME,
+        component_type=constants.DEFAULT_COMPONENT_TYPE,
+        side=constants.DEFAULT_SIDE,
+        index=constants.DEFAULT_INDEX,
+        operators_root_node=None,
+        main_operator_node=None,
+        sub_operator_node=None,
     ):
-        """Build the components operator.
+        """
+        Init important data.
 
         Args:
-                operator_name(str): The operator name.
-                comp_typ(str): The component typ.
-                side(str): The component side. Valid is L, R, M.
-                axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
-                index(int): The component index.
-                connect_node(str): The connect node .
-                ik_space_ref(list): Spaces given as nodes in a string
-                sub_operators_count(int): Suboperators count.
-                local_rotate_axes(bool): Enable/Disable
-        Return:
-                True if successful.
+            name(str, optional): Component name.
+            component_type(str, optional): Component type.
+            side(str, optional): The component side.
+            index(int, optional): The component index.
+            operators_root_node(pmc.PyNode(), optional): The operators root
+            node.
+            main_operator_node(pmc.PyNode(), optional): The main operator_node.
+            sub_operator_node(pmc.PyNode(), optional)): The sub operator node.
+
         """
-        self.operator = self.init_operator(
-            operator_name=operator_name,
-            sub_operators_count=sub_operators_count,
-            axes=axes,
-            local_rotate_axes=local_rotate_axes,
+        operators.ComponentOperator.__init__(
+            self, operators_root_node, main_operator_node, sub_operator_node
         )
-        self.set_component_name(operator_name)
-        self.set_component_type(comp_typ)
-        if side:
-            self.set_component_side(side)
-        if index:
-            self.set_component_index(index)
-        if connect_node:
-            self.set_connect_nd(connect_node)
-        if ik_space_ref:
-            self.set_ik_spaces_ref(ik_space_ref)
-        return True
-
-
-# class template for rig component creation.
-class build_component_rig(object):
-    """
-    Class as rig build template for each rig component.
-    """
-
-    def __init__(self):
+        self.name = name
+        self.component_type = component_type
+        self.side = side
+        self.index = index
         self.component_root = []
         self.input = []
         self.output = []
         self.component = []
         self.spaces = []
-        self.fk_joints = []
-        self.ik_joints = []
-        self.drv_joints = []
-        self.bnd_joints = []
-        self.ref_transforms = []
+        self.component_rig_list = []
+        self.bnd_output_matrix = []
+        self.input_matrix_offset_grp = []
+        self.controls = []
+        if self.main_op_nd:
+            self.drawn_name = self.get_component_name()
+            self.drawn_component_type = self.get_component_type()
+            self.drawn_side = self.get_component_side()
+            self.drawn_index = self.get_component_index()
 
-    def init_hierarchy(self, component_name, side, parent):
+    def build_operator(
+        self,
+        axes,
+        sub_operators_count,
+        parent=None,
+        local_rotate_axes=True,
+        connect_node=None,
+        ik_space_ref=None,
+    ):
+        """
+        Build component operator.
+
+        Args:
+            axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
+            sub_operators_count(int): Sub operators count.
+            parent(pmc.PyNode): The parent node.
+            connect_node(str): The connect node .
+            ik_space_ref(list): Spaces given as nodes in a string
+            local_rotate_axes(bool): Enable/Disable.
+
+        """
+        if not parent:
+            parent = selected()
+        self.create_component_op_node(
+            name=self.name,
+            side=self.side,
+            index=self.index,
+            axes=axes,
+            sub_operators_count=sub_operators_count,
+            local_rotate_axes=local_rotate_axes,
+            parent=parent
+        )
+        self.set_component_name(self.name)
+        self.set_component_type(self.component_type)
+        self.set_component_side(self.side)
+        self.set_component_index(self.index)
+        if connect_node:
+            self.set_connect_nd(connect_node)
+        if ik_space_ref:
+            self.set_ik_spaces_ref(ik_space_ref)
+        logger.log(
+            level="info",
+            message="{} component operator "
+            "build with the name: {}".format(self.component_type, self.name),
+            logger=_LOGGER,
+        )
+
+
+    def init_component_hierarchy(self):
         """
         Init rig component base hierarchy.
-        Args:
-                component_name(str): The Components name.
-                side(str): Component Side.
-                parent(dagnode): Component parent node.
         """
-        component_root_name = "{}_RIG_{}_component_0_GRP".format(
-            side, component_name.lower()
+        component_root_name = "{}_ROOT_{}_component_0_GRP".format(
+            self.drawn_side, self.drawn_name
         )
         component_root_name = strings.string_checkup(component_root_name)
-        self.component_root = pmc.createNode("transform", n=component_root_name)
-        attributes.lock_and_hide_attributes(self.component_root)
+        self.component_root = pmc.createNode("container", n=component_root_name)
+        icon = os.path.normpath(
+            "{}/components_logo.png".format(constants.ICONS_PATH)
+        )
+        self.component_root.iconName.set(icon)
         self.input = pmc.createNode("transform", n="input")
         self.output = pmc.createNode("transform", n="output")
         self.component = pmc.createNode("transform", n="component")
         self.spaces = pmc.createNode("transform", n="spaces")
         temp = [self.input, self.output, self.component, self.spaces]
-        for node in temp:
-            self.component_root.addChild(node)
-            attributes.lock_and_hide_attributes(node)
         attributes.add_attr(
             self.input,
-            name="input_ws_matrix",
+            name=constants.INPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
             keyable=False,
@@ -172,20 +223,30 @@ class build_component_rig(object):
         )
         attributes.add_attr(
             self.output,
-            name="output_ws_matrix",
+            name=constants.OUTPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
             keyable=False,
             hidden=True,
         )
-        if parent:
-            parent.addChild(self.component_root)
+        attributes.add_attr(
+            self.output,
+            name=constants.BND_OUTPUT_WS_PORT_NAME,
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )
+        for node in temp:
+            self.component_root.addNode(node)
 
     def create_input_ws_matrix_port(self, name):
         """
         Create a input port for ws matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.input,
@@ -195,11 +256,29 @@ class build_component_rig(object):
             hidden=True,
         )
 
+    def create_input_os_matrix_port(self, name):
+        """
+        Create a input port for os matrix connection.
+
+        Args:
+            name(str): Name of the attribute.
+
+        """
+        attributes.add_attr(
+            self.input,
+            name="{}_input_os_matrix".format(name),
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+        )
+
     def create_output_ws_matrix_port(self, name):
         """
         Create a output port for ws matrix connection.
+
         Args:
-                name(str): Name of the attribute.
+            name(str): Name of the attribute.
+
         """
         attributes.add_attr(
             self.output,
@@ -209,117 +288,114 @@ class build_component_rig(object):
             hidden=True,
         )
 
+    def create_output_os_matrix_port(self, name):
+        """
+        Create a output port for os matrix connection.
+
+        Args:
+            name(str): Name of the attribute.
+
+        """
+        attributes.add_attr(
+            self.output,
+            name="{}_output_os_matrix".format(name),
+            attrType="matrix",
+            keyable=False,
+            hidden=True,
+        )
+
     def add_ud_port(
         self,
         component_port="input",
         name=None,
-        typ="float",
+        type_="float",
         minValue=0,
         maxValue=1,
         value=1,
     ):
         """
-        Add userdefined port to the input or output port of a rig component.
+        Add user defined port to the input or output port of a rig component.
         By Default it add a float value to the input port with a given
         name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
+
         Args:
-                component_port(str): The rig components port.
-                name(str): The port name.
-                type(str): The port typ.
-                minValue(float or int): The minimal port value.
-                maxValue(float or int): The maximum port value.
-                value(float or int or str): The port value.
+            component_port(str): The rig components port.
+            name(str): The port name.
+            type_(str): The port typ.
+            minValue(float or int): The minimal port value.
+            maxValue(float or int): The maximum port value.
+            value(float or int or str): The port value.
+
         """
-        if component_port == "input":
-            node = self.input
-        elif component_port == "output":
+        valid_ports = ["input", "output"]
+        if component_port not in valid_ports:
+            raise AttributeError(
+                'Chosen port not valid. Valid values are ["input", "output"]'
+            )
+        node = self.input
+        if component_port == "output":
             node = self.output
 
         attributes.add_attr(
             node=node,
             name=name,
-            attrType=typ,
+            attrType=type_,
             minValue=minValue,
             maxValue=maxValue,
             value=value,
         )
 
-    def create_joint_by_data(self, matrix, side, name, typ, index):
+    def build_component_logic(
+        self, main_operator_ws_matrix=None, sub_operator_ws_matrix=None
+    ):
         """
-        Create a joint by data.
-        Args:
-                matrix(matrix): Matrix data to match.
-                side(str): Joint side. Valid is M, R, L.
-                name(str): Joint name.
-                typ(str): Joint typ.
-                index(int): The index number.
-        Return:
-                tuple: The create joint.
-        """
-        name = "{}_{}_{}_{}_JNT".format(side, typ, name, str(index))
-        jnt = mayautils.create_joint(name=name, typ=typ, match_matrix=matrix)
-        return jnt
+        Method for building a component. Use the list variables
+        self.component_rig_list, self.bnd_output_matrix,
+        self.input_matrix_offset_grp to define input and output connections
+        of the component
 
-    def create_joint_skeleton_by_data_dic(self, data_list):
-        """
-        Create a joint skeleton by a data dictonary.
         Args:
-                data_list(list with dics): A List filled with dictonaries.
-                Example: [{'matrix': [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]
-                , [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]; 'side': 'M';
-                name: 'Test'; 'typ': 'BND; 'index': 0}]
+            main_operator_ws_matrix(matrix): World space position of main
+            operator.
+            sub_operator_ws_matrix(list): List of sub operators world space
+            position.
+
         """
-        temp = []
-        for data in data_dic:
-            jnt = self.create_joint_by_data(
-                data["matrix"],
-                data["side"],
-                data["name"],
-                data["typ"],
-                data["index"],
+        return True
+
+    def connect_component_edges(self):
+        """
+        Method to connect the input and output of a component.
+        """
+        for index, bnd_node in enumerate(self.bnd_output_matrix):
+            bnd_node.worldMatrix[0].connect(
+                self.output.attr(
+                    "{}[{}]".format(
+                        constants.BND_OUTPUT_WS_PORT_NAME, str(index)
+                    )
+                )
             )
-            if data["typ"] == "FK":
-                self.fk_joints.append(jnt)
-            elif data["typ"] == "IK":
-                self.ik_joints.append(jnt)
-            elif data["typ"] == "DRV":
-                self.drv_joints.append(jnt)
-            elif data["typ"] == "BND":
-                self.bnd_joints.append(jnt)
-        mayautils.create_hierarchy(temp)
+        for index, input_node in enumerate(self.input_matrix_offset_grp):
+            mayautils.decompose_matrix_constraint(
+                source=input_node,
+                target=self.input,
+                target_plug="{}[{}]".format(
+                    constants.INPUT_WS_PORT_NAME, str(index)
+                ),
+            )
+        if self.component_rig_list:
+            for node in self.component_rig_list:
+                if self.component_root:
+                    self.component_root.addNode(
+                        node, ish=True, ihb=True, iha=True, inc=True
+                    )
+                    self.component.addChild(node)
 
-    def create_ref_transform(self, name, side, index, buffer_grp, match_matrix):
+    def build_from_operator(self):
         """
-        Create a reference transform.
-        Args:
-                name(str): Name for the ref node.
-                side(str): The side. Valid is M, R, L.
-                index(int): The index number.
-                buffer_grp(bool): Enable buffer grp.
-                match_matrix(matrix): The match matrix.
-        Return:
-                tuple: The new ref node.
+        Build the whole component rig from operator.
+        With initial hierarchy.
         """
-        name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
-        name = strings.string_checkup(name, logger_=_LOGGER)
-        ref_trs = pmc.createNode("transform", n=name)
-        if self.component:
-            self.component.addChild(ref_trs)
-        if match_matrix:
-            ref_trs.setMatrix(match_matrix, worldSpace=True)
-        if buffer_grp:
-            mayautils.create_buffer_grp(node=ref_trs)
-        return ref_trs
-
-    def build_from_operator(self, component_name, side, parent):
-        """
-        Build the component from operator.
-        """
-        self.init_hierarchy(component_name, side, parent)
-        self.build_rig()
-
-    def build_rig(self):
-        """
-        Create the actual rig.
-        """
-        return False
+        self.init_component_hierarchy()
+        self.build_component_logic()
+        self.connect_component_edges()

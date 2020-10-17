@@ -21,7 +21,7 @@
 # Base code from Chad Vernon cmt_master.
 # https://github.com/chadmv/cmt
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2019 / 08 / 18
+# Date:       2019 / 10 / 05
 
 """
 Contains a user interface for the testing framework.
@@ -46,10 +46,10 @@ from tests.ui.qt.QtWidgets import *
 import tests.mayaunittest as mayaunittest
 import tests.ui.shortcuts as shortcuts
 
-logger = logging.getLogger(__name__)
+_LOGGER = logging.getLogger(__name__)
 
 ICON_DIR = os.path.join(
-    os.environ["JoMRS"], "scripts", "JoMRS", "tests", "ui", "icons"
+    os.environ["JoMRS"], "tests", "ui", "icons"
 )
 
 _win = None
@@ -308,7 +308,7 @@ class TestNode(shortcuts.BaseTreeNode):
                 getattr(self.test, self.name())()
             except ImportError:
                 self.tool_tip = traceback.format_exc()
-                logger.warning(self.tool_tip)
+                _LOGGER.warning(self.tool_tip)
 
     def name(self):
         """
