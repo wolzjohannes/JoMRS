@@ -73,7 +73,7 @@ def get_module_tests_path():
     Return:
                 Path to unittest directory.
     """
-    path = "{0}/scripts/JoMRS/tests".format(os.environ["JoMRS"])
+    path = os.path.join(os.environ.get('JoMRS'), 'tests')
     if os.path.exists(path):
         return path
     else:

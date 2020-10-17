@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 03 / 05
+# Date:       2020 / 05 / 22
 
 """
 JoMRS maya utils module. Utilities helps
@@ -63,10 +63,10 @@ def create_buffer_grp(node, name=None):
             tuple: The created buffer dagnode.
     """
     parent = node.getParent()
-    if name:
-        name = strings.string_checkup(name + "_buffer_GRP", _LOGGER)
+    if not name:
+        name = name + "_buffer_GRP"
     else:
-        name = strings.string_checkup(str(node) + "_buffer_GRP", _LOGGER)
+        name = str(node) + "_buffer_GRP"
     buffer_grp = pmc.createNode("transform", n=name)
     buffer_grp.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     buffer_grp.addChild(node)
@@ -161,9 +161,7 @@ def create_spline_ik(
     result[0].attr("weight").set(weight)
     result[0].attr("po_weight").set(po_weight)
     logger.log(
-        level="info",
-        message='Spline IK "' + name + '" created',
-        logger=_LOGGER,
+        level="info", message='Spline IK "' + name + '" created', logger=_LOGGER
     )
     return result
 
@@ -213,9 +211,7 @@ def create_IK(
     ik_handle[0].attr("weight").set(weight)
     ik_handle[0].attr("po_weight").set(po_weight)
     logger.log(
-        level="info",
-        message=solver + ' "' + name + '" created',
-        logger=_LOGGER,
+        level="info", message=solver + ' "' + name + '" created', logger=_LOGGER
     )
     return ik_handle
 
@@ -603,7 +599,8 @@ def create_aim_constraint(
 
 
 def decompose_matrix_constraint(
-    source, target, translation=True, rotation=True, scale=True
+    source, target, translation=True, rotation=True, scale=True,
+    target_plug=None
 ):
     """
     Create decompose matrix constraint.
@@ -613,11 +610,15 @@ def decompose_matrix_constraint(
             translation(bool): Envelope to connect the translation.
             rotation(bool): Envelope to connect the rotation.
             scale(bool): Envelope to connect the scale.
+            target_plug(string): Target plug for world matrix connection.
+            If none will take "worldMatrix[0]" as default.
     Return:
             tuple: Created decompose matrix node.
     """
-    decomp = pmc.creatNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
-    target.worldMatrix[0].connect(decomp.inputMatrix)
+    decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
+    if not target_plug:
+        target_plug = 'worldMatrix[0]'
+    target.attr(target_plug).connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
     if rotation:
@@ -888,9 +889,7 @@ def default_orient_joint(node, aim_axes="xyz", up_axes="yup"):
             )
     else:
         logger.log(
-            level="error",
-            message="Node has to be a joint",
-            logger=_LOGGER,
+            level="error", message="Node has to be a joint", logger=_LOGGER
         )
 
 
@@ -932,7 +931,7 @@ def create_joint(
             node(dagnode): The node for transformation match.
             orient_match_rotation(bool): Enable the match of the joint
             orientation with the rotation of the node.
-            match_matrix(matirx): The matrix to match
+            match_matrix(matrix): The matrix to match
     Return:
             tuple: The created joint node.
     """
@@ -943,8 +942,7 @@ def create_joint(
         {"typ": "FK", "radius": 1.5, "overrideColor": 4},
         {"typ": "IK", "radius": 2, "overrideColor": 6},
     ]
-    pmc.select(clear=True)
-    jnt = pmc.joint(n=name)
+    jnt = pmc.createNode("joint", n=name)
     for util in data:
         if util["typ"] == typ:
             jnt.overrideEnabled.set(1)
@@ -1132,9 +1130,9 @@ def reduce_shape_nodes(node=None):
     """
     Reduce a transform to his true shape node.
     Args:
-            node(dagnode): The transform with the shape ndoe.
+            node(dagnode): The transform with the shape node.
     Return:
-            list: The true shape node of the transform.
+            List: The true shape node of the transform.
     """
     search_pattern = "ShapeOrig|ShapeDeformed"
     shapes = node.getShapes()
@@ -1143,3 +1141,95 @@ def reduce_shape_nodes(node=None):
         result = strings.search(search_pattern, str(shape))
         pmc.delete(result)
     return node.getShapes()
+
+
+def create_joint_by_data(name, type_, side, index, matrix=None):
+    """
+    Create a joint by data.
+    Args:
+            name(str): Joint name.
+            type_(str): Joint typ. Valid values are "BND", "DRV", "IK", "FK".
+            side(str): Joint side. Valid values are "M", "R", "L".
+            index(int): The index number.
+            matrix(matrix): Matrix data to snap.
+    Return:
+            The new joint.
+    """
+    valid_sides = ["L", "R", "M"]
+    valid_types = ["BND", "DRV", "FK", "IK"]
+    if side not in valid_sides:
+        raise AttributeError(
+            'Chosen side is not valid. Valid values are ["L", "R", "M"]'
+        )
+    if type_ not in valid_types:
+        raise AttributeError(
+            "Chosen joint type is not valid. Valid values "
+            'are ["BND", "DRV", "IK", "FK"]'
+        )
+    name = "{}_{}_{}_{}_JNT".format(side, type_, name, str(index))
+    return create_joint(name=name, typ=type_, match_matrix=matrix)
+
+
+def create_joint_skeleton_by_data_dic(data_list):
+    """
+    Create a joint skeleton by a data dictionary.
+    Args:
+            data_list(list): A List filled with dictionaries.
+
+    Example:
+            >>> create_joint_skeleton_by_data_dic([{'matrix': [1.0, 0.0, 0.0,
+            >>> 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+            >>> , 'side': 'M', 'name': 'Test', 'typ': 'BND', 'index': 0},
+            >>> {'matrix': [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0,
+            >>> 1.0, 0.0, 3.0, 10.0, -3.6787579514, 1.0], 'side': 'M', 'name':
+            >>> 'Test', 'typ': 'DRV', 'index': 1}])
+    """
+    temp = [
+        create_joint_by_data(
+            data["name"],
+            data["typ"],
+            data["side"],
+            data["index"],
+            data["matrix"],
+        )
+        for data in data_list
+    ]
+    create_hierarchy(temp)
+
+
+def create_ref_transform(
+    name, side, index, buffer_grp=False, match_matrix=None, child=None
+):
+    """
+    Create a reference transform.
+    Args:
+            name(str): Name for the ref node.
+            side(str): The side. Valid values are "M", "R", "L".
+            index(int): The index number.
+            buffer_grp(bool): Enable buffer grp.
+            match_matrix(matrix): The match matrix.
+            child(dagnode): Child of node.
+
+    Example:
+            >>> create_ref_transform('test', 'M', 0, True,
+            >>> [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
+            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('yournode'))
+
+    Return:
+            The new ref node.
+    """
+    valid_sides = ["L", "R", "M"]
+    if side not in valid_sides:
+        raise AttributeError(
+            'Chosen side is not valid. Valid values are ["L", "R", "M"]'
+        )
+    name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
+    name = strings.string_checkup(name, logger_=_LOGGER)
+    ref_trs = pmc.createNode("transform", n=name)
+    if match_matrix:
+        ref_trs.setMatrix(match_matrix, worldSpace=True)
+    if buffer_grp:
+        create_buffer_grp(node=ref_trs)
+    if child:
+        ref_trs.addChild(child)
+    return ref_trs

@@ -49,6 +49,34 @@ def undo(func_):
     return inner
 
 
+def connect_next_available(
+    source_node, target_node, source_plug, target_multi_plug
+):
+    """
+    Connect next available multi attribute
+
+    Args:
+        source_node(pmc.PyNode()): Source node.
+        target_node(pmc.PyNode()): Destination node.
+        source_plug(str): Source attribute.
+        target_multi_plug(str): Destination multi attribute.
+
+    Return:
+        True if successfully. None if fail.
+
+    """
+    try_count = 100
+    for x in range(try_count):
+        try:
+            source_node.attr(source_plug).connect(
+                target_node.attr("{}[{}]".format(target_multi_plug, str(x)))
+            )
+            return True
+        except:
+            continue
+    return
+
+
 def add_attr(
     node,
     name,
@@ -248,9 +276,7 @@ def add_enum_attribute(
 
     node.addAttr(name, **data_dic)
 
-    node.attr(name).set(
-        lock=lock, keyable=keyable, channelBox=True, value=value
-    )
+    node.attr(name).set(value, lock=lock, keyable=keyable, channelBox=True)
     if not channelBox:
         node.attr(name).set(lock=lock, keyable=False, channelBox=False)
 
@@ -275,9 +301,7 @@ def add_separator_attr(node, name):
         )
         return
     logger.log(
-        level="error",
-        message="no attributes name specified",
-        logger=_LOGGER,
+        level="error", message="no attributes name specified", logger=_LOGGER
     )
     return
 
@@ -497,7 +521,10 @@ def re_arrange_usd_attributes_by_name(
         step_down = None
     index_change = [old_index, new_index]
     return re_arrange_usd_attributes_by_index(
-        node=node, index_change=index_change, step_up=step_up, step_down=step_down
+        node=node,
+        index_change=index_change,
+        step_up=step_up,
+        step_down=step_down,
     )
 
 
@@ -527,9 +554,9 @@ def move_attribute_in_channel_box(
     """
     if not attribute_name:
         if len(pmc.channelBox("mainChannelBox", q=True, sma=True)) == 1:
-            attribute_name = pmc.channelBox(
-                "mainChannelBox", q=True, sma=True
-            )[0]
+            attribute_name = pmc.channelBox("mainChannelBox", q=True, sma=True)[
+                0
+            ]
         else:
             logger.log(
                 level="error",
@@ -546,9 +573,7 @@ def move_attribute_in_channel_box(
         for attr_ in usd_attr:
             name = attr_["usd_attr"].split(".")[1]
             if name == exchange_attr_name:
-                print attr_["usd_attr"]
                 new_index = attr_["index"]
-                print new_index
     usd_attr = re_arrange_usd_attributes_by_name(
         node=node,
         attribute_name=attribute_name,
