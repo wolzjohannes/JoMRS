@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 23
+# Date:       2020 / 10 / 17
 
 """
 Build a single single_control
@@ -98,7 +98,6 @@ class Main(main.component):
 
         Args:
             name(str, optional): Component name.
-            component_type(str, optional): Component type.
             side(str, optional): The component side.
             index(int, optional): The component index.
             operators_root_node(pmc.PyNode(), optional): The operators root
@@ -118,6 +117,11 @@ class Main(main.component):
             sub_operator_node,
         )
 
+    def add_component_defined_attributes(self):
+        """
+        Add component specific attributes to operator.
+        And fill the cd_attributes list for meta data.
+        """
         self.control_shapes_attr = {
             "name": constants.CONTROL_SHAPE_ATTR_NAME,
             "enum": [data["shape"] for data in self.CONTROL_SHAPES],
@@ -126,18 +130,18 @@ class Main(main.component):
             "writable": True,
             "channelBox": False,
         }
+        attributes.add_enum_attribute(
+            node=self.main_meta_nd, **self.control_shapes_attr
+        )
+        self.cd_attributes.append(constants.CONTROL_SHAPE_ATTR_NAME)
 
     def _init_operator(self, parent=None):
         """
         Init the operator creation.
         """
         self.build_operator(
-            self.AXES, self.SUB_OPERATORS_COUNT, self.LOCAL_ROTATION_AXES,
-            parent
-        )
-
-        attributes.add_enum_attribute(
-            node=self.main_meta_nd, **self.control_shapes_attr
+            self.AXES, self.SUB_OPERATORS_COUNT, parent,
+            self.LOCAL_ROTATION_AXES
         )
 
     def build_component_logic(self, main_operator_ws_matrix=None):

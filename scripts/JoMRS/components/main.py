@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 23
+# Date:       2020 / 10 / 17
 
 """
 Rig components main module. This class is the template to create a rig
@@ -132,20 +132,26 @@ class component(operators.ComponentOperator):
         self.component_type = component_type
         self.side = side
         self.index = index
-        self.component_root = []
-        self.input = []
-        self.output = []
-        self.component = []
-        self.spaces = []
-        self.component_rig_list = []
-        self.bnd_output_matrix = []
-        self.input_matrix_offset_grp = []
-        self.controls = []
+        self.component_root = list()
+        self.input = list()
+        self.output = list()
+        self.component = list()
+        self.spaces = list()
+        self.component_rig_list = list()
+        self.bnd_output_matrix = list()
+        self.input_matrix_offset_grp = list()
+        self.controls = list()
         if self.main_op_nd:
             self.drawn_name = self.get_component_name()
             self.drawn_component_type = self.get_component_type()
             self.drawn_side = self.get_component_side()
             self.drawn_index = self.get_component_index()
+
+    def add_component_defined_attributes(self):
+        """
+        Method to implement extra ud attributes.
+        """
+        return
 
     def build_operator(
         self,
@@ -168,6 +174,7 @@ class component(operators.ComponentOperator):
             local_rotate_axes(bool): Enable/Disable.
 
         """
+        print parent
         if not parent:
             parent = selected()
         self.create_component_op_node(
@@ -183,6 +190,8 @@ class component(operators.ComponentOperator):
         self.set_component_type(self.component_type)
         self.set_component_side(self.side)
         self.set_component_index(self.index)
+        self.add_component_defined_attributes()
+        self.set_cd_attributes()
         if connect_node:
             self.set_connect_nd(connect_node)
         if ik_space_ref:

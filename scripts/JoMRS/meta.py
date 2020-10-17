@@ -618,6 +618,13 @@ class MainOpMetaNode(MetaNode):
             "multi": True,
         }
 
+        component_defined_attr = {
+            "name": constants.META_COMPONENT_DEFINED_ATTR,
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -632,6 +639,7 @@ class MainOpMetaNode(MetaNode):
             rig_build_class_ref,
             parent_nd_attr,
             child_nd_attr,
+            component_defined_attr,
         ]
 
         for attr_ in main_node_param_list:
