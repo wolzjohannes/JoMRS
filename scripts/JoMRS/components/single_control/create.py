@@ -38,6 +38,7 @@ import strings
 reload(curves)
 reload(attributes)
 reload(main)
+reload(constants)
 
 ##########################################################
 # GLOBALS
@@ -53,21 +54,6 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 class Main(main.component):
     """
     Single single_control component class
-
-    Example:
-        Create the operator.
-        >>> import pymel.core as pmc
-        >>> import components.main as main
-        >>> import components.single_control.create as create
-        >>> selected = main.selected()
-        >>> control = create.Main('Test', 'L', 0, selected, selected, selected)
-        >>> control._init_operator()
-        >>> control.set_control_shape('pyramide')
-        Create the single_control component based on the selected operator.
-        >>> selected = main.selected()
-        >>> component = create.Main(main_operator_node=selected)
-        >>> component.build_from_operator()
-
     """
 
     COMP_TYPE = "single_control"
@@ -140,38 +126,74 @@ class Main(main.component):
         Init the operator creation.
         """
         self.build_operator(
-            self.AXES, self.SUB_OPERATORS_COUNT, parent,
-            self.LOCAL_ROTATION_AXES
+            self.AXES,
+            self.SUB_OPERATORS_COUNT,
+            parent,
+            self.LOCAL_ROTATION_AXES,
         )
 
-    def build_component_logic(self, main_operator_ws_matrix=None):
+    def build_component_logic(self, operator_data=None):
         """
         Build component logic. It is derivative method from parent class.
+
+        Args:
+            operator_data(dict): Component building data.
+
         """
-        if not main_operator_ws_matrix:
-            main_operator_ws_matrix = self.get_main_op_ws_matrix()
+        # Method ---------- HEAD --------------
+        if not operator_data:
+            self.get_operator_meta_data()
+        else:
+            self.operator_meta_data = operator_data
+        # Name reformatting.
         control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
         control_name = strings.search_and_replace(
-            control_name, "M_", "{}_".format(self.drawn_side)
+            control_name,
+            "M_",
+            "{}_".format(
+                self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE)
+            ),
         )
         control_name = strings.search_and_replace(
-            control_name, "name", self.drawn_name
+            control_name,
+            "name",
+            self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
         )
         control_name = strings.search_and_replace(
-            control_name, "index", str(self.drawn_index)
+            control_name,
+            "index",
+            str(self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)),
         )
+        # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_GRP".format(control_name)
         )
-        curve_instance = self.get_control_shape_instance()
+        # Find correct control shape based on meta data.
+        for index, shape_instance in enumerate(self.CONTROL_SHAPES):
+            if index is self.operator_meta_data["control_shape"]:
+                curve_instance = shape_instance.get("instance")
+        # Create control curve and match it with main_op_nd.
         curve = curve_instance.create_curve(
-            name=control_name, match=main_operator_ws_matrix
+            name=control_name,
+            match=self.operator_meta_data.get(
+                constants.META_MAIN_OP_ND_WS_MATRIX_STR
+            ),
         )
+        # At control to offset group.
         offset_grp.addChild(curve[0])
         self.controls.append(curve[1])
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         self.bnd_output_matrix.append(curve[1])
+        # Method ---------- TAIL --------------
+        logger.log(
+            level="info",
+            message="Component logic created "
+            "for: {} component".format(
+                self.operator_meta_data[constants.META_MAIN_COMP_NAME]
+            ),
+            logger=_LOGGER,
+        )
 
     def set_control_shape(self, control_shape):
         """
@@ -195,19 +217,3 @@ class Main(main.component):
                 control_shape, self.CONTROL_SHAPES
             ),
         )
-
-    def get_control_shape_instance(self):
-        """
-        Gives back the control shape instance based on set
-        control shape meta data.
-
-        Return:
-            Python object from curves module.
-
-        """
-        shape = self.main_meta_nd.attr(constants.CONTROL_SHAPE_ATTR_NAME).get(
-            asString=True
-        )
-        for data in self.CONTROL_SHAPES:
-            if shape == data["shape"]:
-                return data["instance"]

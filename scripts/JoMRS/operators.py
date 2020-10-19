@@ -1015,17 +1015,14 @@ class ComponentOperator(MainOperatorNode):
         Return:
             List: Dictionary with attributes names and values.
         """
-        result = []
+        result = dict()
         cd_attributes = (
             self.main_meta_nd.attr(constants.META_COMPONENT_DEFINED_ATTR)
             .get()
             .split(";")
         )
         for attr_ in cd_attributes:
-            data = {}
-            data["name"] = attr_
-            data["value"] = self.main_meta_nd.attr(attr_).get()
-            result.append(data)
+            result[attr_] = self.main_meta_nd.attr(attr_).get()
         return result
 
     def rename_operator_nodes(self, name):

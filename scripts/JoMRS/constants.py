@@ -140,6 +140,10 @@ META_GOD_META_ND_ATTR = 'meta_nd'
 
 META_COMPONENT_DEFINED_ATTR = "component_defined_attributes"
 
+META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
+
+META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
+
 MAIN_META_ND_PLUG = "main_meta_nd"
 
 SUB_META_ND_PLUG = "sub_meta_nd"

@@ -141,11 +141,7 @@ class component(operators.ComponentOperator):
         self.bnd_output_matrix = list()
         self.input_matrix_offset_grp = list()
         self.controls = list()
-        if self.main_op_nd:
-            self.drawn_name = self.get_component_name()
-            self.drawn_component_type = self.get_component_type()
-            self.drawn_side = self.get_component_side()
-            self.drawn_index = self.get_component_index()
+        self.operator_meta_data = dict()
 
     def add_component_defined_attributes(self):
         """
@@ -174,7 +170,6 @@ class component(operators.ComponentOperator):
             local_rotate_axes(bool): Enable/Disable.
 
         """
-        print parent
         if not parent:
             parent = selected()
         self.create_component_op_node(
@@ -184,7 +179,7 @@ class component(operators.ComponentOperator):
             axes=axes,
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,
-            parent=parent
+            parent=parent,
         )
         self.set_component_name(self.name)
         self.set_component_type(self.component_type)
@@ -203,13 +198,60 @@ class component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
+    def get_operator_meta_data(self):
+        """
+        Collect the operators meta data.
+        """
+        self.operator_meta_data[
+            constants.META_MAIN_OP_ND_WS_MATRIX_STR
+        ] = self.get_main_op_ws_matrix()
+        self.operator_meta_data[
+            constants.META_SUB_OP_ND_WS_MATRIX_STR
+        ] = self.get_sub_op_nodes_ws_matrix()
+        self.operator_meta_data[
+            constants.META_MAIN_COMP_NAME
+        ] = self.get_component_name()
+        self.operator_meta_data[
+            constants.META_MAIN_COMP_TYPE
+        ] = self.get_component_type()
+        self.operator_meta_data[
+            constants.META_MAIN_COMP_SIDE
+        ] = self.get_component_side()
+        self.operator_meta_data[
+            constants.META_MAIN_COMP_INDEX
+        ] = self.get_component_index()
+        self.operator_meta_data[
+            constants.META_MAIN_CONNECTION_TYPES
+        ] = self.get_connection_types()
+        self.operator_meta_data[
+            constants.META_MAIN_IK_SPACES
+        ] = self.get_ik_spaces_ref()
+        self.operator_meta_data[
+            constants.META_MAIN_CONNECT_ND
+        ] = self.get_connect_nd()
+        self.operator_meta_data[
+            constants.META_MAIN_PARENT_ND
+        ] = self.get_parent_nd()
+        self.operator_meta_data[
+            constants.META_MAIN_CHILD_ND
+        ] = self.get_child_nd()
+        self.operator_meta_data.update(self.get_cd_attributes())
 
-    def init_component_hierarchy(self):
+    def init_component_hierarchy(self, operator_data=None):
         """
         Init rig component base hierarchy.
+
+        Args:
+            operator_data(dict): Component building data.
+
         """
+        if not operator_data:
+            self.get_operator_meta_data()
+        else:
+            self.operator_meta_data = operator_data
         component_root_name = "{}_ROOT_{}_component_0_GRP".format(
-            self.drawn_side, self.drawn_name
+            self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
+            self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
         )
         component_root_name = strings.string_checkup(component_root_name)
         self.component_root = pmc.createNode("container", n=component_root_name)
@@ -248,6 +290,14 @@ class component(operators.ComponentOperator):
         )
         for node in temp:
             self.component_root.addNode(node)
+        logger.log(
+            level="info",
+            message="Component hierarchy setted up "
+            "for: {} component".format(
+                self.operator_meta_data[constants.META_MAIN_COMP_NAME]
+            ),
+            logger=_LOGGER,
+        )
 
     def create_input_ws_matrix_port(self, name):
         """
@@ -354,9 +404,7 @@ class component(operators.ComponentOperator):
             value=value,
         )
 
-    def build_component_logic(
-        self, main_operator_ws_matrix=None, sub_operator_ws_matrix=None
-    ):
+    def build_component_logic(self, operator_data=None):
         """
         Method for building a component. Use the list variables
         self.component_rig_list, self.bnd_output_matrix,
@@ -364,12 +412,26 @@ class component(operators.ComponentOperator):
         of the component
 
         Args:
-            main_operator_ws_matrix(matrix): World space position of main
-            operator.
-            sub_operator_ws_matrix(list): List of sub operators world space
-            position.
+            operator_data(dict): Component building data.
 
         """
+        # Method ---------- HEAD --------------
+        # Check if operator data is passed or not. This section has to be
+        # implemented every time at the beginning of the method.
+        if not operator_data:
+            self.get_operator_meta_data()
+        else:
+            self.operator_meta_data = operator_data
+        # Method ---------- TAIL --------------
+        # Logger section for proper user feedback.
+        logger.log(
+            level="info",
+            message="Component logic created "
+            "for: {} component".format(
+                self.operator_meta_data[constants.META_MAIN_COMP_NAME]
+            ),
+            logger=_LOGGER,
+        )
         return True
 
     def connect_component_edges(self):
@@ -399,6 +461,19 @@ class component(operators.ComponentOperator):
                         node, ish=True, ihb=True, iha=True, inc=True
                     )
                     self.component.addChild(node)
+        # Clear lists for reuse!
+        del self.bnd_output_matrix[:]
+        del self.input_matrix_offset_grp[:]
+        del self.component_rig_list[:]
+        # Step feedback
+        logger.log(
+            level="info",
+            message="Component edges connected "
+            "for: {} component".format(
+                self.operator_meta_data[constants.META_MAIN_COMP_NAME]
+            ),
+            logger=_LOGGER,
+        )
 
     def build_from_operator(self):
         """
