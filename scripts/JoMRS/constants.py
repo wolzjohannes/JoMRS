@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 08 / 30
+# Date:       2020 / 10 / 17
 
 """
 JoMRS constants module for global values.
@@ -137,6 +137,12 @@ META_MAIN_PARENT_ND = "parent_nd"
 META_MAIN_CHILD_ND = "child_nd"
 
 META_GOD_META_ND_ATTR = 'meta_nd'
+
+META_COMPONENT_DEFINED_ATTR = "component_defined_attributes"
+
+META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
+
+META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
 MAIN_META_ND_PLUG = "main_meta_nd"
 

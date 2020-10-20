@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 7
+# Date:       2020 / 10 / 17
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -443,6 +443,7 @@ class ComponentOperator(MainOperatorNode):
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
         self.all_container_nodes = []
         self.sub_operators = []
+        self.cd_attributes = []
         self.joint_control = None
         self.main_op_nd_name = None
         self.sub_op_nd_name = None
@@ -804,6 +805,16 @@ class ComponentOperator(MainOperatorNode):
                 node, self.main_op_nd, "message", constants.NODE_LIST_ATTR_NAME
             )
 
+    def set_cd_attributes(self):
+        """
+        Set the component defined attributes data on meta node.
+        """
+        if self.cd_attributes:
+            attributes = ";".join(self.cd_attributes)
+            self.main_meta_nd.attr(constants.META_COMPONENT_DEFINED_ATTR).set(
+                attributes
+            )
+
     def set_connection_type(self, types):
         """
         Set the connection type.
@@ -996,6 +1007,23 @@ class ComponentOperator(MainOperatorNode):
             .get()
             .split(";")
         )
+
+    def get_cd_attributes(self):
+        """
+        Get the component defined attribute.
+
+        Return:
+            List: Dictionary with attributes names and values.
+        """
+        result = dict()
+        cd_attributes = (
+            self.main_meta_nd.attr(constants.META_COMPONENT_DEFINED_ATTR)
+            .get()
+            .split(";")
+        )
+        for attr_ in cd_attributes:
+            result[attr_] = self.main_meta_nd.attr(attr_).get()
+        return result
 
     def rename_operator_nodes(self, name):
         """
