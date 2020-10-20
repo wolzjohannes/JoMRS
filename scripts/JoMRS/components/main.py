@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 17
+# Date:       2020 / 10 / 20
 
 """
 Rig components main module. This class is the template to create a rig
@@ -237,18 +237,10 @@ class component(operators.ComponentOperator):
         ] = self.get_child_nd()
         self.operator_meta_data.update(self.get_cd_attributes())
 
-    def init_component_hierarchy(self, operator_data=None):
+    def init_component_hierarchy(self):
         """
         Init rig component base hierarchy.
-
-        Args:
-            operator_data(dict): Component building data.
-
         """
-        if not operator_data:
-            self.get_operator_meta_data()
-        else:
-            self.operator_meta_data = operator_data
         component_root_name = "{}_ROOT_{}_component_0_GRP".format(
             self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
             self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
@@ -404,25 +396,13 @@ class component(operators.ComponentOperator):
             value=value,
         )
 
-    def build_component_logic(self, operator_data=None):
+    def build_component_logic(self):
         """
         Method for building a component. Use the list variables
         self.component_rig_list, self.bnd_output_matrix,
         self.input_matrix_offset_grp to define input and output connections
-        of the component
-
-        Args:
-            operator_data(dict): Component building data.
-
+        of the component.
         """
-        # Method ---------- HEAD --------------
-        # Check if operator data is passed or not. This section has to be
-        # implemented every time at the beginning of the method.
-        if not operator_data:
-            self.get_operator_meta_data()
-        else:
-            self.operator_meta_data = operator_data
-        # Method ---------- TAIL --------------
         # Logger section for proper user feedback.
         logger.log(
             level="info",
@@ -475,11 +455,15 @@ class component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
-    def build_from_operator(self):
+    def build_from_operator(self, operator_data=None):
         """
         Build the whole component rig from operator.
         With initial hierarchy.
         """
+        if not operator_data:
+            self.get_operator_meta_data()
+        else:
+            self.operator_meta_data = operator_data
         self.init_component_hierarchy()
         self.build_component_logic()
         self.connect_component_edges()

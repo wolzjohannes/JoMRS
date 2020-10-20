@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 17
+# Date:       2020 / 10 / 20
 
 """
 Build a single single_control
@@ -132,19 +132,10 @@ class Main(main.component):
             self.LOCAL_ROTATION_AXES,
         )
 
-    def build_component_logic(self, operator_data=None):
+    def build_component_logic(self):
         """
         Build component logic. It is derivative method from parent class.
-
-        Args:
-            operator_data(dict): Component building data.
-
         """
-        # Method ---------- HEAD --------------
-        if not operator_data:
-            self.get_operator_meta_data()
-        else:
-            self.operator_meta_data = operator_data
         # Name reformatting.
         control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
         control_name = strings.search_and_replace(
@@ -185,7 +176,6 @@ class Main(main.component):
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         self.bnd_output_matrix.append(curve[1])
-        # Method ---------- TAIL --------------
         logger.log(
             level="info",
             message="Component logic created "
