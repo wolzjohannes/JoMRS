@@ -179,7 +179,7 @@
         -divider 0
         -subMenu 0
         -tearOff 0
-        -command "if ( `selectMode -q -component` ) { setSelectMode objects Objects; } \t\t\t else { setSelectMode components Components; }" 
+        -command "if ( `selectMode -q -Component` ) { setSelectMode objects Objects; } \t\t\t else { setSelectMode components Components; }"
         -altModifier 0
         -optionModifier 0
         -commandModifier 0

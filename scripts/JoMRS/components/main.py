@@ -20,11 +20,11 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 20
+# Date:       2020 / 10 / 21
 
 """
 Rig components main module. This class is the template to create a rig
-component. Every rig component should inherit this class as template.
+Component. Every rig Component should inherit this class as template.
 """
 import os
 import pymel.core as pmc
@@ -47,7 +47,7 @@ reload(strings)
 # input output management
 # build process
 # build steps. Example: layout rig. orient rig. ref nodes.
-# all repedative things in a component build.
+# all repedative things in a Component build.
 # What are the repedative things:
 # Build comp hierarchy and parent it under root hierarchy.
 # Set and orient joints.
@@ -96,7 +96,7 @@ def selected():
 ##########################################################
 
 
-class component(operators.ComponentOperator):
+class Component(operators.ComponentOperator):
     """
     Component template class.
     """
@@ -117,8 +117,8 @@ class component(operators.ComponentOperator):
         Args:
             name(str, optional): Component name.
             component_type(str, optional): Component type.
-            side(str, optional): The component side.
-            index(int, optional): The component index.
+            side(str, optional): The Component side.
+            index(int, optional): The Component index.
             operators_root_node(pmc.PyNode(), optional): The operators root
             node.
             main_operator_node(pmc.PyNode(), optional): The main operator_node.
@@ -132,16 +132,16 @@ class component(operators.ComponentOperator):
         self.component_type = component_type
         self.side = side
         self.index = index
-        self.component_root = list()
-        self.input = list()
-        self.output = list()
-        self.component = list()
-        self.spaces = list()
-        self.component_rig_list = list()
-        self.bnd_output_matrix = list()
-        self.input_matrix_offset_grp = list()
-        self.controls = list()
-        self.operator_meta_data = dict()
+        self.component_root = []
+        self.input = []
+        self.output = []
+        self.component = []
+        self.spaces = []
+        self.component_rig_list = []
+        self.bnd_output_matrix = []
+        self.input_matrix_offset_grp = []
+        self.controls = []
+        self.operator_meta_data = {}
 
     def add_component_defined_attributes(self):
         """
@@ -159,7 +159,7 @@ class component(operators.ComponentOperator):
         ik_space_ref=None,
     ):
         """
-        Build component operator.
+        Build Component operator.
 
         Args:
             axes(str): The build axes. Valid is X, -X, Y, -Y, Z, -Z.
@@ -193,7 +193,7 @@ class component(operators.ComponentOperator):
             self.set_ik_spaces_ref(ik_space_ref)
         logger.log(
             level="info",
-            message="{} component operator "
+            message="{} Component operator "
             "build with the name: {}".format(self.component_type, self.name),
             logger=_LOGGER,
         )
@@ -239,7 +239,7 @@ class component(operators.ComponentOperator):
 
     def init_component_hierarchy(self):
         """
-        Init rig component base hierarchy.
+        Init rig Component base hierarchy.
         """
         component_root_name = "{}_ROOT_{}_component_0_GRP".format(
             self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
@@ -253,7 +253,7 @@ class component(operators.ComponentOperator):
         self.component_root.iconName.set(icon)
         self.input = pmc.createNode("transform", n="input")
         self.output = pmc.createNode("transform", n="output")
-        self.component = pmc.createNode("transform", n="component")
+        self.component = pmc.createNode("transform", n="Component")
         self.spaces = pmc.createNode("transform", n="spaces")
         temp = [self.input, self.output, self.component, self.spaces]
         attributes.add_attr(
@@ -285,7 +285,7 @@ class component(operators.ComponentOperator):
         logger.log(
             level="info",
             message="Component hierarchy setted up "
-            "for: {} component".format(
+            "for: {} Component".format(
                 self.operator_meta_data[constants.META_MAIN_COMP_NAME]
             ),
             logger=_LOGGER,
@@ -365,7 +365,7 @@ class component(operators.ComponentOperator):
         value=1,
     ):
         """
-        Add user defined port to the input or output port of a rig component.
+        Add user defined port to the input or output port of a rig Component.
         By Default it add a float value to the input port with a given
         name, with a min value of 0.0 a max value of 1.0 and a value of 1.0.
 
@@ -398,16 +398,16 @@ class component(operators.ComponentOperator):
 
     def build_component_logic(self):
         """
-        Method for building a component. Use the list variables
+        Method for building a Component. Use the list variables
         self.component_rig_list, self.bnd_output_matrix,
         self.input_matrix_offset_grp to define input and output connections
-        of the component.
+        of the Component.
         """
         # Logger section for proper user feedback.
         logger.log(
             level="info",
             message="Component logic created "
-            "for: {} component".format(
+            "for: {} Component".format(
                 self.operator_meta_data[constants.META_MAIN_COMP_NAME]
             ),
             logger=_LOGGER,
@@ -416,7 +416,7 @@ class component(operators.ComponentOperator):
 
     def connect_component_edges(self):
         """
-        Method to connect the input and output of a component.
+        Method to connect the input and output of a Component.
         """
         for index, bnd_node in enumerate(self.bnd_output_matrix):
             bnd_node.worldMatrix[0].connect(
@@ -449,7 +449,7 @@ class component(operators.ComponentOperator):
         logger.log(
             level="info",
             message="Component edges connected "
-            "for: {} component".format(
+            "for: {} Component".format(
                 self.operator_meta_data[constants.META_MAIN_COMP_NAME]
             ),
             logger=_LOGGER,
@@ -457,7 +457,7 @@ class component(operators.ComponentOperator):
 
     def build_from_operator(self, operator_data=None):
         """
-        Build the whole component rig from operator.
+        Build the whole Component rig from operator.
         With initial hierarchy.
         """
         if not operator_data:

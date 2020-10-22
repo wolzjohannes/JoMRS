@@ -155,7 +155,7 @@ class TestOperators(TestCase):
         self.test_op_1.set_component_index(10)
         comp_index = self.test_op_1.get_component_index()
         self.assertEqual(comp_index, 10)
-        # Test component type data.
+        # Test Component type data.
         self.test_op_1.set_component_type("single_control")
         comp_type = self.test_op_1.get_component_type()
         self.assertEqual(comp_type, "single_control")

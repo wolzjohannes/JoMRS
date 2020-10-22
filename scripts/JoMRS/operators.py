@@ -124,13 +124,15 @@ class OperatorsRootNode(object):
             None if given operators_root_node is not valid.
 
         """
+        self.god_meta_nd = None
+        self.root_meta_nd = None
         self.op_root_nd = operators_root_node
         # Check if node is a valid root node.
         if self.op_root_nd:
             if not valid_node(self.op_root_nd, typ="JoMRS_root"):
                 self.op_root_nd = None
-        self.god_meta_nd = None
-        self.root_meta_nd = None
+            else:
+                self.get_root_meta_nd_from_op_root_nd()
         self.root_op_attr = {
             "name": constants.OP_ROOT_TAG_NAME,
             "attrType": "bool",
@@ -400,7 +402,7 @@ class MainOperatorNode(OperatorsRootNode):
 
 class ComponentOperator(MainOperatorNode):
     """
-    Create the whole component operator.
+    Create the whole Component operator.
     """
 
     SUB_ND_COLOR_INDEX = 21
@@ -596,8 +598,6 @@ class ComponentOperator(MainOperatorNode):
         # If not create a new root operator node.
         if not self.op_root_nd:
             self.create_root_op_node()
-        else:
-            self.get_root_meta_nd_from_op_root_nd()
         # Set meta data.
         self.set_root_meta_nd()
         self.set_component_side(side)
@@ -701,20 +701,20 @@ class ComponentOperator(MainOperatorNode):
 
     def set_component_type(self, type):
         """
-        Set the component type.
+        Set the Component type.
 
         Args:
-                type(str): The component type.
+                type(str): The Component type.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_TYPE).set(type)
 
     def set_component_name(self, name):
         """
-        Set the component name.
+        Set the Component name.
 
         Args:
-                name(str): The component name.
+                name(str): The Component name.
 
         """
         name = strings.normalize_string(name, _LOGGER)
@@ -722,20 +722,20 @@ class ComponentOperator(MainOperatorNode):
 
     def set_component_side(self, side):
         """
-        Set the component side.
+        Set the Component side.
 
         Args:
-                side(str): The component side.
+                side(str): The Component side.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_SIDE).set(side)
 
     def set_component_index(self, index):
         """
-        Set the component index.
+        Set the Component index.
 
         Args:
-                index(int): The component index.
+                index(int): The Component index.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_INDEX).set(index)
@@ -807,7 +807,7 @@ class ComponentOperator(MainOperatorNode):
 
     def set_cd_attributes(self):
         """
-        Set the component defined attributes data on meta node.
+        Set the Component defined attributes data on meta node.
         """
         if self.cd_attributes:
             attributes = ";".join(self.cd_attributes)
@@ -837,7 +837,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_type(self):
         """
-        Get component type.
+        Get Component type.
 
         Return:
                 string: Component type.
@@ -847,7 +847,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_name(self):
         """
-        Get component name.
+        Get Component name.
 
         Return:
                 string: Component name.
@@ -856,7 +856,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_side(self):
         """
-        Get component side.
+        Get Component side.
 
         Return:
                 string: Component side.
@@ -865,7 +865,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_index(self):
         """
-        Get component index.
+        Get Component index.
 
         Return:
                 string: Component side.
@@ -1010,7 +1010,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_cd_attributes(self):
         """
-        Get the component defined attribute.
+        Get the Component defined attribute.
 
         Return:
             List: Dictionary with attributes names and values.
@@ -1027,7 +1027,7 @@ class ComponentOperator(MainOperatorNode):
 
     def rename_operator_nodes(self, name):
         """
-        Change operator and component name. Search string is the component
+        Change operator and Component name. Search string is the Component
         name in the meta data.
 
         Args:

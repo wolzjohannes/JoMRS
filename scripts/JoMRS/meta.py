@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 25
+# Date:       2020 / 10 / 22
 
 """
 Meta node creation module.
@@ -163,7 +163,7 @@ class GodMetaNode(MetaNode):
 
     @classmethod
     def _postCreateVirtual(
-        cls, newNode, type=constants.META_TYPE, name="god_meta_0_METAND"
+        cls, newNode, type=constants.META_TYPE, name=constants.META_GOD_ND_NAME
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -293,7 +293,7 @@ class RootOpMetaNode(MetaNode):
         cls,
         newNode,
         type=constants.META_TYPE,
-        god_meta_name="god_meta_0_METAND",
+        god_meta_name=constants.META_GOD_ND_NAME,
     ):
         """
         This is called after creation, pymel/cmds allowed.
@@ -435,6 +435,22 @@ class RootOpMetaNode(MetaNode):
         new_attribute["input"] = node.message
         attributes.add_attr(node=self, **new_attribute)
 
+    def get_main_meta_nodes(self):
+        """
+        Get all connected main meta nodes.
+
+        Return:
+            list: All found meta nodes. None if empty.
+
+        """
+        ud_attr = self.listAttr(ud=True)
+        ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
+        return [
+            self.attr(attr_).get()
+            for attr_ in ud_attr
+            if re.search(constants.MAIN_META_ND_PLUG, attr_)
+        ]
+
     def set_root_op_nd(self, root_op_node):
         """
         Connect meta node with root op node.
@@ -450,7 +466,7 @@ class RootOpMetaNode(MetaNode):
 
 class MainOpMetaNode(MetaNode):
     """
-    Creates a Meta Node as Main Operator Meta Node for a component.
+    Creates a Meta Node as Main Operator Meta Node for a Component.
     """
 
     SUBNODE_TYPE = constants.META_TYPE_B
@@ -500,7 +516,7 @@ class MainOpMetaNode(MetaNode):
         cls,
         newNode,
         type=constants.META_TYPE,
-        god_meta_name="god_meta_0_METAND",
+        god_meta_name=constants.META_GOD_ND_NAME,
         connection_types=constants.DEFAULT_CONNECTION_TYPES,
     ):
         """
@@ -690,7 +706,7 @@ class MainOpMetaNode(MetaNode):
 
 class SubOpMetaNode(MetaNode):
     """
-    Creates a Meta Node as Sub Meta Node for a component..
+    Creates a Meta Node as Sub Meta Node for a Component..
     """
 
     SUBNODE_TYPE = constants.META_TYPE_C
@@ -740,7 +756,7 @@ class SubOpMetaNode(MetaNode):
         cls,
         newNode,
         type=constants.META_TYPE,
-        god_meta_name="god_meta_0_METAND",
+        god_meta_name=constants.META_GOD_ND_NAME,
     ):
         """
         This is called after creation, pymel/cmds allowed.

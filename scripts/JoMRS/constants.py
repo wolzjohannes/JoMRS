@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 17
+# Date:       2020 / 10 / 22
 
 """
 JoMRS constants module for global values.
@@ -64,7 +64,7 @@ SUB_OP_MESSAGE_ATTR_NAME = "sub_operator_nd"
 
 LINEAR_CURVE_NAME = "M_linear_op_0_CRV"
 
-DEFAULT_OPERATOR_NAME = "component"
+DEFAULT_OPERATOR_NAME = "Component"
 
 DEFAULT_SIDE = "M"
 
@@ -81,6 +81,8 @@ DEFAULT_SUB_OPERATORS_SCALE = [0.25, 0.25, 0.25]
 DEFAULT_CONNECTION_TYPES = "translate;rotate;scale"
 
 DEFAULT_COMPONENT_TYPE = 'None'
+
+META_GOD_ND_NAME = "god_meta_0_METAND"
 
 META_NODE_ID = "meta_node"
 
