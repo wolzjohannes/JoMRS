@@ -159,3 +159,5 @@ INPUT_WS_PORT_NAME = "input_ws_matrix"
 CONTROL_SHAPE_ATTR_NAME = "control_shape"
 
 NODE_LIST_ATTR_NAME = "node_list"
+
+RIG_ROOT_NODE = "M_RIG_name_0_GRP"

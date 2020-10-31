@@ -599,8 +599,12 @@ def create_aim_constraint(
 
 
 def decompose_matrix_constraint(
-    source, target, translation=True, rotation=True, scale=True,
-    target_plug=None
+    source,
+    target,
+    translation=True,
+    rotation=True,
+    scale=True,
+    target_plug=None,
 ):
     """
     Create decompose matrix constraint.
@@ -617,7 +621,7 @@ def decompose_matrix_constraint(
     """
     decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
     if not target_plug:
-        target_plug = 'worldMatrix[0]'
+        target_plug = "worldMatrix[0]"
     target.attr(target_plug).connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
@@ -1213,7 +1217,7 @@ def create_ref_transform(
     Example:
             >>> create_ref_transform('test', 'M', 0, True,
             >>> [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('yournode'))
+            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('your_node'))
 
     Return:
             The new ref node.
@@ -1233,3 +1237,64 @@ def create_ref_transform(
     if child:
         ref_trs.addChild(child)
     return ref_trs
+
+
+##########################################################
+# CLASSES
+##########################################################
+
+
+class ContainerNode(object):
+    """
+    Wrapper for the maya container node. JoMRS expansion.
+    """
+
+    def __init__(self, name, icon, container_node=None):
+        """
+        Init creation of the container node.
+
+        Args:
+            name(str): Container node name.
+            icon(str): Path to the icon file.
+
+        """
+        self.container = container_node
+        if not self.container:
+            self.container = pmc.nt.Container(n=name)
+            self.container.iconName(icon)
+        self.container_content = {}
+
+    def create_transform(self, name):
+        """
+        Create a simple transform as container part.
+
+        Args:
+            name(str): Transform name.
+
+        """
+        self.container_content[name] = pmc.createNode("transform", n=name)
+        self.container.addNode(
+            transform, ish=True, ihb=True, iha=True, inc=True
+        )
+
+    def create_container_content_from_list(self, list):
+        """
+        Create the transform container content from list
+        
+        Args:
+            list(list): List of string.
+
+        Return:
+            False if fail.
+
+        """
+        for str in list:
+            if not isinstance(str, string):
+                logger.log(
+                    "error",
+                    "Only string as list content allowed.",
+                    self.create_container_content_from_list(),
+                    logger=_LOGGER,
+                )
+                return False
+            self.create_transform(str)

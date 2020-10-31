@@ -72,9 +72,9 @@ class Main(components.main.Component):
 
     def __init__(
         self,
-        name=None,
-        side=None,
-        index=None,
+        name=constants.DEFAULT_OPERATOR_NAME,
+        side=constants.DEFAULT_SIDE,
+        index=constants.DEFAULT_INDEX,
         operators_root_node=None,
         main_operator_node=None,
         sub_operator_node=None,

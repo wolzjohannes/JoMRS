@@ -703,6 +703,12 @@ class MainOpMetaNode(MetaNode):
             constants.META_MAIN_CHILD_ND,
         )
 
+    def get_main_op_nd(self):
+        """
+        Get the main op node from meta data.
+        """
+        return self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME).get()
+
 
 class SubOpMetaNode(MetaNode):
     """

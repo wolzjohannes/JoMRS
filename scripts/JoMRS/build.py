@@ -36,6 +36,7 @@ import constants
 import logger
 import logging
 import components.main
+import importlib
 
 reload(components.main)
 
@@ -59,12 +60,110 @@ class Main(object):
             sub_operator_node=self.selection,
         )
         self.god_meta_nd = []
+        self.operators_meta_data = []
+        self.rig_meta_data = {}
+        self.rig_transform = None
+        self.rig_components = None
+        self.rig_hierarchy = None
+        self.rig_geo = None
+        self.rig_bshp = None
+        self.shared_attr = None
+        self.no_transform = None
 
-    def get_main_meta_nodes_from_root_meta_node(self):
+    def build_rig_hierarchy(self):
+        rig_root_name = constants.RIG_ROOT_NODE.replace(
+            name, self.rig_meta_data.get("rig_name")
+        )
+        self.rig_hierarchy = pmc.createNode("container", n=rig_root_name)
+        icon = os.path.normpath(
+            "{}/rig_hierarchy_logo.png".format(constants.ICONS_PATH)
+        )
+        self.rig_hierarchy.iconName.set(icon)
+        self.rig_transform = pmc.createNode("transform", n="M_RIG_0_GRP")
+        self.rig_components = pmc.createNode(
+            "transform", n="M_COMPONENTS_0_GRP"
+        )
+        self.rig_geo = pmc.createNode("transform", n="M_GEO_0_GRP")
+        self.rig_bshp = pmc.createNode("transform", n="M_BSHP_0_GRP")
+        self.shared_attr = pmc.createNode("transform", n="M_SHARED_ATTR_0_GRP")
+        self.no_transform = pmc.createNode(
+            "transform", n="M_NO_TRANSFORM_0_GRP"
+        )
+        hierarchy_nodes = [self.rig_transform, self.rig_components, ]
+
+    def add_node_to_rig_hierarchy(self, node):
+        """
+        Add node to rig hierarchy.
+
+        Args:
+            node(pmc.PyNode()): Node to add.
+
+        """
+        self.rig_hierarchy.addNode(node, ish=True, ihb=True, iha=True, inc=True)
+
+    def build_components(self):
+        raise NotImplemented()
+
+    def connect_components(self):
+        raise NotImplemented()
+
+    def build_deformation_rig(self):
+        raise NotImplemented()
+
+    def execute_building_steps(self, operator_data=None):
+        self.build_rig_hierarchy()
+
+    def get_operators_meta_data_from_root_meta_node(self, root_meta_nd=None):
+        """
+        Gives back all operators meta data from operators root node.
+
+        Args:
+            root_meta_nd(pmc.PyNode, optional): Root meta node.
+
+        Return:
+            List: Filled with a dictionary for each operator in the scene.
+
+        """
+        main_meta_nodes = self.get_main_meta_nodes_from_root_meta_node(
+            root_meta_nd
+        )
+        if main_meta_nodes:
+            all_main_op_nodes = [
+                meta_node.get_main_op_nd() for meta_node in main_meta_nodes
+            ]
+            for main_op_nd in all_main_op_nodes:
+                component_instance = components.main.Component(
+                    main_operator_node=main_op_nd
+                )
+                component_instance.get_operator_meta_data()
+                self.operators_meta_data.append(
+                    component_instance.operator_meta_data
+                )
+        return self.operators_meta_data
+
+    def get_main_meta_nodes_from_root_meta_node(self, root_meta_nd=None):
         """
         Get all main meta nodes from root meta nd.
+
+        Args:
+            root_meta_nd(pmc.PyNode, optional): Root meta node.
+
+        Return:
+            List: ALl connected meta_nodes.
+            False if fail.
+
         """
-        return self.component_instance.root_meta_nd.get_main_meta_nodes()
+        if not root_meta_nd:
+            if self.component_instance.root_meta_nd:
+                root_meta_nd = self.component_instance.root_meta_nd
+            else:
+                logger.log(
+                    level="error",
+                    message="Need a selected JoMRS node " "in the scene",
+                    logger=_LOGGER,
+                )
+                return False
+        return root_meta_nd.get_main_meta_nodes()
 
     def get_god_meta_nd_from_scene(self):
         """
@@ -100,3 +199,6 @@ class Main(object):
             logger=_LOGGER,
         )
         return False
+
+    def get_operators_meta_data_from_god_node(self):
+        raise NotImplemented()

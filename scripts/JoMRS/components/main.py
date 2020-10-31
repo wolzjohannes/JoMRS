@@ -246,16 +246,17 @@ class Component(operators.ComponentOperator):
             self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
         )
         component_root_name = strings.string_checkup(component_root_name)
-        self.component_root = pmc.createNode("container", n=component_root_name)
         icon = os.path.normpath(
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
-        self.component_root.iconName.set(icon)
-        self.input = pmc.createNode("transform", n="input")
-        self.output = pmc.createNode("transform", n="output")
-        self.component = pmc.createNode("transform", n="Component")
-        self.spaces = pmc.createNode("transform", n="spaces")
-        temp = [self.input, self.output, self.component, self.spaces]
+        container_node = mayautils.ContainerNode(component_root_name, icon)
+        container_node.create_container_content(['input', 'output',
+                                                 'component', 'spaces'])
+        self.component_root = container_node.container
+        self.input = container_node.container_content.get('input')
+        self.output = container_node.container_content.get('output')
+        self.component = container_node.container_content.get('component')
+        self.spaces = container_node.container_content.get('spaces')
         attributes.add_attr(
             self.input,
             name=constants.INPUT_WS_PORT_NAME,
@@ -280,8 +281,6 @@ class Component(operators.ComponentOperator):
             keyable=False,
             hidden=True,
         )
-        for node in temp:
-            self.component_root.addNode(node)
         logger.log(
             level="info",
             message="Component hierarchy setted up "
