@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 17
+# Date:       2020 / 11 / 07
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -42,6 +42,7 @@ reload(meta)
 reload(curves)
 reload(strings)
 reload(attributes)
+reload(mayautils)
 
 ##########################################################
 # GLOBALS
@@ -161,11 +162,11 @@ class OperatorsRootNode(object):
 
         """
         # Create a asset container as root node.
-        self.op_root_nd = pmc.createNode("container", n=constants.OP_ROOT_NAME)
         icon = os.path.normpath(
             "{}/root_operator_logo.png".format(constants.ICONS_PATH)
         )
-        self.op_root_nd.iconName.set(icon)
+        container_node = mayautils.ContainerNode(constants.OP_ROOT_NAME, icon)
+        self.op_root_nd = container_node.container
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
         # Create the meta node for the root node.
