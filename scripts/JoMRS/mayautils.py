@@ -1249,7 +1249,7 @@ class ContainerNode(object):
     Wrapper for the maya container node. JoMRS expansion.
     """
 
-    def __init__(self, name, icon, container_node=None):
+    def __init__(self, name=None, icon=None, container_node=None):
         """
         Init creation of the container node.
 
@@ -1261,7 +1261,8 @@ class ContainerNode(object):
         self.container = container_node
         if not self.container:
             self.container = pmc.nt.Container(n=name)
-            self.container.iconName(icon)
+            if icon:
+                self.container.iconName.set(icon)
         self.container_content = {}
 
     def create_transform(self, name):
@@ -1274,7 +1275,7 @@ class ContainerNode(object):
         """
         self.container_content[name] = pmc.createNode("transform", n=name)
         self.container.addNode(
-            transform, ish=True, ihb=True, iha=True, inc=True
+            self.container_content[name], ish=True, ihb=True, iha=True, inc=True
         )
 
     def create_container_content_from_list(self, list):
@@ -1288,8 +1289,8 @@ class ContainerNode(object):
             False if fail.
 
         """
-        for str in list:
-            if not isinstance(str, string):
+        for str_ in list:
+            if not isinstance(str_, str):
                 logger.log(
                     "error",
                     "Only string as list content allowed.",
@@ -1297,4 +1298,24 @@ class ContainerNode(object):
                     logger=_LOGGER,
                 )
                 return False
-            self.create_transform(str)
+            self.create_transform(str_)
+
+    def get_container_content(self):
+        """
+        Get the container nodes and store them in a dictionary.
+        """
+        container_nodes = self.container.getNodeList()
+        for node in container_nodes:
+            self.container_content[node.name()] = node
+
+    def add_node_to_container_content(self, node, content_name):
+        """
+        Add node to container content
+
+        Args:
+            node(pmc.PyNode()): The node to add.
+            content_name(str): The content node.
+
+        """
+        self.container.addNode(node, ish=True, ihb=True, iha=True, inc=True)
+        self.container_content.get(content_name).addChild(node)

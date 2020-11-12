@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 20
+# Date:       2020 / 11 / 12
 
 """
 Build a single single_control
@@ -35,11 +35,6 @@ import logging
 import logger
 import strings
 
-reload(curves)
-reload(attributes)
-reload(components.main)
-reload(constants)
-
 ##########################################################
 # GLOBALS
 ##########################################################
@@ -51,7 +46,7 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 ##########################################################
 
 
-class Main(components.main.Component):
+class MainCreate(components.main.Component):
     """
     Single single_control Component class
     """

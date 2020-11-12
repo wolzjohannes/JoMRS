@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 22
+# Date:       2020 / 11 / 12
 
 """
 Meta node creation module.
@@ -31,9 +31,6 @@ import attributes
 import re
 import strings
 import constants
-
-reload(constants)
-reload(attributes)
 
 ##########################################################
 # GLOBALS

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 21
+# Date:       2020 / 11 / 12
 
 """
 Rig components main module. This class is the template to create a rig
@@ -35,11 +35,6 @@ import logger
 import logging
 import constants
 import mayautils
-
-reload(constants)
-reload(mayautils)
-reload(operators)
-reload(strings)
 
 ##########################################################
 # Methods
@@ -133,10 +128,6 @@ class Component(operators.ComponentOperator):
         self.side = side
         self.index = index
         self.component_root = []
-        self.input = []
-        self.output = []
-        self.component = []
-        self.spaces = []
         self.component_rig_list = []
         self.bnd_output_matrix = []
         self.input_matrix_offset_grp = []
@@ -249,16 +240,12 @@ class Component(operators.ComponentOperator):
         icon = os.path.normpath(
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
-        container_node = mayautils.ContainerNode(component_root_name, icon)
-        container_node.create_container_content(['input', 'output',
-                                                 'component', 'spaces'])
-        self.component_root = container_node.container
-        self.input = container_node.container_content.get('input')
-        self.output = container_node.container_content.get('output')
-        self.component = container_node.container_content.get('component')
-        self.spaces = container_node.container_content.get('spaces')
+        self.component_root = mayautils.ContainerNode(component_root_name, icon)
+        self.component_root.create_container_content_from_list(
+            ["input", "output", "component", "spaces"]
+        )
         attributes.add_attr(
-            self.input,
+            self.component_root.container_content.get("input"),
             name=constants.INPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
@@ -266,7 +253,7 @@ class Component(operators.ComponentOperator):
             hidden=True,
         )
         attributes.add_attr(
-            self.output,
+            self.component_root.container_content.get("output"),
             name=constants.OUTPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
@@ -274,7 +261,7 @@ class Component(operators.ComponentOperator):
             hidden=True,
         )
         attributes.add_attr(
-            self.output,
+            self.component_root.container_content.get("output"),
             name=constants.BND_OUTPUT_WS_PORT_NAME,
             attrType="matrix",
             multi=True,
@@ -299,7 +286,7 @@ class Component(operators.ComponentOperator):
 
         """
         attributes.add_attr(
-            self.input,
+            self.component_root.container_content.get("input"),
             name="{}_input_ws_matrix".format(name),
             attrType="matrix",
             keyable=False,
@@ -315,7 +302,7 @@ class Component(operators.ComponentOperator):
 
         """
         attributes.add_attr(
-            self.input,
+            self.component_root.container_content.get("input"),
             name="{}_input_os_matrix".format(name),
             attrType="matrix",
             keyable=False,
@@ -331,7 +318,7 @@ class Component(operators.ComponentOperator):
 
         """
         attributes.add_attr(
-            self.output,
+            self.component_root.container_content.get("output"),
             name="{}_output_ws_matrix".format(name),
             attrType="matrix",
             keyable=False,
@@ -347,7 +334,7 @@ class Component(operators.ComponentOperator):
 
         """
         attributes.add_attr(
-            self.output,
+            self.component_root.container_content.get("output"),
             name="{}_output_os_matrix".format(name),
             attrType="matrix",
             keyable=False,
@@ -382,9 +369,9 @@ class Component(operators.ComponentOperator):
             raise AttributeError(
                 'Chosen port not valid. Valid values are ["input", "output"]'
             )
-        node = self.input
+        node = self.component_root.container_content.get("input")
         if component_port == "output":
-            node = self.output
+            node = self.component_root.container_content.get("output")
 
         attributes.add_attr(
             node=node,
@@ -419,7 +406,7 @@ class Component(operators.ComponentOperator):
         """
         for index, bnd_node in enumerate(self.bnd_output_matrix):
             bnd_node.worldMatrix[0].connect(
-                self.output.attr(
+                self.component_root.container_content.get("output").attr(
                     "{}[{}]".format(
                         constants.BND_OUTPUT_WS_PORT_NAME, str(index)
                     )
@@ -428,18 +415,16 @@ class Component(operators.ComponentOperator):
         for index, input_node in enumerate(self.input_matrix_offset_grp):
             mayautils.decompose_matrix_constraint(
                 source=input_node,
-                target=self.input,
+                target=self.component_root.container_content.get("input"),
                 target_plug="{}[{}]".format(
                     constants.INPUT_WS_PORT_NAME, str(index)
                 ),
             )
         if self.component_rig_list:
             for node in self.component_rig_list:
-                if self.component_root:
-                    self.component_root.addNode(
-                        node, ish=True, ihb=True, iha=True, inc=True
-                    )
-                    self.component.addChild(node)
+                self.component_root.add_node_to_container_content(
+                    node, "component"
+                )
         # Clear lists for reuse!
         del self.bnd_output_matrix[:]
         del self.input_matrix_offset_grp[:]
@@ -454,15 +439,19 @@ class Component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
-    def build_from_operator(self, operator_data=None):
+    def build_from_operator(self, operator_meta_data=None):
         """
         Build the whole Component rig from operator.
         With initial hierarchy.
+
+        Args:
+            operator_meta_data(dict): Operators meta data.
+
         """
-        if not operator_data:
+        if not operator_meta_data:
             self.get_operator_meta_data()
         else:
-            self.operator_meta_data = operator_data
+            self.operator_meta_data = operator_meta_data
         self.init_component_hierarchy()
         self.build_component_logic()
         self.connect_component_edges()

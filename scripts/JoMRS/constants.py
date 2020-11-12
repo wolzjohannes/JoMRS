@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 22
+# Date:       2020 / 11S / 12
 
 """
 JoMRS constants module for global values.
