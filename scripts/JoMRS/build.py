@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 12
+# Date:       2020 / 11 / 14
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
@@ -63,7 +63,37 @@ class MainBuild(object):
         self.rig_meta_data = {}
         self.rig_hierarchy = None
 
+    def get_rig_meta_data(self):
+        raise NotImplemented()
+
+    def get_operators_meta_data(self, operator_meta_data=None):
+        """
+        Get operators meta data. If no operators_root node or main_op_nd is
+        selected get the data found in the scene.
+
+        Args:
+            operator_meta_data(List): Filled with dict.
+
+        """
+        logger.log(
+            level="info",
+            message="### Get operators meta data. " "###",
+            logger=_LOGGER,
+        )
+        if not operator_meta_data:
+            if not self.selection:
+                self.get_operators_meta_data_from_god_node()
+            else:
+                self.get_operators_meta_data_from_root_meta_node()
+            return True
+        self.operators_meta_data = operator_meta_data
+
     def build_rig_hierarchy(self):
+        logger.log(
+            level="info",
+            message="### Start building rig hierarchy. " "###",
+            logger=_LOGGER,
+        )
         rig_root_name = constants.RIG_ROOT_NODE.replace(
             name, self.rig_meta_data.get("rig_name")
         )
@@ -82,29 +112,27 @@ class MainBuild(object):
             ]
         )
 
-    def build_components(self, operator_meta_data=None):
+    def build_components(self):
         """
-        Build all rig components based on the
-
-        Args:
-            operator_meta_data(List): Filled with dict.
-
-
+        Build all rig components based on passed operators meta data.
         """
-        if not operator_meta_data:
-            operator_meta_data = self.operators_meta_data
-        if not operator_meta_data:
+        if not self.operators_meta_data:
             logger.log(
                 level="error", message="No operators meta data " "accessible"
             )
             return False
-        for data in operator_meta_data:
+        logger.log(
+            level="info",
+            message="### Start building rig components. " "###",
+            logger=_LOGGER,
+        )
+        for data in self.operators_meta_data:
             root_meta_nd = data.get("root_meta_nd")
             meta_data = data.get("meta_data")
             logger.log(
                 level="info",
                 message="Build components for {}".format(root_meta_nd),
-                logger=_LOGGER
+                logger=_LOGGER,
             )
             for m_data in meta_data:
                 component_module_name = "components.{}.create".format(
@@ -121,9 +149,12 @@ class MainBuild(object):
     def build_deformation_rig(self):
         raise NotImplemented()
 
-    def execute_building_steps(self, operator_meta_data=None):
+    def execute_building_steps(self, rig_meta_data=None,
+                               operator_meta_data=None):
+        self.get_rig_meta_data(rig_meta_data)
+        self.get_operators_meta_data(operator_meta_data)
         self.build_rig_hierarchy()
-        self.build_components(operator_meta_data)
+        self.build_components()
 
     def get_operators_meta_data_from_root_meta_node(self, root_meta_nd=None):
         """
@@ -244,3 +275,9 @@ class MainBuild(object):
                 result.append(self.operators_meta_data[0])
         self.operators_meta_data = result
         return result
+
+    def get_rig_meta_data_from_root_meta_node(self):
+        raise NotImplemented()
+
+    def get_rig_meta_data_from_god_node(self):
+        raise NotImplemented()
