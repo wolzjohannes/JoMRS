@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 12
+# Date:       2020 / 12 / 15
 
 """
 Meta node creation module.
@@ -381,6 +381,13 @@ class RootOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        uuid_attr = {
+            "name": constants.UUID_ATTR_NAME,
+            "attrType": "string",
+            "keyable": False,
+            "value": "None",
+        }
+
         root_node_param_list = [
             rigname_attr,
             l_rig_color_attr,
@@ -390,6 +397,7 @@ class RootOpMetaNode(MetaNode):
             m_rig_color_attr,
             m_rig_sub_color_attr,
             root_op_nd_attr,
+            uuid_attr,
         ]
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
@@ -453,12 +461,21 @@ class RootOpMetaNode(MetaNode):
         Connect meta node with root op node.
 
         Args:
-            node(pmc.PyNode()): Root operator node.
+            root_op_node(pmc.PyNode()): Root operator node.
 
         """
         root_op_node.message.connect(
             self.attr(constants.ROOT_OP_MESSAGE_ATTR_NAME)
         )
+
+    def get_root_op_nd(self):
+        """
+        Return the operators root node form root meta node.
+
+        Return:
+            pmc.PyNode(): The network node.
+        """
+        return self.attr(constants.ROOT_OP_MESSAGE_ATTR_NAME).get()
 
 
 class MainOpMetaNode(MetaNode):
@@ -834,9 +851,112 @@ class SubOpMetaNode(MetaNode):
             self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
         )
 
+class ContainerMetaNode(MetaNode):
+    """
+    Creates a Meta Node as Container Meta Node.
+    """
+
+    SUBNODE_TYPE = constants.META_TYPE_D
+
+    @classmethod
+    def list(cls, *args, **kwargs):
+        """ Returns all instances of all characters in the scene """
+
+        kwargs["type"] = cls.__melnode__
+        return [
+            node for node in pmc.ls(*args, **kwargs) if isinstance(node, cls)
+        ]
+
+    @classmethod
+    def _isVirtual(
+        cls, obj, name, tag=constants.META_NODE_ID, type=constants.META_TYPE
+    ):
+        """
+         This actual creates the node. If a specific tag is found.
+         If not it will create a default node.
+         PyMEL code should not be used inside the callback,
+         only API and maya.cmds.
+         Args:
+                 obj(dagnode): The network node.
+                 name(str): The nodes name.
+                 tag(str): The specific creation tag.
+                 type(str): The meta node type.
+         Return:
+                 True if node with tag exist / False if not or tag is disable.
+         """
+        fn = pmc.api.MFnDependencyNode(obj)
+        try:
+            if fn.hasAttribute(tag):
+                plug = fn.findPlug(tag)
+                if plug.asBool() == 1:
+                    if fn.hasAttribute(type):
+                        plug = fn.findPlug(type)
+                        if plug.asString() == cls.SUBNODE_TYPE:
+                            return True
+                    return False
+        except:
+            pass
+        return False
+
+    @classmethod
+    def _postCreateVirtual(
+        cls,
+        newNode,
+        type=constants.META_TYPE,
+        god_meta_name=constants.META_GOD_ND_NAME,
+        connection_types=constants.DEFAULT_CONNECTION_TYPES,
+    ):
+        """
+        This is called after creation, pymel/cmds allowed.
+        It will create a set of attributes. And the important check up tag for
+        the meta node.
+        Args:
+                newNode(dagnode): The new node.
+                tag(str): The specific creation tag.
+                type(str): The meta node type.
+                god_meta_name(str): The name of the god meta node.
+        """
+        MetaNode._postCreateVirtual(newNode)
+        try:
+            god_mata_nd = pmc.PyNode(god_meta_name)
+        except:
+            god_mata_nd = GodMetaNode()
+        newNode.attr(type).set(cls.SUBNODE_TYPE)
+        god_mata_nd.add_meta_node(newNode)
+        name = "{}_METAND".format(str(newNode))
+        name = strings.string_checkup(name, logger_=_LOGGER)
+        newNode.rename(name)
+
+        uuid_attr = {
+            "name": constants.UUID_ATTR_NAME,
+            "attrType": "string",
+            "keyable": False,
+            "value": "None",
+        }
+
+        container_nd_attr = {
+            "name": constants.CONTAINER_NODE_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+
+        container_meta_param_list = [
+            uuid_attr,
+            container_nd_attr
+        ]
+
+        for attr_ in container_meta_param_list:
+            attributes.add_attr(node=newNode, **attr_)
+
+    def add_rig_container(self, node):
+        node.message.connect(self.attr(constants.CONTAINER_NODE_ATTR_NAME))
+        self.message.connect(node.attr(constants.CONTAINER_META_ND_ATTR_NAME))
+
 
 pmc.factories.registerVirtualClass(MetaNode, nameRequired=False)
 pmc.factories.registerVirtualClass(GodMetaNode, nameRequired=False)
 pmc.factories.registerVirtualClass(RootOpMetaNode, nameRequired=False)
 pmc.factories.registerVirtualClass(MainOpMetaNode, nameRequired=False)
 pmc.factories.registerVirtualClass(SubOpMetaNode, nameRequired=False)
+pmc.factories.registerVirtualClass(ContainerMetaNode, nameRequired=False)

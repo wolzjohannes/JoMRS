@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 22
+# Date:       2020 / 12 / 15
 
 """
 JoMRS maya utils module. Utilities helps
@@ -39,6 +39,9 @@ import attributes
 import strings
 import logging
 import logger
+import constants
+import meta
+import uuid
 
 ##########################################################
 # GLOBAL
@@ -1249,21 +1252,63 @@ class ContainerNode(object):
     Wrapper for the maya container node. JoMRS expansion.
     """
 
-    def __init__(self, name=None, icon=None, container_node=None):
+    def __init__(self, name=None, icon=None, container_node=None,
+                 content_root_node=False):
         """
         Init creation of the container node.
 
         Args:
             name(str): Container node name.
             icon(str): Path to the icon file.
+            container_node(pmc.PyNode()): A container node to pass.
+            content_root_node(bool): Enable/Disable content root node creation.
 
         """
+        self.meta_nd = None
+        self.meta_nd_name = constants.CONTAINER_META_NODE_NAME
+        self.container_meta_nd = None
+        self.container_attr_list = []
         self.container = container_node
-        if not self.container:
-            self.container = pmc.nt.Container(n=name)
-            if icon:
-                self.container.iconName.set(icon)
+        self.name = name
+        self.icon = icon
         self.container_content = {}
+        self.meta_node = None
+        self.container_content_root = None
+        self.content_root_node = content_root_node
+        self.container_meta_nd_attr = {
+            "name": constants.CONTAINER_META_ND_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False
+        }
+        self.container_attr_list.append(self.container_meta_nd_attr)
+        if content_root_node:
+            self.container_content_root_name = "M_content_root_0_GRP"
+
+    def create_container(self, meta_nd=True):
+        """
+        Create the actual container node with a icon.
+
+        Args:
+            meta_nd(bool): Enable/Disable meta node creation.
+
+        """
+        self.container = pmc.nt.Container(n=self.name)
+        self.container.iconName.set(self.icon)
+        if self.content_root_node:
+            self.container_content_root = pmc.createNode(
+                "transform", n=self.container_content_root_name
+            )
+            self.container.addNode(
+                self.container_content_root, ish=True, ihb=True, iha=True, inc=True
+            )
+        for attr_ in self.container_attr_list:
+            attributes.add_attr(node=self.container, **attr_)
+        if meta_nd:
+            self.meta_nd = meta.ContainerMetaNode(n=self.meta_nd_name)
+            self.meta_nd.add_rig_container(self.container)
+            self.container.addNode(self.meta_nd)
+            self.set_uuid()
 
     def create_transform(self, name):
         """
@@ -1277,6 +1322,8 @@ class ContainerNode(object):
         self.container.addNode(
             self.container_content[name], ish=True, ihb=True, iha=True, inc=True
         )
+        if self.content_root_node:
+            self.container_content_root.addChild(self.container_content[name])
 
     def create_container_content_from_list(self, list):
         """
@@ -1319,3 +1366,27 @@ class ContainerNode(object):
         """
         self.container.addNode(node, ish=True, ihb=True, iha=True, inc=True)
         self.container_content.get(content_name).addChild(node)
+
+    def set_uuid(self, uuid_=None):
+        """
+        Set the uuid string
+
+        Args:
+            uuid_(str): The uuid string
+
+        """
+        if not uuid_:
+            uuid_ = "{}-container_nd".format(str(uuid.uuid4()))
+        self.meta_nd.attr(constants.UUID_ATTR_NAME).unlock()
+        self.meta_nd.attr(constants.UUID_ATTR_NAME).set(uuid_)
+        self.meta_nd.attr(constants.UUID_ATTR_NAME).lock()
+
+    def get_uuid(self):
+        """
+        Get the JoMRS uuid from meta
+
+        Return:
+            String: The given uuid.
+
+        """
+        return self.meta_nd.attr(constants.UUID_ATTR_NAME).get()

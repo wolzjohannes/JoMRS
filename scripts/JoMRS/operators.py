@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 07
+# Date:       2020 / 12 / 15
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -37,12 +37,7 @@ import meta
 import os
 import strings
 import re
-
-reload(meta)
-reload(curves)
-reload(strings)
-reload(attributes)
-reload(mayautils)
+import uuid
 
 ##########################################################
 # GLOBALS
@@ -166,6 +161,7 @@ class OperatorsRootNode(object):
             "{}/root_operator_logo.png".format(constants.ICONS_PATH)
         )
         container_node = mayautils.ContainerNode(constants.OP_ROOT_NAME, icon)
+        container_node.create_container(meta_nd=False)
         self.op_root_nd = container_node.container
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
@@ -180,6 +176,7 @@ class OperatorsRootNode(object):
             self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
         )
         self.root_meta_nd.set_root_op_nd(self.op_root_nd)
+        self.set_uuid()
 
     def add_node(self, node):
         """
@@ -243,6 +240,172 @@ class OperatorsRootNode(object):
             constants.ROOT_OP_MESSAGE_ATTR_NAME
         ).get()
         return self.op_root_nd
+
+    def set_rig_name(self, name):
+        """
+        Set rig name
+
+        Attr:
+            name(str)
+
+        """
+        self.root_meta_nd.attr(constants.META_ROOT_RIG_NAME).set(name)
+
+    def set_l_control_rig_color(self, color_index):
+        """
+        Set left rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_LEFT_RIG_COLOR).set(color_index)
+
+    def set_l_sub_control_rig_color(self, color_index):
+        """
+        Set left sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_LEFT_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def set_r_control_rig_color(self, color_index):
+        """
+        Set right rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_RIGHT_RIG_COLOR).set(color_index)
+
+    def set_r_sub_control_rig_color(self, color_index):
+        """
+        Set right sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_RIGHT_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def set_m_control_rig_color(self, color_index):
+        """
+        Set middle rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_MID_RIG_COLOR).set(color_index)
+
+    def set_m_sub_control_rig_color(self, color_index):
+        """
+        Set middle sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_MID_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def set_uuid(self, uuid_=None):
+        """
+        Set the uuid string
+
+        Args:
+            uuid_(str): The uuid string
+
+        """
+        if not uuid_:
+            uuid_ = "{}-root_op".format(str(uuid.uuid4()))
+        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).unlock()
+        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).set(uuid_)
+        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).lock()
+
+    def get_rig_name(self):
+        """
+        Get rig name
+
+        Return:
+            String: Given rig name.
+
+        """
+        return self.root_meta_nd.attr(constants.META_ROOT_RIG_NAME).get()
+
+    def get_l_control_rig_color(self):
+        """
+        Get left rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_LEFT_RIG_COLOR).get()
+
+    def get_l_sub_control_rig_color(self):
+        """
+        Get left rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_LEFT_RIG_SUB_COLOR).get()
+
+    def get_r_control_rig_color(self):
+        """
+        Get right rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_RIGHT_RIG_COLOR).get()
+
+    def get_r_sub_control_rig_color(self):
+        """
+        Get right rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_RIGHT_RIG_SUB_COLOR).get()
+
+    def get_m_control_rig_color(self):
+        """
+        Get middle rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_MID_RIG_COLOR).get()
+
+    def get_m_sub_control_rig_color(self):
+        """
+        Get middle rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_MID_RIG_SUB_COLOR).get()
+
+    def get_uuid(self):
+        """
+        Get the uuid string
+        """
+        return self.root_meta_nd.attr(constants.UUID_ATTR_NAME).get()
 
 
 class MainOperatorNode(OperatorsRootNode):

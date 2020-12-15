@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 15
+# Date:       2020 / 11 / 24
 
 """
 JoMRS operator unittest module
@@ -30,6 +30,7 @@ import pymel.core as pmc
 import pymel.core.datatypes as datatypes
 from tests.mayaunittest import TestCase
 import re
+import constants
 
 
 class TestOperators(TestCase):
@@ -187,6 +188,12 @@ class TestOperators(TestCase):
         sub_operators = self.test_op_1.get_sub_op_nodes_from_main_op_nd()
         self.assertIs(len(sub_operators), self.TEST_1_OP_SUB_COUNT)
         self.assertEqual(sub_operators, self.test_op_1.sub_operators)
+        # Test UUID
+        uuid_string = self.test_op_1.get_uuid()
+        uuid_string_search = self.test_op_1.root_meta_nd.attr(
+            constants.UUID_ATTR_NAME).get()
+        self.assertEqual(uuid_string_search, uuid_string)
+
 
     def test_naming_convention(self):
         """

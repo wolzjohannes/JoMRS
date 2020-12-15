@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 12
+# Date:       2020 / 12 / 05
 
 """
 Rig components main module. This class is the template to create a rig
@@ -35,6 +35,7 @@ import logger
 import logging
 import constants
 import mayautils
+
 
 ##########################################################
 # Methods
@@ -133,12 +134,13 @@ class Component(operators.ComponentOperator):
         self.input_matrix_offset_grp = []
         self.controls = []
         self.operator_meta_data = {}
+        self.rig_meta_data = {}
 
     def add_component_defined_attributes(self):
         """
         Method to implement extra ud attributes.
         """
-        return
+        raise NotImplemented()
 
     def build_operator(
         self,
@@ -228,46 +230,41 @@ class Component(operators.ComponentOperator):
         ] = self.get_child_nd()
         self.operator_meta_data.update(self.get_cd_attributes())
 
+    def get_rig_meta_data(self):
+        """
+        Collect rig meta data.
+        """
+        self.rig_meta_data[constants.UUID_ATTR_NAME] = self.get_uuid()
+        self.rig_meta_data[constants.META_ROOT_RIG_NAME] = self.get_rig_name()
+        self.rig_meta_data[
+            constants.META_LEFT_RIG_COLOR
+        ] = self.get_l_control_rig_color()
+        self.rig_meta_data[
+            constants.META_LEFT_RIG_SUB_COLOR
+        ] = self.get_l_sub_control_rig_color()
+        self.rig_meta_data[
+            constants.META_RIGHT_RIG_COLOR
+        ] = self.get_r_control_rig_color()
+        self.rig_meta_data[
+            constants.META_RIGHT_RIG_SUB_COLOR
+        ] = self.get_r_sub_control_rig_color()
+        self.rig_meta_data[
+            constants.META_MID_RIG_COLOR
+        ] = self.get_m_control_rig_color()
+        self.rig_meta_data[
+            constants.META_MID_RIG_SUB_COLOR
+        ] = self.get_m_sub_control_rig_color()
+
     def init_component_hierarchy(self):
         """
         Init rig Component base hierarchy.
         """
-        component_root_name = "{}_ROOT_{}_component_0_GRP".format(
-            self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
+        self.component_root = CompContainer(
             self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
+            self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
+            self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)
         )
-        component_root_name = strings.string_checkup(component_root_name)
-        icon = os.path.normpath(
-            "{}/components_logo.png".format(constants.ICONS_PATH)
-        )
-        self.component_root = mayautils.ContainerNode(component_root_name, icon)
-        self.component_root.create_container_content_from_list(
-            ["input", "output", "component", "spaces"]
-        )
-        attributes.add_attr(
-            self.component_root.container_content.get("input"),
-            name=constants.INPUT_WS_PORT_NAME,
-            attrType="matrix",
-            multi=True,
-            keyable=False,
-            hidden=True,
-        )
-        attributes.add_attr(
-            self.component_root.container_content.get("output"),
-            name=constants.OUTPUT_WS_PORT_NAME,
-            attrType="matrix",
-            multi=True,
-            keyable=False,
-            hidden=True,
-        )
-        attributes.add_attr(
-            self.component_root.container_content.get("output"),
-            name=constants.BND_OUTPUT_WS_PORT_NAME,
-            attrType="matrix",
-            multi=True,
-            keyable=False,
-            hidden=True,
-        )
+        self.component_root.create_comp_container()
         logger.log(
             level="info",
             message="Component hierarchy setted up "
@@ -455,3 +452,70 @@ class Component(operators.ComponentOperator):
         self.init_component_hierarchy()
         self.build_component_logic()
         self.connect_component_edges()
+
+
+class CompContainer(mayautils.ContainerNode):
+    """
+    Create a container node designed for rig components..
+    """
+
+    CONTENT_GROUPS = ["input", "output", "component", "spaces"]
+
+    def __init__(
+        self, comp_name=None, comp_side=None,
+            comp_index=0, component_container=None,
+    ):
+        """
+        Args
+            comp_name(str): The rig component name.
+            comp_side(str): The component side.
+            comp_index(int): The component index.
+            component_container(pmc.PyNode()): A component container to pass.
+        """
+        mayautils.ContainerNode.__init__(self, content_root_node=True)
+        self.name = "M_ROOT_name_component_0_GRP"
+        self.icon = os.path.normpath(
+            "{}/components_logo.png".format(constants.ICONS_PATH)
+        )
+        self.container = component_container
+        if comp_name and comp_side:
+            self.name = self.name.replace("M", comp_side).replace(
+                "name", comp_name
+            ).replace('0', str(comp_index))
+            self.name = strings.string_checkup(self.name)
+            self.container_content_root_name = self.container_content_root_name.replace(
+                "M", comp_side
+            ).replace(
+                "content_root", "{}_content_root".format(comp_name)
+            )
+
+    def create_comp_container(self):
+        """
+        Create the component container.
+        """
+        self.create_container()
+        self.create_container_content_from_list(self.CONTENT_GROUPS)
+        attributes.add_attr(
+            self.container_content.get("input"),
+            name=constants.INPUT_WS_PORT_NAME,
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )
+        attributes.add_attr(
+            self.container_content.get("output"),
+            name=constants.OUTPUT_WS_PORT_NAME,
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )
+        attributes.add_attr(
+            self.container_content.get("output"),
+            name=constants.BND_OUTPUT_WS_PORT_NAME,
+            attrType="matrix",
+            multi=True,
+            keyable=False,
+            hidden=True,
+        )

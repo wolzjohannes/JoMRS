@@ -34,6 +34,7 @@ import components.main
 import logging
 import logger
 import strings
+reload(components.main)
 
 ##########################################################
 # GLOBALS

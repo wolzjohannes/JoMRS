@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 14
+# Date:       2020 / 12 / 15
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
@@ -37,7 +37,9 @@ import logger
 import logging
 import components.main
 import mayautils
+import strings
 import importlib
+import os
 
 ##########################################################
 # GLOBALS
@@ -60,57 +62,49 @@ class MainBuild(object):
         )
         self.god_meta_nd = []
         self.operators_meta_data = []
-        self.rig_meta_data = {}
+        self.rig_meta_data = []
         self.rig_hierarchy = None
 
-    def get_rig_meta_data(self):
-        raise NotImplemented()
-
-    def get_operators_meta_data(self, operator_meta_data=None):
+    def get_meta_data(self, rig_meta_data=None, operator_meta_data=None):
         """
-        Get operators meta data. If no operators_root node or main_op_nd is
+        Get meta data. If no operators_root node or main_op_nd is
         selected get the data found in the scene.
 
         Args:
+            rig_meta_data(List): Filled with dict.
             operator_meta_data(List): Filled with dict.
 
         """
         logger.log(
-            level="info",
-            message="### Get operators meta data. " "###",
-            logger=_LOGGER,
+            level="info", message="### Get meta data. " "###", logger=_LOGGER
         )
+        self.operators_meta_data = operator_meta_data
+        self.rig_meta_data = rig_meta_data
         if not operator_meta_data:
             if not self.selection:
-                self.get_operators_meta_data_from_god_node()
+                self.get_meta_data_from_god_node("operators")
             else:
                 self.get_operators_meta_data_from_root_meta_node()
-            return True
-        self.operators_meta_data = operator_meta_data
+        if not rig_meta_data:
+            if not self.selection:
+                self.get_meta_data_from_god_node("rig")
+            else:
+                self.get_operators_meta_data_from_root_meta_node()
 
     def build_rig_hierarchy(self):
+        """
+        Build the rig hierarchy.
+        """
         logger.log(
             level="info",
             message="### Start building rig hierarchy. " "###",
             logger=_LOGGER,
         )
-        rig_root_name = constants.RIG_ROOT_NODE.replace(
-            name, self.rig_meta_data.get("rig_name")
-        )
-        icon = os.path.normpath(
-            "{}/rig_hierarchy_logo.png".format(constants.ICONS_PATH)
-        )
-        self.rig_hierarchy = mayautils.ContainerNode(rig_root_name, icon)
-        self.rig_hierarchy.create_container_content_from_list(
-            [
-                "M_RIG_0_GRP",
-                "M_COMPONENTS_0_GRP",
-                "M_GEO_0_GRP",
-                "M_BSHP_0_GRP",
-                "M_SHARED_ATTR_0_GRP",
-                "M_NO_TRANSFORM_0_GRP",
-            ]
-        )
+        for data in self.rig_meta_data:
+            self.rig_hierarchy = RigContainer(
+                data.get("meta_data").get("rig_name")
+            )
+            self.rig_hierarchy.create_rig_container()
 
     def build_components(self):
         """
@@ -144,17 +138,64 @@ class MainBuild(object):
         return True
 
     def connect_components(self):
-        raise NotImplemented()
+        logger.log(
+            "error",
+            message="Not implemented yet",
+            func=self.connect_components,
+            logger=_LOGGER,
+        )
 
     def build_deformation_rig(self):
-        raise NotImplemented()
+        logger.log(
+            "error",
+            message="Not implemented yet",
+            func=self.build_deformation_rig,
+            logger=_LOGGER,
+        )
 
-    def execute_building_steps(self, rig_meta_data=None,
-                               operator_meta_data=None):
-        self.get_rig_meta_data(rig_meta_data)
-        self.get_operators_meta_data(operator_meta_data)
+    def parent_components(self):
+        logger.log(
+            "error",
+            message="Not implemented yet",
+            func=self.parent_components,
+            logger=_LOGGER,
+        )
+
+    def execute_building_steps(
+        self, rig_meta_data=None, operator_meta_data=None
+    ):
+        """
+        Execute all rig building steps.
+
+        Args:
+            rig_meta_data(List): Filled with dict.
+            operator_meta_data(List): Filled with dict.
+
+        """
+        self.get_meta_data(rig_meta_data, operator_meta_data)
         self.build_rig_hierarchy()
         self.build_components()
+        self.parent_components()
+        self.connect_components()
+        self.build_deformation_rig()
+
+    def get_root_meta_nd_from_god_meta_node(self):
+        """
+        Return all root meta nodes from god meta node.
+
+        Return:
+            List: All root meta nodes connected to the god meta node.
+
+        """
+        if not self.god_meta_nd:
+            self.get_god_meta_nd_from_scene()
+        if self.god_meta_nd:
+            all_meta_nodes = self.god_meta_nd.list_meta_nodes()
+            return [
+                root
+                for root in all_meta_nodes
+                if root.attr(constants.META_TYPE).get() == constants.META_TYPE_A
+            ]
 
     def get_operators_meta_data_from_root_meta_node(self, root_meta_nd=None):
         """
@@ -188,6 +229,37 @@ class MainBuild(object):
             {"root_meta_nd": root_meta_nd, "meta_data": meta_data}
         ]
         return [{"root_meta_nd": root_meta_nd, "meta_data": meta_data}]
+
+    def get_rig_meta_data_from_root_meta_node(self, root_meta_nd=None):
+        """
+        Get rig meta data from root meta node.
+
+        Args:
+            root_meta_nd(pmc.PyNode, optional): Root meta node.
+
+        """
+        if not root_meta_nd:
+            if self.component_instance.root_meta_nd:
+                root_meta_nd = self.component_instance.root_meta_nd
+            else:
+                logger.log(
+                    level="error",
+                    message="Need a selected JoMRS node " "in the scene",
+                    logger=_LOGGER,
+                )
+                return False
+        operator_root_node = root_meta_nd.get_root_op_nd()
+        component_instance = components.main.Component(
+            operators_root_node=operator_root_node
+        )
+        component_instance.get_rig_meta_data()
+        self.rig_meta_data = [
+            {
+                "root_meta_nd": root_meta_nd,
+                "meta_data": component_instance.rig_meta_data,
+            }
+        ]
+        return self.rig_meta_data
 
     def get_main_meta_nodes_from_root_meta_node(self, root_meta_nd=None):
         """
@@ -252,9 +324,13 @@ class MainBuild(object):
         )
         return False
 
-    def get_operators_meta_data_from_god_node(self):
+    def get_meta_data_from_god_node(self, meta_data_type):
         """
-        Collect the operators meta data from all root meta nodes in the scene.
+        Collect the meta data from all root meta nodes in the scene.
+
+        Args:
+            meta_data_type(str): Defines meta data type to collect.
+            Valid values are ['operators', 'rig']
 
         Return:
             List: Filled with a dictionary for each root_meta_nd.
@@ -262,22 +338,62 @@ class MainBuild(object):
 
         """
         result = []
-        self.get_god_meta_nd_from_scene()
-        if self.god_meta_nd:
-            all_meta_nodes = self.god_meta_nd.list_meta_nodes()
-            all_root_nodes = [
-                root
-                for root in all_meta_nodes
-                if root.attr(constants.META_TYPE).get() == constants.META_TYPE_A
-            ]
+        all_root_nodes = self.get_root_meta_nd_from_god_meta_node()
+        if meta_data_type == "operators":
             for root_meta_node in all_root_nodes:
                 self.get_operators_meta_data_from_root_meta_node(root_meta_node)
                 result.append(self.operators_meta_data[0])
-        self.operators_meta_data = result
+            self.operators_meta_data = result
+        elif meta_data_type == "rig":
+            for root_meta_node in all_root_nodes:
+                self.get_rig_meta_data_from_root_meta_node(root_meta_node)
+                result.append(self.rig_meta_data[0])
+            self.rig_meta_data = result
         return result
 
-    def get_rig_meta_data_from_root_meta_node(self):
-        raise NotImplemented()
 
-    def get_rig_meta_data_from_god_node(self):
-        raise NotImplemented()
+class RigContainer(mayautils.ContainerNode):
+    """
+    Create a container node designed for the rig content.
+    """
+
+    CONTENT_GROUPS = [
+        "M_RIG_0_GRP",
+        "M_COMPONENTS_0_GRP",
+        "M_GEO_0_GRP",
+        "M_BSHP_0_GRP",
+        "M_SHARED_ATTR_0_GRP",
+        "M_NO_TRANSFORM_0_GRP",
+    ]
+
+    def __init__(self, rig_name=None, rig_container=None):
+        """
+        Args
+            comp_name(str): The rig component name.
+            comp_side(str): The component side.
+            comp_index(int): The component index.
+            component_container(pmc.PyNode()): A component container to pass.
+        """
+        mayautils.ContainerNode.__init__(self, content_root_node=True)
+        self.meta_nd_name = constants.RIG_META_NODE_NAME
+        self.name = constants.RIG_ROOT_NODE
+        self.icon = os.path.normpath(
+            "{}/rig_hierarchy_logo.png".format(constants.ICONS_PATH)
+        )
+        self.container = rig_container
+        if not self.container:
+            if rig_name:
+                self.name = self.name.replace("name", rig_name)
+                self.name = strings.string_checkup(self.name)
+                self.container_content_root_name = self.container_content_root_name.replace(
+                    "M", "M_RIG"
+                ).replace(
+                    "content_root", "{}_content_root".format(rig_name)
+                )
+
+    def create_rig_container(self):
+        """
+        Create the rig container.
+        """
+        self.create_container()
+        self.create_container_content_from_list(self.CONTENT_GROUPS)

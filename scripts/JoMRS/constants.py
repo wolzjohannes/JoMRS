@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11S / 12
+# Date:       2020 / 11 / 22
 
 """
 JoMRS constants module for global values.
@@ -50,11 +50,19 @@ SUB_OP_ROOT_NODE_NAME = "M_SUB_op_0_CON"
 
 ROOT_OP_META_NODE_NAME = "M_ROOT_op_0"
 
+RIG_META_NODE_NAME = "M_RIG_0"
+
+CONTAINER_META_NODE_NAME = "M_CONTAINER_0"
+
 ROOT_OP_META_ND_ATTR_NAME = "root_op_meta_nd"
 
 MAIN_OP_META_ND_ATTR_NAME = "main_op_meta_nd"
 
 SUB_OP_META_ND_ATTR_NAME = "sub_op_meta_nd"
+
+COMPONENT_META_ND_ATTR_NAME = "component_meta_nd"
+
+CONTAINER_META_ND_ATTR_NAME = "container_meta_nd"
 
 MAIN_OP_MESSAGE_ATTR_NAME = "main_operator_nd"
 
@@ -97,6 +105,8 @@ META_TYPE_A = "root_operators_meta_class"
 META_TYPE_B = "main_operator_meta_class"
 
 META_TYPE_C = "sub_operator_meta_class"
+
+META_TYPE_D = "container_meta_class"
 
 META_DEFAULT_CONNECTION_TYPES = "connection_types"
 
@@ -146,6 +156,8 @@ META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
 
 META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
+UUID_ATTR_NAME = "JoMRS_UUID"
+
 MAIN_META_ND_PLUG = "main_meta_nd"
 
 SUB_META_ND_PLUG = "sub_meta_nd"
@@ -161,3 +173,5 @@ CONTROL_SHAPE_ATTR_NAME = "control_shape"
 NODE_LIST_ATTR_NAME = "node_list"
 
 RIG_ROOT_NODE = "M_RIG_name_0_GRP"
+
+CONTAINER_NODE_ATTR_NAME = 'container_nd'
