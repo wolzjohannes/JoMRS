@@ -474,11 +474,13 @@ class CompContainer(mayautils.ContainerNode):
         """
         mayautils.ContainerNode.__init__(self, content_root_node=True)
         self.name = "M_ROOT_name_component_0_GRP"
+        self.meta_nd_name = constants.COMP_META_NODE_NAME
         self.icon = os.path.normpath(
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
         self.container = component_container
         if comp_name and comp_side:
+            self.meta_nd_name = self.meta_nd_name.replace('COMP', comp_name)
             self.name = self.name.replace("M", comp_side).replace(
                 "name", comp_name
             ).replace('0', str(comp_index))

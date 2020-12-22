@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 15
+# Date:       2020 / 12 / 22
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -163,11 +163,17 @@ class OperatorsRootNode(object):
         container_node = mayautils.ContainerNode(constants.OP_ROOT_NAME, icon)
         container_node.create_container(meta_nd=False)
         self.op_root_nd = container_node.container
+        self.op_root_nd.rename(
+            strings.normalize_suffix_1(self.op_root_nd.name(), _LOGGER)
+        )
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
         # Create the meta node for the root node.
         self.root_meta_nd = meta.RootOpMetaNode(
             n=constants.ROOT_OP_META_NODE_NAME
+        )
+        self.root_meta_nd.rename(
+            strings.normalize_suffix_1(self.root_meta_nd.name(), _LOGGER)
         )
         # add root meta nd to container node.
         self.op_root_nd.addNode(self.root_meta_nd)

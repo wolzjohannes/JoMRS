@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 23
+# Date:       2020 / 12 / 22
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -148,7 +148,7 @@ def replace_hash_with_padding(string, index):
     return re.sub("#+", digit, string)
 
 
-def normalize_suffix(string, logger_=_LOGGER):
+def normalize_suffix_0(string, logger_=_LOGGER):
     """
     Replace numbers in the suffix with a ''.
     And if the suffix is lowercase it will turn it uppercase.
@@ -176,6 +176,41 @@ def normalize_suffix(string, logger_=_LOGGER):
     if lower_case:
         instance_ = lower_case.group(0)
         string = string[0 : string.find(instance_)] + instance_.upper()
+    return string
+
+def normalize_suffix_1(string, logger_=_LOGGER):
+    """
+    Replace numbers in the suffix with a '' and generate the correct count
+    and put in the right place.
+    Args:
+            string(str): The string to work with
+            a module.
+            logger_(instance): The logging instance of
+            a module.
+    Return:
+            The new created string.
+    """
+    numbers_end_string_regex = r"(\d+$)"
+    count_regex = r"(_\d+_\D+)"
+    match = re.search(numbers_end_string_regex, string)
+    # If we find a number in the suffix of the string we delete it. And
+    # generate the correct count and put in the correct place in the string.
+    if match:
+        logger.log(
+            level="warning",
+            message='Suffix of string "'
+            + string
+            + '" should not have a number. Numbers removed from the suffix',
+            logger=logger_,
+        )
+        instance = match.groups()[0]
+        string = re.sub(numbers_end_string_regex, "", string)
+        count_match = re.search(count_regex, string)
+        instance_ = count_match.groups()[0]
+        count_list = [str_ for str_ in instance_.split('_') if str_]
+        new_count = int(count_list[0]) + int(instance)
+        new_count = '_{}_{}'.format(new_count, count_list[1])
+        string = string.replace(instance_, new_count)
     return string
 
 
@@ -279,7 +314,7 @@ def string_checkup(string, logger_=_LOGGER):
     string = replace_invalid_prefix(string, logger_)
     string = valid_suffix(string, logger_)
     string = numbers_check(string, logger_)
-    string = normalize_suffix(string, logger_)
+    string = normalize_suffix_0(string, logger_)
     return string
 
 
@@ -376,3 +411,27 @@ def replace_index_numbers(string, replace):
     numbers = re.sub(r"[a-zA-Z]", "", instance)
     return regex_search_and_replace(string, numbers, '_{}_'.format(str(
         replace)))
+
+def normalize_suffix_(string):
+    numbers_end_string_regex = r"(\d+$)"
+    count_regex = r"(_\d+_\D+)"
+    match = re.search(numbers_end_string_regex, string)
+    # If we find a number in the suffix of the string we delete it. And
+    # generate the correct count and put in the correct place in the string.
+    if match:
+        instance = match.groups()[0]
+        string = re.sub(numbers_end_string_regex, "", string)
+        count_match = re.search(count_regex, string)
+        instance_ = count_match.groups()[0]
+        count_list = [str_ for str_ in instance_.split('_') if str_]
+        new_count = int(count_list[0]) + int(instance)
+        new_count = '_{}_{}'.format(new_count, count_list[1])
+        string = string.replace(instance_, new_count)
+        logger.log(
+            level="warning",
+            message='Suffix of string "'
+            + string
+            + '" should not have a number. Numbers removed from the suffix',
+            logger=_LOGGER,
+        )
+

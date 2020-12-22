@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 15
+# Date:       2020 / 12 / 22
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
