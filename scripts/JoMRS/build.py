@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 22
+# Date:       2020 / 12 / 26
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
@@ -63,7 +63,9 @@ class MainBuild(object):
         self.god_meta_nd = []
         self.operators_meta_data = []
         self.rig_meta_data = []
+        self.parenting_data_dic = []
         self.rig_hierarchy = None
+        self.rig_hierarchy_uuid = ""
 
     def get_meta_data(self, rig_meta_data=None, operator_meta_data=None):
         """
@@ -91,9 +93,54 @@ class MainBuild(object):
             else:
                 self.get_operators_meta_data_from_root_meta_node()
 
-    def build_rig_hierarchy(self):
+    def process_component_parenting_data(self, component_parenting_data=None):
         """
-        Build the rig hierarchy.
+        Process the correct parenting data based on the rig and operator meta
+        data.
+
+        Args:
+            component_parenting_data(List): Filled with dict
+
+        """
+        logger.log(
+            level="info",
+            message="### Processing component parenting data dictionary. "
+            "###",
+            logger=_LOGGER,
+        )
+        result = []
+        self.parenting_data_dic = component_parenting_data
+        if not component_parenting_data:
+            for op_meta_data in self.operators_meta_data:
+                data_dic = {}
+                for rig_meta_data in self.rig_meta_data:
+                    if op_meta_data.get("root_meta_nd") == rig_meta_data.get(
+                        "root_meta_nd"
+                    ):
+                        rig_components_list = []
+                        for rig_components in op_meta_data.get("meta_data"):
+                            comp_container_uuid = strings.search_and_replace(
+                                rig_components.get(constants.UUID_ATTR_NAME),
+                                constants.MAIN_OP_ND_UUID_SUFFIX,
+                                constants.COMP_CONTAINER_UUID_SUFFIX,
+                            )
+                            rig_components_list.append(comp_container_uuid)
+                        data_dic[
+                            "root_meta_nd_uuid"
+                        ] = strings.search_and_replace(
+                            rig_meta_data.get("meta_data").get(
+                                constants.UUID_ATTR_NAME
+                            ),
+                            constants.OP_ROOT_ND_UUID_SUFFIX,
+                            constants.RIG_CONTAINER_UUID_SUFFIX,
+                        )
+                        data_dic["rig_components_uuid"] = rig_components_list
+                result.append(data_dic)
+            self.parenting_data_dic = result
+
+    def build_rig_container(self):
+        """
+        Build the rig container and its contents groups..
         """
         logger.log(
             level="info",
@@ -105,6 +152,15 @@ class MainBuild(object):
                 data.get("meta_data").get("rig_name")
             )
             self.rig_hierarchy.create_rig_container()
+            self.rig_hierarchy_uuid = (
+                data.get("meta_data")
+                .get(constants.UUID_ATTR_NAME)
+                .replace(
+                    constants.OP_ROOT_ND_UUID_SUFFIX,
+                    constants.RIG_CONTAINER_UUID_SUFFIX,
+                )
+            )
+            self.rig_hierarchy.set_uuid(self.rig_hierarchy_uuid)
 
     def build_components(self):
         """
@@ -162,7 +218,10 @@ class MainBuild(object):
         )
 
     def execute_building_steps(
-        self, rig_meta_data=None, operator_meta_data=None
+        self,
+        rig_meta_data=None,
+        operator_meta_data=None,
+        component_parenting_data=None,
     ):
         """
         Execute all rig building steps.
@@ -170,13 +229,15 @@ class MainBuild(object):
         Args:
             rig_meta_data(List): Filled with dict.
             operator_meta_data(List): Filled with dict.
+            component_parenting_data(List): Filled with dict.
 
         """
         self.get_meta_data(rig_meta_data, operator_meta_data)
-        self.build_rig_hierarchy()
+        self.process_component_parenting_data(component_parenting_data)
+        self.build_rig_container()
         self.build_components()
-        self.parent_components()
         self.connect_components()
+        self.parent_components()
         self.build_deformation_rig()
 
     def get_root_meta_nd_from_god_meta_node(self):
@@ -349,6 +410,31 @@ class MainBuild(object):
                 self.get_rig_meta_data_from_root_meta_node(root_meta_node)
                 result.append(self.rig_meta_data[0])
             self.rig_meta_data = result
+        return result
+
+    @staticmethod
+    def get_container_node_from_uuid(uuid_):
+        """
+        Get a container from JoMRS uuid.
+
+        Args:
+            uuid_(str): The uuid for the node to search for
+
+        Return:
+            pmc.PyNode(): If successful. None if fail.
+
+        """
+        result = None
+        scene_containers = pmc.ls(containers=True)
+        for container in scene_containers:
+            container_instance = mayautils.ContainerNode(
+                container_node=container
+            )
+            try:
+                if container_instance.get_uuid() == uuid_:
+                    result = container_instance.container
+            except:
+                continue
         return result
 
 
