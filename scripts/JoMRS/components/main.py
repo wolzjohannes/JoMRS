@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 05
+# Date:       2020 / 12 / 29
 
 """
 Rig components main module. This class is the template to create a rig
@@ -228,13 +228,18 @@ class Component(operators.ComponentOperator):
         self.operator_meta_data[
             constants.META_MAIN_CHILD_ND
         ] = self.get_child_nd()
+        self.operator_meta_data[
+            constants.UUID_ATTR_NAME
+        ] = self.main_meta_nd.get_uuid()
         self.operator_meta_data.update(self.get_cd_attributes())
 
     def get_rig_meta_data(self):
         """
         Collect rig meta data.
         """
-        self.rig_meta_data[constants.UUID_ATTR_NAME] = self.get_uuid()
+        self.rig_meta_data[
+            constants.UUID_ATTR_NAME
+        ] = self.root_meta_nd.get_uuid()
         self.rig_meta_data[constants.META_ROOT_RIG_NAME] = self.get_rig_name()
         self.rig_meta_data[
             constants.META_LEFT_RIG_COLOR
@@ -255,16 +260,22 @@ class Component(operators.ComponentOperator):
             constants.META_MID_RIG_SUB_COLOR
         ] = self.get_m_sub_control_rig_color()
 
-    def init_component_hierarchy(self):
+    def create_component_container(self):
         """
-        Init rig Component base hierarchy.
+        Init rig component container its contents..
         """
         self.component_root = CompContainer(
             self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
             self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
-            self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)
+            self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX),
         )
         self.component_root.create_comp_container()
+        # Refactor Main op uuid to comp uuid
+        uuid_ = self.operator_meta_data.get(constants.UUID_ATTR_NAME)
+        uuid_ = strings.search_and_replace(uuid_,
+                                           constants.MAIN_OP_ND_UUID_SUFFIX,
+                                           constants.COMP_CONTAINER_UUID_SUFFIX)
+        self.component_root.set_uuid(uuid_)
         logger.log(
             level="info",
             message="Component hierarchy setted up "
@@ -449,7 +460,7 @@ class Component(operators.ComponentOperator):
             self.get_operator_meta_data()
         else:
             self.operator_meta_data = operator_meta_data
-        self.init_component_hierarchy()
+        self.create_component_container()
         self.build_component_logic()
         self.connect_component_edges()
 
@@ -462,8 +473,11 @@ class CompContainer(mayautils.ContainerNode):
     CONTENT_GROUPS = ["input", "output", "component", "spaces"]
 
     def __init__(
-        self, comp_name=None, comp_side=None,
-            comp_index=0, component_container=None,
+        self,
+        comp_name=None,
+        comp_side=None,
+        comp_index=0,
+        component_container=None,
     ):
         """
         Args
@@ -480,10 +494,12 @@ class CompContainer(mayautils.ContainerNode):
         )
         self.container = component_container
         if comp_name and comp_side:
-            self.meta_nd_name = self.meta_nd_name.replace('COMP', comp_name)
-            self.name = self.name.replace("M", comp_side).replace(
-                "name", comp_name
-            ).replace('0', str(comp_index))
+            self.meta_nd_name = self.meta_nd_name.replace("COMP", comp_name)
+            self.name = (
+                self.name.replace("M", comp_side)
+                .replace("name", comp_name)
+                .replace("0", str(comp_index))
+            )
             self.name = strings.string_checkup(self.name)
             self.container_content_root_name = self.container_content_root_name.replace(
                 "M", comp_side
