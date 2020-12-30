@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 22
+# Date:       2020 / 12 / 29
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -182,7 +182,9 @@ class OperatorsRootNode(object):
             self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
         )
         self.root_meta_nd.set_root_op_nd(self.op_root_nd)
-        self.set_uuid()
+        self.root_meta_nd.set_uuid(
+            "{}-{}".format(str(uuid.uuid4()), constants.OP_ROOT_ND_UUID_SUFFIX)
+        )
 
     def add_node(self, node):
         """
@@ -323,20 +325,6 @@ class OperatorsRootNode(object):
             color_index
         )
 
-    def set_uuid(self, uuid_=None):
-        """
-        Set the uuid string
-
-        Args:
-            uuid_(str): The uuid string
-
-        """
-        if not uuid_:
-            uuid_ = "{}-root_op".format(str(uuid.uuid4()))
-        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).unlock()
-        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).set(uuid_)
-        self.root_meta_nd.attr(constants.UUID_ATTR_NAME).lock()
-
     def get_rig_name(self):
         """
         Get rig name
@@ -406,12 +394,6 @@ class OperatorsRootNode(object):
 
         """
         return self.root_meta_nd.attr(constants.META_MID_RIG_SUB_COLOR).get()
-
-    def get_uuid(self):
-        """
-        Get the uuid string
-        """
-        return self.root_meta_nd.attr(constants.UUID_ATTR_NAME).get()
 
 
 class MainOperatorNode(OperatorsRootNode):
@@ -514,6 +496,9 @@ class MainOperatorNode(OperatorsRootNode):
             attributes.add_attr(node=self.main_op_nd, **attr_)
         # Connect main operator node with main meta node.
         self.set_main_meta_nd()
+        self.main_meta_nd.set_uuid(
+            "{}-{}".format(str(uuid.uuid4()), constants.MAIN_OP_ND_UUID_SUFFIX)
+        )
 
     def set_main_meta_nd(self):
         """
@@ -521,6 +506,7 @@ class MainOperatorNode(OperatorsRootNode):
 
         Args:
             name(str): The operator name.
+
         """
         self.main_meta_nd = meta.MainOpMetaNode(n=self.main_meta_nd_name)
         self.main_meta_nd.message.connect(

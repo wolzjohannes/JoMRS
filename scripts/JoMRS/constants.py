@@ -177,3 +177,13 @@ NODE_LIST_ATTR_NAME = "node_list"
 RIG_ROOT_NODE = "M_RIG_name_0_GRP"
 
 CONTAINER_NODE_ATTR_NAME = 'container_nd'
+
+OP_ROOT_ND_UUID_SUFFIX = 'root_op'
+
+MAIN_OP_ND_UUID_SUFFIX = 'main_op'
+
+RIG_CONTAINER_UUID_SUFFIX = 'rig_container'
+
+COMP_CONTAINER_UUID_SUFFIX = 'comp_container'
+
+CONTAINER_UUID_SUFFIX = 'container_node'

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 15
+# Date:       2020 / 12 / 25
 
 """
 Meta node creation module.
@@ -88,27 +88,35 @@ class MetaNode(pmc.nt.Network):
         return kwargs
 
     @classmethod
-    def _postCreateVirtual(
-        cls,
-        newNode,
-        tag=constants.META_NODE_ID,
-        type=constants.META_TYPE,
-        class_type=constants.META_BASE_TYPE,
-    ):
+    def _postCreateVirtual(cls, newNode):
         """
         This is called after creation, pymel/cmds allowed.
         It will create a set of attributes. And the important check up tag for
         the meta node.
-        Args:
-                newNode(dagnode): The new node.
-                tag(str): The specific creation tag.
-                type(str): The meta node type.
-                class_type(str): The class type.
         """
-        newNode.addAttr(tag, at="bool")
-        newNode.attr(tag).set(1)
-        newNode.addAttr(type, dt="string")
-        newNode.attr(type).set(class_type)
+        newNode.addAttr(constants.META_NODE_ID, at="bool")
+        newNode.attr(constants.META_NODE_ID).set(1)
+        newNode.addAttr(constants.META_TYPE, dt="string")
+        newNode.attr(constants.META_TYPE).set(constants.META_BASE_TYPE)
+        newNode.addAttr(constants.UUID_ATTR_NAME, dt="string")
+
+    def set_uuid(self, uuid_=None):
+        """
+        Set the uuid string
+
+        Args:
+            uuid_(str): The uuid string
+
+        """
+        self.attr(constants.UUID_ATTR_NAME).unlock()
+        self.attr(constants.UUID_ATTR_NAME).set(uuid_)
+        self.attr(constants.UUID_ATTR_NAME).lock()
+
+    def get_uuid(self):
+        """
+        Get the uuid string
+        """
+        return self.attr(constants.UUID_ATTR_NAME).get()
 
 
 class GodMetaNode(MetaNode):
@@ -381,13 +389,6 @@ class RootOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
-        uuid_attr = {
-            "name": constants.UUID_ATTR_NAME,
-            "attrType": "string",
-            "keyable": False,
-            "value": "None",
-        }
-
         root_node_param_list = [
             rigname_attr,
             l_rig_color_attr,
@@ -397,7 +398,6 @@ class RootOpMetaNode(MetaNode):
             m_rig_color_attr,
             m_rig_sub_color_attr,
             root_op_nd_attr,
-            uuid_attr,
         ]
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
@@ -851,6 +851,7 @@ class SubOpMetaNode(MetaNode):
             self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
         )
 
+
 class ContainerMetaNode(MetaNode):
     """
     Creates a Meta Node as Container Meta Node.
@@ -927,13 +928,6 @@ class ContainerMetaNode(MetaNode):
         name = strings.string_checkup(name, logger_=_LOGGER)
         newNode.rename(name)
 
-        uuid_attr = {
-            "name": constants.UUID_ATTR_NAME,
-            "attrType": "string",
-            "keyable": False,
-            "value": "None",
-        }
-
         container_nd_attr = {
             "name": constants.CONTAINER_NODE_ATTR_NAME,
             "attrType": "message",
@@ -941,15 +935,12 @@ class ContainerMetaNode(MetaNode):
             "channelBox": False,
         }
 
-        container_meta_param_list = [
-            uuid_attr,
-            container_nd_attr
-        ]
+        container_meta_param_list = [container_nd_attr]
 
         for attr_ in container_meta_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
-    def add_rig_container(self, node):
+    def add_container_node(self, node):
         node.message.connect(self.attr(constants.CONTAINER_NODE_ATTR_NAME))
         self.message.connect(node.attr(constants.CONTAINER_META_ND_ATTR_NAME))
 

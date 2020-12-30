@@ -1279,11 +1279,13 @@ class ContainerNode(object):
             "name": constants.CONTAINER_META_ND_ATTR_NAME,
             "attrType": "message",
             "keyable": False,
-            "channelBox": False
+            "channelBox": False,
         }
         self.container_attr_list.append(self.container_meta_nd_attr)
         if content_root_node:
             self.container_content_root_name = "M_content_root_0_GRP"
+        if self.container:
+            self.get_meta_nd()
 
     def create_container(self, meta_nd=True):
         """
@@ -1306,7 +1308,10 @@ class ContainerNode(object):
             attributes.add_attr(node=self.container, **attr_)
         if meta_nd:
             self.meta_nd = meta.ContainerMetaNode(n=self.meta_nd_name)
-            self.meta_nd.add_rig_container(self.container)
+            self.meta_nd.rename(
+                strings.normalize_suffix_1(self.meta_nd.name(), _LOGGER)
+            )
+            self.meta_nd.add_container_node(self.container)
             self.container.addNode(self.meta_nd)
             self.set_uuid()
 
@@ -1353,7 +1358,7 @@ class ContainerNode(object):
         """
         container_nodes = self.container.getNodeList()
         for node in container_nodes:
-            self.container_content[node.name()] = node
+            self.container_content[node.nodeName()] = node
 
     def add_node_to_container_content(self, node, content_name):
         """
@@ -1376,10 +1381,10 @@ class ContainerNode(object):
 
         """
         if not uuid_:
-            uuid_ = "{}-container_nd".format(str(uuid.uuid4()))
-        self.meta_nd.attr(constants.UUID_ATTR_NAME).unlock()
-        self.meta_nd.attr(constants.UUID_ATTR_NAME).set(uuid_)
-        self.meta_nd.attr(constants.UUID_ATTR_NAME).lock()
+            uuid_ = "{}-{}".format(
+                str(uuid.uuid4()), constants.CONTAINER_UUID_SUFFIX
+            )
+        self.meta_nd.set_uuid(uuid_)
 
     def get_uuid(self):
         """
@@ -1389,4 +1394,20 @@ class ContainerNode(object):
             String: The given uuid.
 
         """
-        return self.meta_nd.attr(constants.UUID_ATTR_NAME).get()
+        return self.meta_nd.get_uuid()
+
+    def get_meta_nd(self):
+        """
+        Get the meta node.
+
+        Return:
+            pmc.PyNode(): The connected meta node. None if not found
+
+        """
+        try:
+            self.meta_nd = self.container.attr(
+                constants.CONTAINER_META_ND_ATTR_NAME
+            ).get()
+            return self.meta_nd
+        except:
+            return

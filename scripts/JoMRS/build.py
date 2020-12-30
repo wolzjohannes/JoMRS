@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 26
+# Date:       2020 / 12 / 29
 """
 Rig build module. Collect the rig data based on the specified rig guide
 in the scene. Based on that data it execute the rig build.
@@ -40,6 +40,8 @@ import mayautils
 import strings
 import importlib
 import os
+
+reload(mayautils)
 
 ##########################################################
 # GLOBALS
@@ -189,6 +191,7 @@ class MainBuild(object):
                     m_data.get(constants.META_MAIN_COMP_TYPE)
                 )
                 create_module = importlib.import_module(component_module_name)
+                reload(create_module)
                 main_create = create_module.MainCreate()
                 main_create.build_from_operator(m_data)
         return True
@@ -210,12 +213,28 @@ class MainBuild(object):
         )
 
     def parent_components(self):
+        """
+        Add the rig components to the components sibling node of the rig
+        container. Based on the parenting_data_dic dictionary.
+        """
         logger.log(
-            "error",
-            message="Not implemented yet",
-            func=self.parent_components,
+            level="info",
+            message="### Add rig components to rig container. " "###",
             logger=_LOGGER,
         )
+        for data_dic in self.parenting_data_dic:
+            # Filter the rig container in the scene based on his JoMRS uuid.
+            rig_container_nd = self.get_container_node_from_uuid(
+                data_dic.get("root_meta_nd_uuid")
+            )
+            print rig_container_nd, data_dic.get("root_meta_nd_uuid")
+            rig_container_nd = RigContainer(rig_container=rig_container_nd)
+            # add rig components to rig container
+            for comp_container_uuid in data_dic.get("rig_components_uuid"):
+                comp_container = self.get_container_node_from_uuid(
+                    comp_container_uuid
+                )
+                rig_container_nd.add_rig_component(comp_container)
 
     def execute_building_steps(
         self,
@@ -455,12 +474,10 @@ class RigContainer(mayautils.ContainerNode):
     def __init__(self, rig_name=None, rig_container=None):
         """
         Args
-            comp_name(str): The rig component name.
-            comp_side(str): The component side.
-            comp_index(int): The component index.
-            component_container(pmc.PyNode()): A component container to pass.
+            rig_name(str): The rig name
+            rig_container(pmc.PyNode()): A rig container to pass.
         """
-        mayautils.ContainerNode.__init__(self, content_root_node=True)
+        mayautils.ContainerNode.__init__(self)
         self.meta_nd_name = constants.RIG_META_NODE_NAME
         self.name = constants.RIG_ROOT_NODE
         self.icon = os.path.normpath(
@@ -471,11 +488,36 @@ class RigContainer(mayautils.ContainerNode):
             if rig_name:
                 self.name = self.name.replace("name", rig_name)
                 self.name = strings.string_checkup(self.name)
-                self.container_content_root_name = self.container_content_root_name.replace(
-                    "M", "M_RIG"
-                ).replace(
-                    "content_root", "{}_content_root".format(rig_name)
-                )
+
+    def create_transform(self, name):
+        """
+        Overwritten method from base class. It use a container node instead
+        of a simple transform
+
+        Args:
+            name(str): Container name.
+
+        """
+        self.container_content[name] = pmc.nt.Container(n=name)
+        self.container.addNode(
+            self.container_content[name], ish=True, ihb=True, iha=True, inc=True
+        )
+        container_content_name = strings.normalize_suffix_1(
+            self.container_content[name].name(), logger_=_LOGGER)
+        self.container_content[name].rename(container_content_name)
+
+    def add_node_to_container_content(self, node, content_name):
+        """
+        Overwritten base class method. Add node to container content.
+
+        Args:
+            node(pmc.PyNode()): The node to add.
+            content_name(str): The content node.
+
+        """
+        self.container_content.get(content_name).addNode(
+            node, ish=True, ihb=True, iha=True, inc=True
+        )
 
     def create_rig_container(self):
         """
@@ -483,3 +525,23 @@ class RigContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
+
+    def add_rig_component(self, rig_component=None):
+        """
+        Add rig component to rig container.
+
+        Args:
+            rig_component(pmc.PyNode()): The rig component node.
+
+        """
+        # Get container content
+        self.get_container_content()
+        # Filter the component group
+        keys = self.container_content.keys()
+        component_key = [
+            comp_key
+            for comp_key in keys
+            if strings.search("COMPONENTS", comp_key)
+        ][0]
+        # Add rig component node to component sibling of the rig container.
+        self.add_node_to_container_content(rig_component, component_key)
