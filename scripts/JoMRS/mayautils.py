@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 15
+# Date:       2020 / 12 / 30
 
 """
 JoMRS maya utils module. Utilities helps
@@ -1337,7 +1337,7 @@ class ContainerNode(object):
         Args:
             list(list): List of string.
 
-        Return:
+        Returns:
             False if fail.
 
         """
@@ -1374,7 +1374,7 @@ class ContainerNode(object):
 
     def set_uuid(self, uuid_=None):
         """
-        Set the uuid string
+        Set the JoMRS uuid string
 
         Args:
             uuid_(str): The uuid string
@@ -1390,7 +1390,7 @@ class ContainerNode(object):
         """
         Get the JoMRS uuid from meta
 
-        Return:
+        Returns:
             String: The given uuid.
 
         """
@@ -1400,7 +1400,7 @@ class ContainerNode(object):
         """
         Get the meta node.
 
-        Return:
+        Returns:
             pmc.PyNode(): The connected meta node. None if not found
 
         """
