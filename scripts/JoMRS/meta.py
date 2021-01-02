@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 25
+# Date:       2021 / 01 / 02
 
 """
 Meta node creation module.
@@ -65,7 +65,7 @@ class MetaNode(pmc.nt.Network):
         PyMEL code should not be used inside the callback,
         only API and maya.cmds.
         Args:
-                obj(dagnode): The network node.
+                obj(pmc.PyNode()): The network node.
                 name(str): The nodes name.
                 tag(str): The specific creation tag.
         Return:
@@ -145,7 +145,7 @@ class GodMetaNode(MetaNode):
          PyMEL code should not be used inside the callback,
          only API and maya.cmds.
          Args:
-                 obj(dagnode): The network node.
+                 obj(pmc.PyNode()): The network node.
                  name(str): The nodes name.
                  tag(str): The specific creation tag.
                  type(str): The meta node type.
@@ -175,13 +175,16 @@ class GodMetaNode(MetaNode):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         Args:
-                newNode(dagnode): The new node.
+                newNode(pmc.PyNode()): The new node.
                 tag(str): The specific creation tag.
                 type(str): The meta node type.
                 name(str): The name of the god meta node.
         """
         MetaNode._postCreateVirtual(newNode)
         newNode.attr(type).set(cls.SUBNODE_TYPE)
+        newNode.addAttr(
+            constants.GOD_META_ND_ARRAY_PLUG_NAME, typ="message", multi=True
+        )
         newNode.rename(name)
 
     def add_meta_node(self, node):
@@ -189,56 +192,23 @@ class GodMetaNode(MetaNode):
         Add a meta node to the god meta node as message attr connection.
 
         Args:
-                node(dagnode): The node to add.
+                node(pmc.PyNode()): The node to add.
 
         """
-        new_attribute = {}
-        ud_attr = self.listAttr(ud=True)
-        ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        dirty_plugs = []
-        meta_plug = [
-            attr_
-            for attr_ in ud_attr
-            if re.search(constants.META_GOD_META_ND_ATTR, attr_)
-        ]
-        if not meta_plug:
-            count = "0"
-        else:
-            for plug in meta_plug:
-                if not self.attr(plug).get():
-                    self.attr(plug).delete()
-                else:
-                    dirty_plugs.append(plug)
-            integer = dirty_plugs[-1].split(
-                "{}_".format(constants.META_GOD_META_ND_ATTR)
-            )[1]
-            count = str(int(integer) + 1)
-        new_attribute["name"] = "{}_{}".format(
-            constants.MAIN_META_ND_PLUG, count
+        attributes.connect_next_available(
+            node, self, "message", constants.GOD_META_ND_ARRAY_PLUG_NAME
         )
-        new_attribute["attrType"] = "message"
-        new_attribute["keyable"] = False
-        new_attribute["channelBox"] = False
-        new_attribute["input"] = node.message
-        attributes.add_attr(node=self, **new_attribute)
 
-    def list_meta_nodes(
-        self, plug="meta_nd", class_filter=None, type=constants.META_TYPE
-    ):
+    def list_meta_nodes(self, class_filter=None, type=constants.META_TYPE):
         """
         List all meta nodes in the scene.
         Args:
-                plug(str): The attributes name for message connection.
                 class_filter(str): Filters a class type to return.
                 If none it returns all classes found in the scene.
         Return:
                 list: All found meta nodes in the scene.
         """
-        result = None
-        ud_attr = self.listAttr(ud=True)
-        meta_plug = [attr_ for attr_ in ud_attr if re.search(plug, str(attr_))]
-        if meta_plug:
-            result = [node.get() for node in meta_plug]
+        result = self.attr(constants.GOD_META_ND_ARRAY_PLUG_NAME).get()
         if class_filter:
             result = [
                 node for node in result if node.attr(type).get() == class_filter
@@ -272,7 +242,7 @@ class RootOpMetaNode(MetaNode):
          PyMEL code should not be used inside the callback,
          only API and maya.cmds.
          Args:
-                 obj(dagnode): The network node.
+                 obj(pmc.PyNode()): The network node.
                  name(str): The nodes name.
                  tag(str): The specific creation tag.
                  type(str): The meta node type.
@@ -305,7 +275,7 @@ class RootOpMetaNode(MetaNode):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         Args:
-                newNode(dagnode): The new node.
+                newNode(pmc.PyNode()): The new node.
                 tag(str): The specific creation tag.
                 type(str): The meta node type.
                 god_meta_name(str): The name of the god meta node.
@@ -389,6 +359,14 @@ class RootOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        main_meta_nodes_array_attr = {
+            "name": constants.ROOT_META_ND_ARRAY_PLUG_NAME,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+            "multi": True,
+        }
+
         root_node_param_list = [
             rigname_attr,
             l_rig_color_attr,
@@ -398,6 +376,7 @@ class RootOpMetaNode(MetaNode):
             m_rig_color_attr,
             m_rig_sub_color_attr,
             root_op_nd_attr,
+            main_meta_nodes_array_attr,
         ]
         for attr_ in root_node_param_list:
             attributes.add_attr(node=newNode, **attr_)
@@ -407,38 +386,12 @@ class RootOpMetaNode(MetaNode):
         Add a main meta node to the root meta node as message attr connection.
 
         Args:
-                node(dagnode): The node to add.
+                node(pmc.PyNode()): The node to add.
 
         """
-        new_attribute = {}
-        dirty_plugs = []
-        ud_attr = self.listAttr(ud=True)
-        ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        meta_plug = [
-            attr_
-            for attr_ in ud_attr
-            if re.search(constants.MAIN_META_ND_PLUG, attr_)
-        ]
-        if not meta_plug:
-            count = "0"
-        else:
-            for plug in meta_plug:
-                if not self.attr(plug).get():
-                    self.attr(plug).delete()
-                else:
-                    dirty_plugs.append(plug)
-            integer = dirty_plugs[-1].split(
-                "{}_".format(constants.MAIN_META_ND_PLUG)
-            )[1]
-            count = str(int(integer) + 1)
-        new_attribute["name"] = "{}_{}".format(
-            constants.MAIN_META_ND_PLUG, count
+        attributes.connect_next_available(
+            node, self, "message", constants.ROOT_META_ND_ARRAY_PLUG_NAME
         )
-        new_attribute["attrType"] = "message"
-        new_attribute["keyable"] = False
-        new_attribute["channelBox"] = False
-        new_attribute["input"] = node.message
-        attributes.add_attr(node=self, **new_attribute)
 
     def get_main_meta_nodes(self):
         """
@@ -448,13 +401,13 @@ class RootOpMetaNode(MetaNode):
             list: All found meta nodes. None if empty.
 
         """
-        ud_attr = self.listAttr(ud=True)
-        ud_attr = [str(attr_).split(".")[1] for attr_ in ud_attr]
-        return [
-            self.attr(attr_).get()
-            for attr_ in ud_attr
-            if re.search(constants.MAIN_META_ND_PLUG, attr_)
+        result = [
+            node
+            for node in self.attr(constants.ROOT_META_ND_ARRAY_PLUG_NAME).get()
+            if node.attr(constants.META_TYPE).get() == constants.META_TYPE_B
         ]
+        if result:
+            return result
 
     def set_root_op_nd(self, root_op_node):
         """
@@ -504,7 +457,7 @@ class MainOpMetaNode(MetaNode):
          PyMEL code should not be used inside the callback,
          only API and maya.cmds.
          Args:
-                 obj(dagnode): The network node.
+                 obj(pmc.PyNode()): The network node.
                  name(str): The nodes name.
                  tag(str): The specific creation tag.
                  type(str): The meta node type.
@@ -538,7 +491,7 @@ class MainOpMetaNode(MetaNode):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         Args:
-                newNode(dagnode): The new node.
+                newNode(pmc.PyNode()): The new node.
                 tag(str): The specific creation tag.
                 type(str): The meta node type.
                 god_meta_name(str): The name of the god meta node.
@@ -679,7 +632,7 @@ class MainOpMetaNode(MetaNode):
         """
         Add a sub meta node to the main meta node as message attr connection.
         Args:
-                node(dagnode): The node to add.
+                node(pmc.PyNode()): The node to add.
         """
         new_attribute = {}
         ud_attr = self.listAttr(ud=True)
@@ -700,6 +653,7 @@ class MainOpMetaNode(MetaNode):
         new_attribute["keyable"] = False
         new_attribute["channelBox"] = False
         new_attribute["input"] = node.message
+        new_attribute["disconnectBehaviour"] = 0
         attributes.add_attr(node=self, **new_attribute)
 
     def add_child_node(self, parent_node):
@@ -750,7 +704,7 @@ class SubOpMetaNode(MetaNode):
          PyMEL code should not be used inside the callback,
          only API and maya.cmds.
          Args:
-                 obj(dagnode): The network node.
+                 obj(pmc.PyNode()): The network node.
                  name(str): The nodes name.
                  tag(str): The specific creation tag.
                  type(str): The meta node type.
@@ -783,7 +737,7 @@ class SubOpMetaNode(MetaNode):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         Args:
-                newNode(dagnode): The new node.
+                newNode(pmc.PyNode()): The new node.
                 tag(str): The specific creation tag.
                 type(str): The meta node type.
                 god_meta_name(str): The name of the god meta node.
@@ -878,7 +832,7 @@ class ContainerMetaNode(MetaNode):
          PyMEL code should not be used inside the callback,
          only API and maya.cmds.
          Args:
-                 obj(dagnode): The network node.
+                 obj(pmc.PyNode()): The network node.
                  name(str): The nodes name.
                  tag(str): The specific creation tag.
                  type(str): The meta node type.
@@ -912,7 +866,7 @@ class ContainerMetaNode(MetaNode):
         It will create a set of attributes. And the important check up tag for
         the meta node.
         Args:
-                newNode(dagnode): The new node.
+                newNode(pmc.PyNode()): The new node.
                 tag(str): The specific creation tag.
                 type(str): The meta node type.
                 god_meta_name(str): The name of the god meta node.

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 30
+# Date:       2021 / 01 / 02
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -280,7 +280,6 @@ class MainBuild(object):
                 # import correct module for each component based on the
                 # formatted import statement string.
                 create_module = importlib.import_module(component_module_name)
-                # reload(create_module)
                 # instance the MainCreate class which is the base of each rig
                 # component.
                 main_create = create_module.MainCreate()
@@ -367,17 +366,11 @@ class MainBuild(object):
         # If no god meta node stored, store it.
         if not self.god_meta_nd:
             self.get_god_meta_nd_from_scene()
+        # Return all root meta nodes.
         if self.god_meta_nd:
-            # If god meta node stored get all JoMRS meta nodes in the scene.
-            all_meta_nodes = self.god_meta_nd.list_meta_nodes()
-            # Return only all found root_op_meta nodes. Root meta nodes only
-            # exist ones for each operators root node. It stores dependencies
-            # to all meta main nodes corresponding to the operators root node.
-            return [
-                root
-                for root in all_meta_nodes
-                if root.attr(constants.META_TYPE).get() == constants.META_TYPE_A
-            ]
+            return self.god_meta_nd.list_meta_nodes(
+                class_filter=constants.META_TYPE_A
+            )
 
     def get_operators_meta_data_from_root_meta_node(self, root_meta_nd=None):
         """

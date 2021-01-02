@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 03
+# Date:       2021 / 01 / 02
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -93,6 +93,7 @@ def add_attr(
     input=None,
     output=None,
     multi=False,
+    disconnectBehaviour=2
 ):
     """
     Add attribute to a node.
@@ -112,6 +113,8 @@ def add_attr(
             input(dagNode.attribute): Connects the attribute with the input.
             output(dagNode.attribute): Connects the attribute with the output.
             multi(bool): Define if attribute is a multi attribute.
+            disconnectBehaviour(int): Defines the Disconnect Behaviour 2
+            Nothing, 1 Reset, 0 Delete.
     Return:
             str: The new created attributes name.
 
@@ -136,6 +139,7 @@ def add_attr(
     data_dic["hidden"] = hidden
     data_dic["writable"] = writable
     data_dic["multi"] = multi
+    data_dic['disconnectBehaviour'] = disconnectBehaviour
 
     if minValue is not None:
         data_dic["minValue"] = minValue

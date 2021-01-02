@@ -160,7 +160,9 @@ META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
 UUID_ATTR_NAME = "JoMRS_UUID"
 
-MAIN_META_ND_PLUG = "main_meta_nd"
+GOD_META_ND_ARRAY_PLUG_NAME = "meta_nodes"
+
+ROOT_META_ND_ARRAY_PLUG_NAME = "main_meta_nodes"
 
 SUB_META_ND_PLUG = "sub_meta_nd"
 

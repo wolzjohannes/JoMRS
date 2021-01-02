@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 24
+# Date:       2021 / 01 / 02
 
 """
 JoMRS operator unittest module
@@ -161,12 +161,13 @@ class TestOperators(TestCase):
         comp_type = self.test_op_1.get_component_type()
         self.assertEqual(comp_type, "single_control")
         # Test connection types
-        self.assertFalse(self.test_op_1.set_connection_type('translate'))
-        self.test_op_1.set_connection_type(['translate', 'rotate'])
-        self.assertEqual(self.test_op_1.get_connection_types(), ['translate',
-                                                                 'rotate'])
+        self.assertFalse(self.test_op_1.set_connection_type("translate"))
+        self.test_op_1.set_connection_type(["translate", "rotate"])
+        self.assertEqual(
+            self.test_op_1.get_connection_types(), ["translate", "rotate"]
+        )
         # Test ik ref data.
-        self.assertFalse(self.test_op_1.set_ik_spaces_ref('world'))
+        self.assertFalse(self.test_op_1.set_ik_spaces_ref("world"))
         self.test_op_1.set_ik_spaces_ref(list(["world", "root", "chest"]))
         spaces = self.test_op_1.get_ik_spaces_ref().split(";")
         self.assertEqual(spaces, list(["world", "root", "chest"]))
@@ -189,11 +190,10 @@ class TestOperators(TestCase):
         self.assertIs(len(sub_operators), self.TEST_1_OP_SUB_COUNT)
         self.assertEqual(sub_operators, self.test_op_1.sub_operators)
         # Test UUID
-        uuid_string = self.test_op_1.get_uuid()
-        uuid_string_search = self.test_op_1.root_meta_nd.attr(
-            constants.UUID_ATTR_NAME).get()
-        self.assertEqual(uuid_string_search, uuid_string)
-
+        root_op_nd_uuid_string = self.test_op_1.root_meta_nd.get_uuid()
+        main_op_nd_uuid_string = self.test_op_1.main_meta_nd.get_uuid()
+        self.assertIn(constants.OP_ROOT_ND_UUID_SUFFIX, root_op_nd_uuid_string)
+        self.assertIn(constants.MAIN_OP_ND_UUID_SUFFIX, main_op_nd_uuid_string)
 
     def test_naming_convention(self):
         """
