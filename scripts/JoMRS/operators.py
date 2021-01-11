@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 02
+# Date:       2021 / 01 / 11
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -97,6 +97,26 @@ def valid_node(node, typ):
                 logger=_LOGGER,
             )
         return False
+
+
+def parent_operator_node(child, parent):
+    """
+    Parent a JoMRS main_op_nd to a JoMRS root_op_nd, main_op_nd or sub_op_nd.
+    It always add the child node to the correct container and sets all needed
+    meta data as well.
+
+    Args:
+        parent(pmc.PyNode()): The parent node.
+        child(pmc.PyNode()): The child node.
+
+    """
+    child_instance = ComponentOperator(child, child, child)
+    parent_instance = ComponentOperator(parent, parent, parent)
+    parent_instance.add_node(child_instance.main_op_nd)
+    if parent_instance.op_root_nd is not parent:
+        parent.addChild(child)
+        child_instance.set_parent_ws_output_index(parent)
+        child_instance.set_parent_nd(parent_instance.main_op_nd)
 
 
 ##########################################################
@@ -583,19 +603,37 @@ class ComponentOperator(MainOperatorNode):
 
         Example:
             (1)
-            Example without selection.
+            Example without selection. Basic creation of a operator.
+            Index, side and sub_operators_count are on default.
             >>> import operators
-            >>> component_op.create_component_op_node('test', sub_operators_count=2)
+            >>> component_op = operators.ComponentOperator()
+            >>> component_op.create_component_op_node('Test')
             (2)
-            Example with selection.
-            >>> import pymel.core as pmc
+            Example to pass a selected JoMRS Operator object in the operators
+            class. So you are able to use all getters and setters.
             >>> import operators
-            >>> selection = []
-            >>> selection.extend(pmc.ls(sl=True, containers=True))
-            >>> selection.extend(pmc.ls(sl=True, tr=True))
-            >>> component_op = operators.ComponentOperator(selection[0],
-            >>> selection[0], selection[0])
-            >>> component_op.create_component_op_node('test', sub_operators_count=2)
+            >>> import components.main as main
+            >>> selection = main.selected()
+            >>> component_op = operators.ComponentOperator(
+            >>> operators_root_node=selection, main_operator_node=selection,
+            >>> sub_operator_node=selection)
+            (3)
+            Example to build a new operator as child of selected JoMRS
+            Operator object
+            >>> import operators
+            >>> import components.main as main
+            >>> component_op_test = operators.ComponentOperator()
+            >>> component_op_test.create_component_op_node(name='test',
+            >>> sub_operators_count=2)
+            # Select the created operator container or main operator node or
+            the sub operator node. Then store the selection with the
+            main.selected() function.
+            >>> selection = main.selected()
+            >>> component_op_test = operators.ComponentOperator(selection,
+            >>> selection, selection)
+            >>> component_op_test.create_component_op_node(name='mom',
+            >>> sub_operators_count=1, parent=selection)
+
 
         """
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
@@ -695,6 +733,7 @@ class ComponentOperator(MainOperatorNode):
             )
         self.sub_operators.append(sub_op_node)
         self.linear_curve_drivers.append(sub_op_node)
+        self.sub_meta_nd.set_ws_output_index(count + 1)
 
     def create_component_op_node(
         self,
@@ -718,13 +757,15 @@ class ComponentOperator(MainOperatorNode):
             sub_operators_count(int): Sub operators count.
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
-            parent(pmc.PyNode): The parent node.
+            parent(pmc.PyNode()): The parent node.
 
         """
         # Check at start if a parent node is passed. If it is not a valid not
         # method will break.
         if parent:
-            if valid_node(parent, "JoMRS_main"):
+            if valid_node(parent, "JoMRS_root"):
+                pass
+            elif valid_node(parent, "JoMRS_main"):
                 self.parent = parent
                 self.parent_main_op_nd = parent
                 self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
@@ -735,6 +776,11 @@ class ComponentOperator(MainOperatorNode):
                 self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
                 self.get_root_nd_from_root_meta_nd()
             else:
+                logger.log(
+                    level="error",
+                    message="Parent node is not a JoMRS node.",
+                    logger=_LOGGER,
+                )
                 return
         # Bypass axes for later refactoring.
         vec = constants.DEFAULT_SPACING
@@ -849,7 +895,11 @@ class ComponentOperator(MainOperatorNode):
         # if valid parent is passed parent the new operator under the
         # specified parent node.
         if self.parent:
+            # Parent new operator under selected JoMRS node.
             self.parent.addChild(self.main_op_nd)
+            # Get ws output index and set it as parent ws output index.
+            self.set_parent_ws_output_index(self.parent)
+            # Set the parent meta nd.
             self.set_parent_nd(self.parent_main_op_nd)
         # fill the all_container_nodes list.
         self.set_node_list()
@@ -936,6 +986,26 @@ class ComponentOperator(MainOperatorNode):
             constants.MAIN_OP_META_ND_ATTR_NAME
         ).get()
         parent_main_meta_nd.add_child_node(self.main_meta_nd)
+
+    def set_parent_ws_output_index(self, parent_node):
+        """
+        Set parent ws output index from parent node ws output index.
+
+        Args:
+            parent_node(pmc.PyNode()): The parent node.
+
+        """
+        try:
+            meta_node = parent_node.attr(
+                constants.SUB_OP_META_ND_ATTR_NAME
+            ).get()
+        except:
+            meta_node = parent_node.attr(
+                constants.MAIN_OP_META_ND_ATTR_NAME
+            ).get()
+        self.main_meta_nd.set_parent_ws_output_index(
+            meta_node.get_ws_output_index()
+        )
 
     def set_node_list(self):
         """

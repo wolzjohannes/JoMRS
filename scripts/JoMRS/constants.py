@@ -189,3 +189,7 @@ RIG_CONTAINER_UUID_SUFFIX = 'rig_container'
 COMP_CONTAINER_UUID_SUFFIX = 'comp_container'
 
 CONTAINER_UUID_SUFFIX = 'container_node'
+
+OUTPUT_WS_PORT_INDEX = 'output_ws_matrix_index'
+
+PARENT_OUTPUT_WS_PORT_INDEX = 'parent_output_ws_matrix_index'

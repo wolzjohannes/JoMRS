@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 02
+# Date:       2021 / 01 / 03
 
 """
 Rig components main module. This class is the template to create a rig
@@ -231,6 +231,9 @@ class Component(operators.ComponentOperator):
         self.operator_meta_data[
             constants.UUID_ATTR_NAME
         ] = self.main_meta_nd.get_uuid()
+        self.operator_meta_data[
+            constants.PARENT_OUTPUT_WS_PORT_INDEX
+        ] = self.main_meta_nd.get_parent_ws_output_index()
         self.operator_meta_data.update(self.get_cd_attributes())
 
     def get_rig_meta_data(self):

@@ -608,6 +608,20 @@ class MainOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        ws_output_index_attr = {
+            "name": constants.OUTPUT_WS_PORT_INDEX,
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 0,
+        }
+
+        parent_ws_output_index_attr = {
+            "name": constants.PARENT_OUTPUT_WS_PORT_INDEX,
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 0,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -623,6 +637,8 @@ class MainOpMetaNode(MetaNode):
             parent_nd_attr,
             child_nd_attr,
             component_defined_attr,
+            ws_output_index_attr,
+            parent_ws_output_index_attr,
         ]
 
         for attr_ in main_node_param_list:
@@ -676,6 +692,30 @@ class MainOpMetaNode(MetaNode):
         Get the main op node from meta data.
         """
         return self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME).get()
+
+    def get_ws_output_index(self):
+        """
+        Get world space output port index.
+        """
+        return self.attr(constants.OUTPUT_WS_PORT_INDEX).get()
+
+    def get_parent_ws_output_index(self):
+        """
+        Get parent world space output port index.
+        """
+        return self.attr(constants.PARENT_OUTPUT_WS_PORT_INDEX).get()
+
+    def set_ws_output_index(self, index):
+        """
+        Set world space output port index.
+        """
+        return self.attr(constants.OUTPUT_WS_PORT_INDEX).set(index)
+
+    def set_parent_ws_output_index(self, index):
+        """
+        Set parent world space output port index.
+        """
+        return self.attr(constants.PARENT_OUTPUT_WS_PORT_INDEX).set(index)
 
 
 class SubOpMetaNode(MetaNode):
@@ -775,10 +815,26 @@ class SubOpMetaNode(MetaNode):
             "channelBox": False,
         }
 
+        ws_output_index_attr = {
+            "name": constants.OUTPUT_WS_PORT_INDEX,
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 1,
+        }
+
+        parent_ws_output_index_attr = {
+            "name": constants.PARENT_OUTPUT_WS_PORT_INDEX,
+            "attrType": "long",
+            "keyable": False,
+            "defaultValue": 0,
+        }
+
         sub_node_param_list = [
             connection_type_attr,
             sub_operator_connection,
             main_operator_connection,
+            ws_output_index_attr,
+            parent_ws_output_index_attr,
         ]
 
         for attr_ in sub_node_param_list:
@@ -804,6 +860,30 @@ class SubOpMetaNode(MetaNode):
         main_op_nd.message.connect(
             self.attr(constants.MAIN_OP_MESSAGE_ATTR_NAME)
         )
+
+    def get_ws_output_index(self):
+        """
+        Get world space output port index.
+        """
+        return self.attr(constants.OUTPUT_WS_PORT_INDEX).get()
+
+    def get_parent_ws_output_index(self):
+        """
+        Get parent world space output port index.
+        """
+        return self.attr(constants.PARENT_OUTPUT_WS_PORT_INDEX).get()
+
+    def set_ws_output_index(self, index):
+        """
+        Set world space output port index.
+        """
+        return self.attr(constants.OUTPUT_WS_PORT_INDEX).set(index)
+
+    def set_parent_ws_output_index(self, index):
+        """
+        Set parent world space output port index.
+        """
+        return self.attr(constants.PARENT_OUTPUT_WS_PORT_INDEX).set(index)
 
 
 class ContainerMetaNode(MetaNode):

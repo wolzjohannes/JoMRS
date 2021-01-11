@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 02
+# Date:       2021 / 01 / 11
 
 """
 JoMRS attributes module. Module for attributes handling.
@@ -65,12 +65,15 @@ def connect_next_available(
         True if successfully. None if fail.
 
     """
-    try_count = 100
+    try_count = 1000
     for x in range(try_count):
         try:
-            source_node.attr(source_plug).connect(
+            if not source_node.attr(source_plug).isConnectedTo(
                 target_node.attr("{}[{}]".format(target_multi_plug, str(x)))
-            )
+            ):
+                source_node.attr(source_plug).connect(
+                    target_node.attr("{}[{}]".format(target_multi_plug, str(x)))
+                )
             return True
         except:
             continue
@@ -93,7 +96,7 @@ def add_attr(
     input=None,
     output=None,
     multi=False,
-    disconnectBehaviour=2
+    disconnectBehaviour=2,
 ):
     """
     Add attribute to a node.
@@ -139,7 +142,7 @@ def add_attr(
     data_dic["hidden"] = hidden
     data_dic["writable"] = writable
     data_dic["multi"] = multi
-    data_dic['disconnectBehaviour'] = disconnectBehaviour
+    data_dic["disconnectBehaviour"] = disconnectBehaviour
 
     if minValue is not None:
         data_dic["minValue"] = minValue
