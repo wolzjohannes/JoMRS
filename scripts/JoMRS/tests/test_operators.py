@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 02
+# Date:       2021 / 01 / 18
 
 """
 JoMRS operator unittest module
@@ -63,7 +63,11 @@ class TestOperators(TestCase):
         self.test_op_0.main_op_nd.translate.set(10, 5, 3)
         self.test_op_0.main_op_nd.rotate.set(100, 20.56, 342.11)
 
-        self.test_op_1 = operators.ComponentOperator()
+        self.test_op_1 = operators.ComponentOperator(
+            self.test_op_0.sub_operators[-1],
+            self.test_op_0.sub_operators[-1],
+            self.test_op_0.sub_operators[-1],
+        )
         self.test_op_1.create_component_op_node(
             name=self.TEST_1_OP_NAME,
             side=self.TEST_1_OP_SIDE,
@@ -253,3 +257,27 @@ class TestOperators(TestCase):
         )
         lra_buffer_test_rotation = datatypes.Vector([3.1108, 20.9634, 16.6992])
         self.assertEqual(lra_buffer_local_rotation, lra_buffer_test_rotation)
+
+    def test_parent_ws_output_input_index(self):
+        """
+        Test the parent input output index for a correct parenting.
+        """
+        # Test the main op node ws output index. This should be 0.
+        self.assertIs(self.test_op_1.main_meta_nd.get_ws_output_index(), 0)
+        # Test the first sub op node ws output index this should be 1.
+        self.assertIs(
+            self.test_op_0.sub_operators[0]
+            .attr(constants.SUB_OP_META_ND_ATTR_NAME)
+            .get()
+            .get_ws_output_index(),
+            1,
+        )
+        # Test if the child main op nd ws parent output index is the parent
+        # sub nd parent ws output index.
+        self.assertIs(
+            self.test_op_1.main_meta_nd.get_parent_ws_output_index(),
+                        self.test_op_0.sub_operators[-1]
+            .attr(constants.SUB_OP_META_ND_ATTR_NAME)
+            .get()
+            .get_ws_output_index(),
+        )

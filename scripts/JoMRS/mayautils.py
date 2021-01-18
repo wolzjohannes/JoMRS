@@ -668,19 +668,22 @@ def matrix_constraint_ui_grp_(source):
     return ui_grp
 
 
-def mult_matrix_setup_(source, target, maintainOffset=None):
+def mult_matrix_setup_(source, target, maintainOffset=None, target_plug=None):
     """
     Creates the multMatrix setup for further use.
     Args:
             source(dagnode): The source node.
             target(dagnode): The target node.
             maintainOffste(bool): Enable/Disable the maintainOffset option.
+            target_plug(str): The targets plug name.
     Return:
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
     mul_ma_nd = pmc.creatNode("multMatrix", n=str(source) + "_0_MUMAND")
-    target.worldMatrix[0].connect(mul_ma_nd.matrixIn[1])
+    if not target_plug:
+        target_plug = 'worldMatrix[0]'
+    target.atr(target_plug).connect(mul_ma_nd.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
     else:
@@ -699,6 +702,7 @@ def create_matrix_constraint(
     rotation=True,
     scale=True,
     maintain_offset=None,
+    target_plug=None
 ):
     """
     Creates the matrix constraint.
@@ -709,13 +713,15 @@ def create_matrix_constraint(
             rotation(bool): Connect/Disconnect the rotation channel.
             scale(bool): Connect/Disconnect the scale channel.
             maintainOffste(bool): Enable/Disable the maintain_offset option.
+            target_plug(str): The targets plug name.
     """
     axis = ["X", "Y", "Z"]
     decomp_mat_nd = pmc.creatNode(
         "decomposeMatrix", n=str(source) + "_0_DEMAND"
     )
     mul_ma_nd = mult_matrix_setup_(
-        source=source, target=target, maintainOffset=maintain_offset
+        source=source, target=target, maintainOffset=maintain_offset,
+        target_plug=target_plug
     )
     mul_ma_nd.matrixSum.connect(decomp_mat_nd.inputMatrix)
     if translation:

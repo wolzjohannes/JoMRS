@@ -132,6 +132,7 @@ class Component(operators.ComponentOperator):
         self.component_rig_list = []
         self.bnd_output_matrix = []
         self.input_matrix_offset_grp = []
+        self.output_matrix_nd_list = []
         self.controls = []
         self.operator_meta_data = {}
         self.rig_meta_data = {}
@@ -275,9 +276,11 @@ class Component(operators.ComponentOperator):
         self.component_root.create_comp_container()
         # Refactor Main op uuid to comp uuid
         uuid_ = self.operator_meta_data.get(constants.UUID_ATTR_NAME)
-        uuid_ = strings.search_and_replace(uuid_,
-                                           constants.MAIN_OP_ND_UUID_SUFFIX,
-                                           constants.COMP_CONTAINER_UUID_SUFFIX)
+        uuid_ = strings.search_and_replace(
+            uuid_,
+            constants.MAIN_OP_ND_UUID_SUFFIX,
+            constants.COMP_CONTAINER_UUID_SUFFIX,
+        )
         self.component_root.set_uuid(uuid_)
         logger.log(
             level="info",
@@ -411,10 +414,13 @@ class Component(operators.ComponentOperator):
         )
         return True
 
-    def connect_component_edges(self):
+    def connect_inner_component_edges(self):
         """
-        Method to connect the input and output of a Component.
+        Method to connect the component rig content with the input and
+        outputs of the component.
         """
+        # connect every node in the bnd_output_matrix list as BND output in
+        # the output node.
         for index, bnd_node in enumerate(self.bnd_output_matrix):
             bnd_node.worldMatrix[0].connect(
                 self.component_root.container_content.get("output").attr(
@@ -423,14 +429,27 @@ class Component(operators.ComponentOperator):
                     )
                 )
             )
-        for index, input_node in enumerate(self.input_matrix_offset_grp):
-            mayautils.decompose_matrix_constraint(
-                source=input_node,
-                target=self.component_root.container_content.get("input"),
-                target_plug="{}[{}]".format(
-                    constants.INPUT_WS_PORT_NAME, str(index)
-                ),
+        # connect every node in the input_matrix_offset_grp with the
+        # input_ws_matrix_offset_nd attr on the meta nd. For further use to
+        # connect the different components.
+        if self.input_matrix_offset_grp:
+            self.component_root.set_input_ws_matrix_offset_nd(
+                self.input_matrix_offset_grp
             )
+        # each node in the output_matrix_nd_list will be connected with
+        # output_ws_matrix node of the component output nd.
+        if self.output_matrix_nd_list:
+            for index, output_nd in enumerate(self.output_matrix_nd_list):
+                output_nd.worldMatrix[0].connect(
+                    self.component_root.container_content.get("output").attr(
+                        "{}[{}]".format(
+                            constants.constants.OUTPUT_WS_PORT_NAME
+                        ),
+                        str(index),
+                    )
+                )
+        # every node in the component rig list will be a child of the
+        # component node.
         if self.component_rig_list:
             for node in self.component_rig_list:
                 self.component_root.add_node_to_container_content(
@@ -443,7 +462,7 @@ class Component(operators.ComponentOperator):
         # Step feedback
         logger.log(
             level="info",
-            message="Component edges connected "
+            message="Inner component edges connected "
             "for: {} Component".format(
                 self.operator_meta_data[constants.META_MAIN_COMP_NAME]
             ),
@@ -465,7 +484,7 @@ class Component(operators.ComponentOperator):
             self.operator_meta_data = operator_meta_data
         self.create_component_container()
         self.build_component_logic()
-        self.connect_component_edges()
+        self.connect_inner_component_edges()
 
 
 class CompContainer(mayautils.ContainerNode):
@@ -540,3 +559,32 @@ class CompContainer(mayautils.ContainerNode):
             keyable=False,
             hidden=True,
         )
+
+    def set_input_ws_matrix_offset_nd(self, offset_nd_list):
+        """
+        Connect a list of nodes with the input ws matrix nd port on the
+        container meta nd
+
+        Args:
+            offset_nd_list(list): The node list to connect with the offset nd
+            list port.
+
+        """
+        for index, node in enumerate(offset_nd_list):
+            node.message.connect(
+                self.meta_nd.attr(
+                    "{}[{}]".format(
+                        constants.INPUT_WS_MATRIX_OFFSET_ND, str(index)
+                    )
+                )
+            )
+
+    def get_input_ws_matrix_offset_nd(self):
+        """
+        Get the input ws matrix offset nd.
+
+        Returns:
+            List: All connected offset nodes
+            
+        """
+        return self.meta_nd.attr(constants.INPUT_WS_MATRIX_OFFSET_ND).get()

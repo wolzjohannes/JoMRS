@@ -969,7 +969,17 @@ class ContainerMetaNode(MetaNode):
             "channelBox": False,
         }
 
-        container_meta_param_list = [container_nd_attr]
+        input_ws_matrix_offset_nd_attr = {
+            "name": constants.INPUT_WS_MATRIX_OFFSET_ND,
+            "attrType": "message",
+            "keyable": False,
+            "multi": True,
+        }
+
+        container_meta_param_list = [
+            container_nd_attr,
+            input_ws_matrix_offset_nd_attr,
+        ]
 
         for attr_ in container_meta_param_list:
             attributes.add_attr(node=newNode, **attr_)

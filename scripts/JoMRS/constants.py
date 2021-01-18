@@ -193,3 +193,5 @@ CONTAINER_UUID_SUFFIX = 'container_node'
 OUTPUT_WS_PORT_INDEX = 'output_ws_matrix_index'
 
 PARENT_OUTPUT_WS_PORT_INDEX = 'parent_output_ws_matrix_index'
+
+INPUT_WS_MATRIX_OFFSET_ND = 'input_ws_matrix_offset_nd'

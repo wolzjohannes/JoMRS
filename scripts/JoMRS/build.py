@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 03
+# Date:       2021 / 01 / 18
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -63,6 +63,7 @@ class MainBuild(object):
     self.build_rig_container()
     self.build_components()
     self.connect_components()
+    self.connect_components_inputs_with_components_rig_offsets_grp()
     self.parent_components()
     self.build_deformation_rig()
 
@@ -290,12 +291,101 @@ class MainBuild(object):
         """
         Will connect all input and outputs of each component.
         """
+        if not self.operators_meta_data:
+            logger.log(
+                level="error", message="No operators meta data " "accessible"
+            )
+            return False
         logger.log(
-            "error",
-            message="Not implemented yet",
-            func=self.connect_components,
+            level="info",
+            message="### Connect component inputs and outputs. " "###",
             logger=_LOGGER,
         )
+        # loop trough the operators_meta_data.
+        for dic in self.operators_meta_data:
+            # get the meta data form dic.
+            meta_data = dic.get("meta_data")
+            for data in meta_data:
+                # try to get the parent meta data node.
+                parent_meta_nd = data.get(constants.META_MAIN_PARENT_ND)
+                # if parent meta data node exist go further.
+                if parent_meta_nd:
+                    # get the parent meta uuid data.
+                    parent_meta_nd_ui = parent_meta_nd.get_uuid()
+                    # refactor the parent meta nd uuid to component meta nd
+                    # uuid.
+                    parent_component_container_uuid = strings.search_and_replace(
+                        parent_meta_nd_ui,
+                        constants.MAIN_OP_ND_UUID_SUFFIX,
+                        constants.COMP_CONTAINER_UUID_SUFFIX,
+                    )
+                    # get the parent component container nd based on the
+                    # refactored parent meta nd uuid.
+                    parent_component_container_nd = self.get_container_node_from_uuid(
+                        parent_component_container_uuid
+                    )
+                    # refactor the child meta nd uuid to component meta nd
+                    # uuid.
+                    child_component_container_uuid = strings.search_and_replace(
+                        data.get(constants.UUID_ATTR_NAME),
+                        constants.MAIN_OP_ND_UUID_SUFFIX,
+                        constants.COMP_CONTAINER_UUID_SUFFIX,
+                    )
+                    # get the child component container nd based on the
+                    # refactored child meta nd uuid.
+                    child_component_container_nd = self.get_container_node_from_uuid(
+                        child_component_container_uuid
+                    )
+                    # parent component instance to get output node.
+                    parent_component_instance = components.main.CompContainer(
+                        component_container=parent_component_container_nd
+                    )
+                    # get container content to set container content dic.
+                    parent_component_instance.get_container_content()
+                    # get the output node from container dic.
+                    parent_component_container_nd_output = parent_component_instance.container_content.get(
+                        "output"
+                    )
+                    # child component instance to get output node.
+                    child_component_container_instance = components.main.CompContainer(
+                        component_container=child_component_container_nd
+                    )
+                    # get container content to set container content dic.
+                    child_component_container_instance.get_container_content()
+                    # get the input node from container dic.
+                    child_component_container_nd_input = child_component_container_instance.container_content.get(
+                        "input"
+                    )
+                    # connect the output and input node.
+                    parent_component_container_nd_output.attr(
+                        "{}[{}]".format(
+                            constants.OUTPUT_WS_PORT_NAME,
+                            data.get(constants.PARENT_OUTPUT_WS_PORT_INDEX),
+                        )
+                    ).connect(
+                        child_component_container_nd_input.attr(
+                            "{}[0]".format(constants.INPUT_WS_PORT_NAME)
+                        )
+                    )
+
+    def connect_components_inputs_with_components_rig_offsets_grp(self):
+        if not self.operators_meta_data:
+            logger.log(
+                level="error", message="No operators meta data " "accessible"
+            )
+            return False
+        logger.log(
+            level="info",
+            message="### Connect the components inputs with the components rig "
+            "offsets grp. ###",
+            logger=_LOGGER,
+        )
+        for dic in self.operators_meta_data:
+            meta_data = dic.get("meta_data")
+            for data in meta_data:
+                main_op_uuid = data.get(constants.UUID_ATTR_NAME)
+                comp_container_uuid = strings.search_and_replace(
+                    main_op_uuid, constants.)
 
     def build_deformation_rig(self):
         """
