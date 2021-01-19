@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 03
+# Date:       2021 / 01 / 19
 
 """
 Rig components main module. This class is the template to create a rig
@@ -443,9 +443,8 @@ class Component(operators.ComponentOperator):
                 output_nd.worldMatrix[0].connect(
                     self.component_root.container_content.get("output").attr(
                         "{}[{}]".format(
-                            constants.constants.OUTPUT_WS_PORT_NAME
-                        ),
-                        str(index),
+                            constants.OUTPUT_WS_PORT_NAME, str(index)
+                        )
                     )
                 )
         # every node in the component rig list will be a child of the
@@ -508,13 +507,14 @@ class CompContainer(mayautils.ContainerNode):
             comp_index(int): The component index.
             component_container(pmc.PyNode()): A component container to pass.
         """
-        mayautils.ContainerNode.__init__(self, content_root_node=True)
+        mayautils.ContainerNode.__init__(self,
+                                         container_node=component_container,
+                                         content_root_node=True)
         self.name = "M_ROOT_name_component_0_GRP"
         self.meta_nd_name = constants.COMP_META_NODE_NAME
         self.icon = os.path.normpath(
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
-        self.container = component_container
         if comp_name and comp_side:
             self.meta_nd_name = self.meta_nd_name.replace("COMP", comp_name)
             self.name = (

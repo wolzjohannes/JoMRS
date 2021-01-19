@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 12 / 30
+# Date:       2021 / 01 / 19
 
 """
 JoMRS maya utils module. Utilities helps
@@ -295,7 +295,7 @@ def constraint_ui_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_ui = pmc.creatNode(
+        constraint_ui = pmc.createNode(
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
         constraint.addChild(constraint_ui)
@@ -635,7 +635,7 @@ def decompose_matrix_constraint(
     return decomp
 
 
-def calculate_matrix_offset_(target, source):
+def calculate_matrix_offset_(target, source, target_plug=None):
     """
     Calculate the matrix offset of the source to the target.
     Args:
@@ -644,7 +644,11 @@ def calculate_matrix_offset_(target, source):
     Return:
             The offset matrix values from target to source.
     """
-    tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
+
+    if not target_plug:
+        tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
+    else:
+        tm = dt.Matrix(target.attr(target_plug).get()).inverse()
     sm = dt.Matrix(source.getMatrix(ws=True))
     return sm.__mul__(tm)
 
@@ -659,10 +663,10 @@ def matrix_constraint_ui_grp_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    ui_grp = pmc.creatNode(
+    ui_grp = pmc.createNode(
         "transform", n=str(source) + "_matrixConstraint_UI_GRP"
     )
-    attributes.add_attr(node=ui_grp, name="offset_matrix", attr_type="matrix")
+    attributes.add_attr(node=ui_grp, name="offset_matrix", attrType="matrix")
     attributes.lock_and_hide_attributes(node=ui_grp)
     source.addChild(ui_grp)
     return ui_grp
@@ -680,17 +684,19 @@ def mult_matrix_setup_(source, target, maintainOffset=None, target_plug=None):
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
-    mul_ma_nd = pmc.creatNode("multMatrix", n=str(source) + "_0_MUMAND")
+    mul_ma_nd = pmc.createNode("multMatrix", n=str(source) + "_0_MUMAND")
     if not target_plug:
-        target_plug = 'worldMatrix[0]'
-    target.atr(target_plug).connect(mul_ma_nd.matrixIn[1])
+        target_plug = "worldMatrix[0]"
+    target.attr(target_plug).connect(mul_ma_nd.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
     else:
         source.parentInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
     if maintainOffset:
         ui_grp = matrix_constraint_ui_grp_(source=source)
-        ui_grp.offset_matrix.set(calculate_matrix_offset_(target, source))
+        ui_grp.offset_matrix.set(
+            calculate_matrix_offset_(target, source, target_plug)
+        )
         ui_grp.offset_matrix.connect(mul_ma_nd.matrixIn[0])
     return mul_ma_nd
 
@@ -702,7 +708,7 @@ def create_matrix_constraint(
     rotation=True,
     scale=True,
     maintain_offset=None,
-    target_plug=None
+    target_plug=None,
 ):
     """
     Creates the matrix constraint.
@@ -714,14 +720,19 @@ def create_matrix_constraint(
             scale(bool): Connect/Disconnect the scale channel.
             maintainOffste(bool): Enable/Disable the maintain_offset option.
             target_plug(str): The targets plug name.
+
+    Returns:
+        pmc.PyNode(): The mul matrix node of the constraint setup.
     """
     axis = ["X", "Y", "Z"]
-    decomp_mat_nd = pmc.creatNode(
+    decomp_mat_nd = pmc.createNode(
         "decomposeMatrix", n=str(source) + "_0_DEMAND"
     )
     mul_ma_nd = mult_matrix_setup_(
-        source=source, target=target, maintainOffset=maintain_offset,
-        target_plug=target_plug
+        source=source,
+        target=target,
+        maintainOffset=maintain_offset,
+        target_plug=target_plug,
     )
     mul_ma_nd.matrixSum.connect(decomp_mat_nd.inputMatrix)
     if translation:
@@ -739,6 +750,7 @@ def create_matrix_constraint(
             decomp_mat_nd.attr("outputScale" + axe).connect(
                 source.attr("scale" + axe)
             )
+    return mul_ma_nd
 
 
 def ancestors(node):
@@ -1054,7 +1066,7 @@ def create_motion_path(
     """
     axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, _LOGGER)
-    mpnd = pmc.creatNode("motionPath", n=name)
+    mpnd = pmc.createNode("motionPath", n=name)
     mpnd.fractionMode.set(1)
     mpnd.uValue.set(position)
     curve_shape.worldSpace[0].connect(mpnd.geometryPath)
@@ -1258,8 +1270,9 @@ class ContainerNode(object):
     Wrapper for the maya container node. JoMRS expansion.
     """
 
-    def __init__(self, name=None, icon=None, container_node=None,
-                 content_root_node=False):
+    def __init__(
+        self, name=None, icon=None, container_node=None, content_root_node=False
+    ):
         """
         Init creation of the container node.
 
@@ -1308,7 +1321,11 @@ class ContainerNode(object):
                 "transform", n=self.container_content_root_name
             )
             self.container.addNode(
-                self.container_content_root, ish=True, ihb=True, iha=True, inc=True
+                self.container_content_root,
+                ish=True,
+                ihb=True,
+                iha=True,
+                inc=True,
             )
         for attr_ in self.container_attr_list:
             attributes.add_attr(node=self.container, **attr_)

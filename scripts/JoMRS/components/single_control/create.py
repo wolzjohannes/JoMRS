@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 12
+# Date:       2021 / 01 / 19
 
 """
 Build a single single_control
@@ -34,7 +34,6 @@ import components.main
 import logging
 import logger
 import strings
-reload(components.main)
 
 ##########################################################
 # GLOBALS
@@ -171,6 +170,7 @@ class MainCreate(components.main.Component):
         self.controls.append(curve[1])
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
+        self.output_matrix_nd_list.append(curve[1])
         self.bnd_output_matrix.append(curve[1])
         logger.log(
             level="info",

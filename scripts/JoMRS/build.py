@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 18
+# Date:       2021 / 01 / 19
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -369,6 +369,11 @@ class MainBuild(object):
                     )
 
     def connect_components_inputs_with_components_rig_offsets_grp(self):
+        """
+        Connect the component inputs with the component rig offsets of each
+        created component. This step has to be always after
+        self.connect_components() method.
+        """
         if not self.operators_meta_data:
             logger.log(
                 level="error", message="No operators meta data " "accessible"
@@ -380,12 +385,60 @@ class MainBuild(object):
             "offsets grp. ###",
             logger=_LOGGER,
         )
+        # loop through the operators_meta_data
         for dic in self.operators_meta_data:
+            # get the meta_data
             meta_data = dic.get("meta_data")
             for data in meta_data:
+                # get the main_op_uuid
                 main_op_uuid = data.get(constants.UUID_ATTR_NAME)
+                # reformat the main_op_uuid to the comp container uuid.
                 comp_container_uuid = strings.search_and_replace(
-                    main_op_uuid, constants.)
+                    main_op_uuid,
+                    constants.MAIN_OP_ND_UUID_SUFFIX,
+                    constants.COMP_CONTAINER_UUID_SUFFIX,
+                )
+                # Get the component container from reformated uuid.
+                comp_container = self.get_container_node_from_uuid(
+                    comp_container_uuid
+                )
+                if not comp_container:
+                    logger.log(
+                        level="error",
+                        message="Component container "
+                        "with {} uuid "
+                        "not exist.".format(comp_container_uuid),
+                    )
+                    return False
+                # Create the component instance for further use
+                comp_container_instance = components.main.CompContainer(
+                    component_container=comp_container
+                )
+                # Get the component input node.
+                comp_container_instance.get_container_content()
+                comp_container_input = comp_container_instance.container_content.get(
+                    "input"
+                )
+                # Get rig offset node from the container meta nd.
+                rig_ws_offset_nd = (
+                    comp_container_instance.get_input_ws_matrix_offset_nd()
+                )
+                # For each node in rig_ws_offset_nd create a matrix constraint.
+                for index, node in enumerate(rig_ws_offset_nd):
+                    mul_ma_nd = mayautils.create_matrix_constraint(
+                        source=node,
+                        target=comp_container_input,
+                        maintain_offset=True,
+                        target_plug="{}[{}]".format(
+                            constants.INPUT_WS_PORT_NAME, str(index)
+                        ),
+                    )
+                    decomp_nd = mul_ma_nd.matrixSum.connections()
+                    offset_nd = mul_ma_nd.matrixIn[0].connections()
+                    matrix_constraint_nodes = [mul_ma_nd, decomp_nd, offset_nd]
+                    # add all content matrix nodes to the container.
+                    for node in matrix_constraint_nodes:
+                        comp_container_instance.container.addNode(node)
 
     def build_deformation_rig(self):
         """
@@ -441,6 +494,7 @@ class MainBuild(object):
         self.build_rig_container()
         self.build_components()
         self.connect_components()
+        self.connect_components_inputs_with_components_rig_offsets_grp()
         self.parent_components()
         self.build_deformation_rig()
 
