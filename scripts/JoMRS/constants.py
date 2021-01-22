@@ -195,3 +195,7 @@ OUTPUT_WS_PORT_INDEX = 'output_ws_matrix_index'
 PARENT_OUTPUT_WS_PORT_INDEX = 'parent_output_ws_matrix_index'
 
 INPUT_WS_MATRIX_OFFSET_ND = 'input_ws_matrix_offset_nd'
+
+BND_JNT_DEFAULT_NAME = 'side_BND_name_index_count_JNT'
+
+BND_JNT_ROOT_ND_ATTR = 'BND_jnt_root_nd'

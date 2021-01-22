@@ -6,7 +6,9 @@
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/build.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/build.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/components/single_control/create.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/single_control/create.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/constants.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/meta.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/meta.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/strings.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/strings.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -19,8 +21,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="323">
-              <caret line="367" column="25" lean-forward="true" selection-start-line="367" selection-start-column="25" selection-end-line="367" selection-end-column="25" />
+            <state relative-caret-position="1102">
+              <caret line="145" column="42" lean-forward="true" selection-start-line="145" selection-start-column="42" selection-end-line="145" selection-end-column="42" />
               <folding>
                 <element signature="e#1490#1514#0" expanded="true" />
               </folding>
@@ -31,8 +33,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="304">
-              <caret line="22" column="28" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
+            <state relative-caret-position="326">
+              <caret line="469" lean-forward="true" selection-start-line="469" selection-end-line="469" />
               <folding>
                 <element signature="e#1313#1322#0" expanded="true" />
               </folding>
@@ -41,13 +43,22 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/strings.py">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="8308">
+              <caret line="270" column="28" selection-start-line="270" selection-start-column="28" selection-end-line="270" selection-end-column="28" />
+              <folding>
+                <element signature="e#1429#1438#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/single_control/create.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="665">
-              <caret line="35" column="14" selection-start-line="35" selection-start-column="14" selection-end-line="35" selection-end-column="14" />
-              <folding>
-                <element signature="e#1203#1227#0" expanded="true" />
-              </folding>
+            <state relative-caret-position="271">
+              <caret line="29" column="17" lean-forward="true" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="17" />
             </state>
           </provider>
         </entry>
@@ -55,8 +66,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="342">
-              <caret line="27" column="3" lean-forward="true" selection-start-line="27" selection-start-column="3" selection-end-line="27" selection-end-column="3" />
+            <state relative-caret-position="822">
+              <caret line="1155" column="46" selection-start-line="1155" selection-start-column="46" selection-end-line="1155" selection-end-column="46" />
               <folding>
                 <element signature="e#1425#1449#0" expanded="true" />
               </folding>
@@ -67,8 +78,11 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/meta.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="560">
-              <caret line="28" column="14" lean-forward="true" selection-start-line="28" selection-start-column="14" selection-end-line="28" selection-end-column="14" />
+            <state relative-caret-position="462">
+              <caret line="22" column="28" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
+              <folding>
+                <element signature="e#1199#1222#0" expanded="true" />
+              </folding>
             </state>
           </provider>
         </entry>
@@ -76,8 +90,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/constants.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="217">
-              <caret line="7" column="51" selection-start-line="7" selection-start-column="51" selection-end-line="7" selection-end-column="51" />
+            <state relative-caret-position="274">
+              <caret line="186" column="25" selection-start-line="186" selection-end-line="186" selection-end-column="25" />
             </state>
           </provider>
         </entry>
@@ -85,8 +99,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="212">
-              <caret line="63" selection-start-line="63" selection-end-line="63" />
+            <state relative-caret-position="2077">
+              <caret line="68" selection-start-line="68" selection-end-line="68" />
               <folding>
                 <element signature="e#0#24#0" expanded="true" />
               </folding>
@@ -116,6 +130,7 @@
       <find>MAIN_OP_META_ND_ATTR_NAME</find>
       <find>connect</find>
       <find>input</find>
+      <find>create_hier</find>
     </findStrings>
     <replaceStrings>
       <replace>createNode</replace>
@@ -145,24 +160,24 @@
         <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/control/__init__.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/control/create.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/strings.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/operators.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/attributes.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py" />
         <option value="$APPLICATION_CONFIG_DIR$/scratches/scratch.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/constants.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/meta.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/components/main.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/strings.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/constants.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/single_control/create.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/build.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/meta.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/components/main.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="2383" />
-    <option name="width" value="1931" />
-    <option name="height" value="1250" />
+    <option name="x" value="2393" />
+    <option name="width" value="1620" />
+    <option name="height" value="1051" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -528,7 +543,14 @@
       <option name="project" value="LOCAL" />
       <updated>1611001890003</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Add connect component edges method to build module. So that connecting and parenting between components container are possible!">
+      <created>1611075887802</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1611075887802</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TodoView">
@@ -544,12 +566,12 @@
     <frame x="2160" y="0" width="1920" height="1080" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.18842888" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21231422" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.32771084" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.31687716" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.31572905" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -623,7 +645,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="test" />
     <MESSAGE value="wip. tweak curve control result to get LRA buffer group" />
     <MESSAGE value="wip. found get main meta node form root node issue" />
     <MESSAGE value="wip" />
@@ -648,7 +669,8 @@
     <MESSAGE value="Fixed issue #27(Fix rig build issue if a meta node is deleted in the scene!). And fixed test_operators unittest module." />
     <MESSAGE value="add a parent operator function! And fix next available connect function!" />
     <MESSAGE value="commit for safety because i have togo to my son!" />
-    <option name="LAST_COMMIT_MESSAGE" value="commit for safety because i have togo to my son!" />
+    <MESSAGE value="Add connect component edges method to build module. So that connecting and parenting between components container are possible!" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add connect component edges method to build module. So that connecting and parenting between components container are possible!" />
   </component>
   <component name="WindowStateProjectService">
     <state width="1127" height="844" key="Git.Branch.Popup" />
@@ -723,16 +745,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/strings.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="71">
-          <caret line="16" column="29" selection-start-line="16" selection-start-column="29" selection-end-line="16" selection-end-column="29" />
-          <folding>
-            <element signature="e#1429#1438#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/attributes.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="2015">
@@ -763,40 +775,44 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/strings.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="8308">
+          <caret line="270" column="28" selection-start-line="270" selection-start-column="28" selection-end-line="270" selection-end-column="28" />
+          <folding>
+            <element signature="e#1429#1438#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$APPLICATION_CONFIG_DIR$/scratches/scratch.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="212">
-          <caret line="63" selection-start-line="63" selection-end-line="63" />
+        <state relative-caret-position="2077">
+          <caret line="68" selection-start-line="68" selection-end-line="68" />
           <folding>
             <element signature="e#0#24#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/constants.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="304">
-          <caret line="22" column="28" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
-          <folding>
-            <element signature="e#1313#1322#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="274">
+          <caret line="186" column="25" selection-start-line="186" selection-end-line="186" selection-end-column="25" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/single_control/create.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="665">
-          <caret line="35" column="14" selection-start-line="35" selection-start-column="14" selection-end-line="35" selection-end-column="14" />
-          <folding>
-            <element signature="e#1203#1227#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="271">
+          <caret line="29" column="17" lean-forward="true" selection-start-line="29" selection-start-column="17" selection-end-line="29" selection-end-column="17" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/mayautils.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="342">
-          <caret line="27" column="3" lean-forward="true" selection-start-line="27" selection-start-column="3" selection-end-line="27" selection-end-column="3" />
+        <state relative-caret-position="822">
+          <caret line="1155" column="46" selection-start-line="1155" selection-start-column="46" selection-end-line="1155" selection-end-column="46" />
           <folding>
             <element signature="e#1425#1449#0" expanded="true" />
           </folding>
@@ -805,22 +821,28 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/meta.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="560">
-          <caret line="28" column="14" lean-forward="true" selection-start-line="28" selection-start-column="14" selection-end-line="28" selection-end-column="14" />
+        <state relative-caret-position="462">
+          <caret line="22" column="28" selection-start-line="22" selection-start-column="28" selection-end-line="22" selection-end-column="28" />
+          <folding>
+            <element signature="e#1199#1222#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/constants.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="217">
-          <caret line="7" column="51" selection-start-line="7" selection-start-column="51" selection-end-line="7" selection-end-column="51" />
+        <state relative-caret-position="326">
+          <caret line="469" lean-forward="true" selection-start-line="469" selection-end-line="469" />
+          <folding>
+            <element signature="e#1313#1322#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="323">
-          <caret line="367" column="25" lean-forward="true" selection-start-line="367" selection-start-column="25" selection-end-line="367" selection-end-column="25" />
+        <state relative-caret-position="1102">
+          <caret line="145" column="42" lean-forward="true" selection-start-line="145" selection-start-column="42" selection-end-line="145" selection-end-column="42" />
           <folding>
             <element signature="e#1490#1514#0" expanded="true" />
           </folding>

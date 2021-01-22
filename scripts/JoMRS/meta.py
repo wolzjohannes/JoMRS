@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 02
+# Date:       2021 / 01 / 22
 
 """
 Meta node creation module.
@@ -976,9 +976,16 @@ class ContainerMetaNode(MetaNode):
             "multi": True,
         }
 
+        bnd_root_node_attr = {
+            "name": constants.BND_JNT_ROOT_ND_ATTR,
+            "attrType": "message",
+            "keyable": False,
+        }
+
         container_meta_param_list = [
             container_nd_attr,
             input_ws_matrix_offset_nd_attr,
+            bnd_root_node_attr,
         ]
 
         for attr_ in container_meta_param_list:

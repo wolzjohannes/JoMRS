@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 19
+# Date:       2021 / 01 / 22
 
 """
 Rig components main module. This class is the template to create a rig
@@ -468,6 +468,95 @@ class Component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
+    def create_BND_joints(self):
+        """
+        Create the component bind joints.
+        """
+        temp = []
+        output_nd = self.component_root.container_content.get("output")
+        connected_bnd_outputs = (
+            self.component_root.container_content.get("output")
+            .attr(constants.OUTPUT_WS_PORT_NAME)
+            .get()
+        )
+        for count in range(len(connected_bnd_outputs)):
+            # Bind joint name creation.
+            bnd_joint_name = strings.search_and_replace(
+                constants.BND_JNT_DEFAULT_NAME,
+                "side",
+                self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
+            )
+            bnd_joint_name = strings.search_and_replace(
+                bnd_joint_name,
+                "name",
+                self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
+            )
+            bnd_joint_name = strings.search_and_replace(
+                bnd_joint_name,
+                "index",
+                str(
+                    self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)
+                ),
+            )
+            bnd_joint_name = strings.search_and_replace(
+                bnd_joint_name, "count", str(count)
+            )
+            bnd_joint = mayautils.create_joint(bnd_joint_name, typ="BND")
+            mul_ma_nd = mayautils.create_matrix_constraint(
+                source=bnd_joint,
+                target=output_nd,
+                target_plug="{}[{}]".format(
+                    constants.OUTPUT_WS_PORT_NAME, str(count)
+                ),
+            )
+            # The part below will check if the component is a mirrored
+            # component. If it will get the negative scale value in the
+            # bnd joints and make it positive! This is important for a correct
+            # rig hierarchy without buffer transforms.
+            negate_axe = []
+            if bnd_joint.scaleX.get() < 0:
+                negate_axe.append("X")
+            elif bnd_joint.scaleY.get() < 0:
+                negate_axe.append("Y")
+            elif bnd_joint.scaleZ.get() < 0:
+                negate_axe.append("Z")
+            if negate_axe:
+                decomp_nd = mul_ma_nd.matrixSum.connections()
+                for axe in negate_axe:
+                    mult_nd_name = strings.search_and_replace(
+                        decomp_nd.name(),
+                        "_DEMAND",
+                        "_scale_{}_MULDOLINND".format(axe),
+                    )
+                    mult_nd = pmc.createNode("multDoubleLinear", n=mult_nd_name)
+                    mult_nd.input2.set(-1)
+                    decomp_nd.attr("outputScale{}".format(axe)).connect(
+                        mult_nd.input1
+                    )
+                    mult_nd.output.connect(
+                        bnd_joint.attr(
+                            bnd_joint.attr("scale{}".format(axe)), force=True
+                        )
+                    )
+            temp.append(bnd_joint)
+            # If it is more then one joint it will create a hierarchy.
+            if len(temp) > 1:
+                mayautils.create_hierarchy(temp, True)
+            # set joint orient to zero because this would mess up the matrix
+            # constraint setup.
+            for jnt in temp:
+                jnt.jointOrient.set(0, 0, 0)
+            self.component_root.set_bnd_root_nd(temp[-1])
+        # Step feedback
+        logger.log(
+            level="info",
+            message="BND joint hierarchy build "
+            "for: {} Component".format(
+                self.operator_meta_data[constants.META_MAIN_COMP_NAME]
+            ),
+            logger=_LOGGER,
+        )
+
     def build_from_operator(self, operator_meta_data=None):
         """
         Build the whole Component rig from operator.
@@ -484,6 +573,7 @@ class Component(operators.ComponentOperator):
         self.create_component_container()
         self.build_component_logic()
         self.connect_inner_component_edges()
+        self.create_BND_joints()
 
 
 class CompContainer(mayautils.ContainerNode):
@@ -507,9 +597,9 @@ class CompContainer(mayautils.ContainerNode):
             comp_index(int): The component index.
             component_container(pmc.PyNode()): A component container to pass.
         """
-        mayautils.ContainerNode.__init__(self,
-                                         container_node=component_container,
-                                         content_root_node=True)
+        mayautils.ContainerNode.__init__(
+            self, container_node=component_container, content_root_node=True
+        )
         self.name = "M_ROOT_name_component_0_GRP"
         self.meta_nd_name = constants.COMP_META_NODE_NAME
         self.icon = os.path.normpath(
@@ -588,3 +678,19 @@ class CompContainer(mayautils.ContainerNode):
             
         """
         return self.meta_nd.attr(constants.INPUT_WS_MATRIX_OFFSET_ND).get()
+
+    def set_bnd_root_nd(self, node):
+        """
+        Set the bnd root nd.
+        """
+        node.message.connect(self.meta_nd.attr(constants.BND_JNT_ROOT_ND_ATTR))
+
+    def get_bnd_root_nd(self):
+        """
+        Get the bnd root node
+
+        Returns:
+             pmc.PyNode(): The bnd root node.
+
+        """
+        return self.meta_nd.attr(constants.BND_JNT_ROOT_ND_ATTR).get()

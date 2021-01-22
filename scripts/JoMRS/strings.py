@@ -263,7 +263,7 @@ def valid_suffix(string, logger_=_LOGGER):
     """
     valid = (
         "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND"
-        "|_CONST"
+        "|_CONST|_MULDOLINND"
     )
     suffix_pattern = re.compile(valid)
     if not re.search(suffix_pattern, string):

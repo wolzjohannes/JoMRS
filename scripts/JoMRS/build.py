@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 19
+# Date:       2021 / 01 / 22
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -65,7 +65,7 @@ class MainBuild(object):
     self.connect_components()
     self.connect_components_inputs_with_components_rig_offsets_grp()
     self.parent_components()
-    self.build_deformation_rig()
+    self.arrange_deformation_hierarchy()
 
     """
 
@@ -283,6 +283,7 @@ class MainBuild(object):
                 create_module = importlib.import_module(component_module_name)
                 # instance the MainCreate class which is the base of each rig
                 # component.
+                reload(create_module)
                 main_create = create_module.MainCreate()
                 # build each component
                 main_create.build_from_operator(m_data)
@@ -392,24 +393,9 @@ class MainBuild(object):
             for data in meta_data:
                 # get the main_op_uuid
                 main_op_uuid = data.get(constants.UUID_ATTR_NAME)
-                # reformat the main_op_uuid to the comp container uuid.
-                comp_container_uuid = strings.search_and_replace(
-                    main_op_uuid,
-                    constants.MAIN_OP_ND_UUID_SUFFIX,
-                    constants.COMP_CONTAINER_UUID_SUFFIX,
+                comp_container = self.get_component_container_from_main_op_nd_uuid(
+                    main_op_uuid
                 )
-                # Get the component container from reformated uuid.
-                comp_container = self.get_container_node_from_uuid(
-                    comp_container_uuid
-                )
-                if not comp_container:
-                    logger.log(
-                        level="error",
-                        message="Component container "
-                        "with {} uuid "
-                        "not exist.".format(comp_container_uuid),
-                    )
-                    return False
                 # Create the component instance for further use
                 comp_container_instance = components.main.CompContainer(
                     component_container=comp_container
@@ -440,16 +426,72 @@ class MainBuild(object):
                     for node in matrix_constraint_nodes:
                         comp_container_instance.container.addNode(node)
 
-    def build_deformation_rig(self):
+    def arrange_deformation_hierarchy(self):
         """
         Will build the deformation rig hierarchy.
         """
+        if not self.operators_meta_data:
+            logger.log(
+                level="error", message="No operators meta data " "accessible"
+            )
+            return False
         logger.log(
-            "error",
-            message="Not implemented yet",
-            func=self.build_deformation_rig,
+            level="info",
+            message="### Collect all component BND hierarchies and arrange it "
+            "to a deformation single hierarchy. ###",
             logger=_LOGGER,
         )
+        # loop through the operators_meta_data
+        temp = []
+        for dic in self.operators_meta_data:
+            # get the rig container.
+            root_meta_nd = dic.get("root_meta_nd")
+            operators_root_nd_uuid = root_meta_nd.get_uuid()
+            rig_container_uuid = strings.search_and_replace(
+                operators_root_nd_uuid,
+                constants.OP_ROOT_ND_UUID_SUFFIX,
+                constants.RIG_CONTAINER_UUID_SUFFIX,
+            )
+            rig_container_nd = self.get_container_node_from_uuid(
+                rig_container_uuid
+            )
+            # If no rig container node exist fail.
+            if not rig_container_nd:
+                logger.log(
+                    level="error",
+                    message="No rig container with "
+                    "uuid: {} exist.".format(rig_container_uuid),
+                    logger=_LOGGER,
+                )
+                return False
+            rig_container_instance = RigContainer(
+                rig_container=rig_container_nd
+            )
+            # Get rig container content
+            rig_container_instance.get_container_content()
+            # get the meta_data
+            meta_data = dic.get("meta_data")
+            for data in meta_data:
+                # get the main_op_uuid
+                main_op_uuid = data.get(constants.UUID_ATTR_NAME)
+                comp_container = self.get_component_container_from_main_op_nd_uuid(
+                    main_op_uuid
+                )
+                # Create the component instance for further use
+                comp_container_instance = components.main.CompContainer(
+                    component_container=comp_container
+                )
+                # get the bnd root node form component
+                bnd_root_node = comp_container_instance.get_bnd_root_nd()
+                # at the bnd root to temp list
+                temp.append(bnd_root_node)
+            # use temp list for hierarchy creation.
+            mayautils.create_hierarchy(temp, True)
+            # add the rig hierarchy root node to the rig container. The last
+            # object in the temp list is always the rig hierarchy root node.
+            rig_container_instance.add_node_to_container_content(
+                temp[-1], "M_RIG_0_GRP"
+            )
 
     def parent_components(self):
         """
@@ -496,7 +538,7 @@ class MainBuild(object):
         self.connect_components()
         self.connect_components_inputs_with_components_rig_offsets_grp()
         self.parent_components()
-        self.build_deformation_rig()
+        self.arrange_deformation_hierarchy()
 
     def get_root_meta_nd_from_god_meta_node(self):
         """
@@ -718,6 +760,35 @@ class MainBuild(object):
             except:
                 continue
         return result
+
+    def get_component_container_from_main_op_nd_uuid(self, main_op_uuid):
+        """
+        Gives back the component_container node form main_op_nd_uuid.
+
+        Args:
+            main_op_uuid(str): The main op nd uuid.
+
+        Returns:
+            pmc.PyNode() if successful. False if not.
+
+        """
+        # reformat the main_op_nd_uuid to comp_container_uuid
+        comp_container_uuid = strings.search_and_replace(
+            main_op_uuid,
+            constants.MAIN_OP_ND_UUID_SUFFIX,
+            constants.COMP_CONTAINER_UUID_SUFFIX,
+        )
+        # Get the component container from reformatted uuid.
+        comp_container = self.get_container_node_from_uuid(comp_container_uuid)
+        if not comp_container:
+            logger.log(
+                level="error",
+                message="Component container "
+                "with {} uuid "
+                "not exist.".format(comp_container_uuid),
+            )
+            return False
+        return comp_container
 
 
 class RigContainer(mayautils.ContainerNode):
