@@ -111,7 +111,7 @@ class MainBuild(object):
             'l_rig_color': 13, 'r_rig_sub_color': 9, 'm_rig_sub_color': 11,
             'm_rig_color': 17}}]
             [{'root_meta_nd': nt.RootOpMetaNode(u'M_ROOT_op_0_METAND'),
-            'meta_data': [{'component_type': u'single_control',
+            'meta_data': [{'component_type': u'test_single_control',
             'component_side': u'L',
             'main_op_nd_ws_matrix':
             Matrix([[-0.855774425863, -0.416261824405, -0.307207137909, 0.0],
@@ -124,7 +124,7 @@ class MainBuild(object):
             'JoMRS_UUID': u'f0bc993e-38e5-4210-816c-3dac633b6ee0-main_op',
             'component_name': u'MOM'}]},
             {'root_meta_nd': nt.RootOpMetaNode(u'M_ROOT_op_1_METAND'),
-            'meta_data': [{'component_type': u'single_control',
+            'meta_data': [{'component_type': u'test_single_control',
             'component_side': u'M',
             'main_op_nd_ws_matrix':
             Matrix([[0.0498978099393, 0.554286236569, -0.830829089834, 0.0],
@@ -283,7 +283,6 @@ class MainBuild(object):
                 create_module = importlib.import_module(component_module_name)
                 # instance the MainCreate class which is the base of each rig
                 # component.
-                reload(create_module)
                 main_create = create_module.MainCreate()
                 # build each component
                 main_create.build_from_operator(m_data)

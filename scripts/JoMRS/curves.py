@@ -73,12 +73,12 @@ class ControlCurves(object):
         """
         Create curve method.
         Args:
-            name(str): The single_control name. You should follow the
+            name(str): The test_single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            color_index(integer): The color of the single_control.
+            color_index(integer): The color of the test_single_control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -86,14 +86,14 @@ class ControlCurves(object):
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            buffer_grp(bool): Create buffer_grp for the single_control.
-            child(dagnode): The child of the single_control.
+            buffer_grp(bool): Create buffer_grp for the test_single_control.
+            child(dagnode): The child of the test_single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
             lock_visibility(bool): Lock/Hide the visibility channels.
         Return:
-                list: The buffer group, the single_control curve node.
+                list: The buffer group, the test_single_control curve node.
         """
         result = []
         name = strings.string_checkup(name, _LOGGER)
@@ -1589,12 +1589,12 @@ class RotateAxesControl:
         """
         Creates LRA Control Curve. By Default with a buffer group.
         Args:
-            name(str): The single_control name. You should follow the
+            name(str): The test_single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             match(dagnode): The node for transform match.
             scale(list): The scale values.
-            buffer_grp(bool): Create bufferGRP for the single_control.
+            buffer_grp(bool): Create bufferGRP for the test_single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
@@ -1689,13 +1689,13 @@ class DiamondControl:
         """
         Creates Diamond Control Curve. By Default with a buffer group.
         Args:
-            name(str): The single_control name. You should follow the
+            name(str): The test_single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
             scale(list): The scale values.
             match(dagnode): The node for transform match.
-            color_index(integer): The color of the single_control.
-            local_rotate_axes(bool): Enable a LRA curve single_control.
+            color_index(integer): The color of the test_single_control.
+            local_rotate_axes(bool): Enable a LRA curve test_single_control.
             Valid is:
              0:GREY,1:BLACK,2:DARKGREY,3:BRIGHTGREY,4:RED,5:DARKBLUE,
              6:BRIGHTBLUE,7:GREEN,8:DARKLILA,9:MAGENTA,10:BRIGHTBROWN,
@@ -1703,7 +1703,7 @@ class DiamondControl:
              16:WHITE,17:BRIGHTYELLOW,18:CYAN,19:TURQUOISE,20:LIGHTRED,
              21:LIGHTORANGE,22:LIGHTYELLOW,23:DIRTGREEN,24:LIGHTBROWN,
              25:DIRTYELLOW,26:LIGHTGREEN,27:LIGHTGREEN2,28:LIGHTBLUE
-            buffer_grp(bool): Create buffer_grp for the single_control.
+            buffer_grp(bool): Create buffer_grp for the test_single_control.
             lock_translate(list): Valid is ['tx','ty','tz']
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']

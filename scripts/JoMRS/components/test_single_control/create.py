@@ -20,10 +20,10 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 19
+# Date:       2021 / 01 / 23
 
 """
-Build a single single_control
+Build a single_control for testing purposes.
 """
 
 import pymel.core as pmc
@@ -34,7 +34,6 @@ import components.main
 import logging
 import logger
 import strings
-reload(components.main)
 
 ##########################################################
 # GLOBALS
@@ -49,10 +48,10 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 
 class MainCreate(components.main.Component):
     """
-    Single single_control Component class
+    Single test Component class
     """
 
-    COMP_TYPE = "single_control"
+    COMP_TYPE = "test_single_control"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = True
     AXES = "X"

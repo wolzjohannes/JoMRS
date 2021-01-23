@@ -161,9 +161,9 @@ class TestOperators(TestCase):
         comp_index = self.test_op_1.get_component_index()
         self.assertEqual(comp_index, 10)
         # Test Component type data.
-        self.test_op_1.set_component_type("single_control")
+        self.test_op_1.set_component_type("test_single_control")
         comp_type = self.test_op_1.get_component_type()
-        self.assertEqual(comp_type, "single_control")
+        self.assertEqual(comp_type, "test_single_control")
         # Test connection types
         self.assertFalse(self.test_op_1.set_connection_type("translate"))
         self.test_op_1.set_connection_type(["translate", "rotate"])
