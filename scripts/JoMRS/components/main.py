@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 22
+# Date:       2021 / 01 / 23
 
 """
 Rig components main module. This class is the template to create a rig
@@ -509,6 +509,12 @@ class Component(operators.ComponentOperator):
                     constants.OUTPUT_WS_PORT_NAME, str(count)
                 ),
             )
+            # get the matrix constraint nodes and add them to the component
+            # container.
+            offset_matrix_nd = mul_ma_nd.matrixIn[0].connections()
+            decomp_nd = mul_ma_nd.matrixSum.connections()
+            for node in [offset_matrix_nd, decomp_nd, mul_ma_nd]:
+                self.component_root.container.addNode(node)
             # The part below will check if the component is a mirrored
             # component. If it will get the negative scale value in the
             # bnd joints and make it positive! This is important for a correct
@@ -521,7 +527,6 @@ class Component(operators.ComponentOperator):
             elif bnd_joint.scaleZ.get() < 0:
                 negate_axe.append("Z")
             if negate_axe:
-                decomp_nd = mul_ma_nd.matrixSum.connections()
                 for axe in negate_axe:
                     mult_nd_name = strings.search_and_replace(
                         decomp_nd.name(),

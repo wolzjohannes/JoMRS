@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 22
+# Date:       2021 / 01 / 23
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -467,8 +467,12 @@ class MainBuild(object):
             rig_container_instance = RigContainer(
                 rig_container=rig_container_nd
             )
-            # Get rig container content
+            # get rig container content
             rig_container_instance.get_container_content()
+            # get the "M_RIG_0_GRP" container
+            m_rig_container_grp = rig_container_instance.container_content.get(
+                "M_RIG_0_GRP"
+            )
             # get the meta_data
             meta_data = dic.get("meta_data")
             for data in meta_data:
@@ -489,9 +493,7 @@ class MainBuild(object):
             mayautils.create_hierarchy(temp, True)
             # add the rig hierarchy root node to the rig container. The last
             # object in the temp list is always the rig hierarchy root node.
-            rig_container_instance.add_node_to_container_content(
-                temp[-1], "M_RIG_0_GRP"
-            )
+            m_rig_container_grp.addNode(temp)
 
     def parent_components(self):
         """
