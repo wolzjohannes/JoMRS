@@ -630,6 +630,7 @@ class CompContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
+        self.set_container_type(constants.META_TYPE_F)
         attributes.add_attr(
             self.container_content.get("input"),
             name=constants.INPUT_WS_PORT_NAME,

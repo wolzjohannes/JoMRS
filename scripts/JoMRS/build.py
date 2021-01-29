@@ -154,7 +154,9 @@ class MainBuild(object):
             if not self.selection:
                 self.get_meta_data_from_god_node("rig")
             else:
-                self.get_operators_meta_data_from_root_meta_node()
+                self.get_rig_meta_data_from_root_meta_node(
+                    self.component_instance.root_meta_nd
+                )
 
     def process_component_parenting_data(self, component_parenting_data=None):
         """
@@ -202,7 +204,7 @@ class MainBuild(object):
                             )
                             rig_components_list.append(comp_container_uuid)
                         data_dic[
-                            "root_meta_nd_uuid"
+                            constants.RIG_CONTAINER_UUID_DIC_KEY
                         ] = strings.search_and_replace(
                             rig_meta_data.get("meta_data").get(
                                 constants.UUID_ATTR_NAME
@@ -210,7 +212,9 @@ class MainBuild(object):
                             constants.OP_ROOT_ND_UUID_SUFFIX,
                             constants.RIG_CONTAINER_UUID_SUFFIX,
                         )
-                        data_dic["rig_components_uuid"] = rig_components_list
+                        data_dic[
+                            constants.COMP_CONTAINER_UUID_DIC_KEY
+                        ] = rig_components_list
                 result.append(data_dic)
             self.parenting_data_dic = result
 
@@ -440,16 +444,12 @@ class MainBuild(object):
             "to a deformation single hierarchy. ###",
             logger=_LOGGER,
         )
-        # loop through the operators_meta_data
-        temp = []
-        for dic in self.operators_meta_data:
-            # get the rig container.
-            root_meta_nd = dic.get("root_meta_nd")
-            operators_root_nd_uuid = root_meta_nd.get_uuid()
-            rig_container_uuid = strings.search_and_replace(
-                operators_root_nd_uuid,
-                constants.OP_ROOT_ND_UUID_SUFFIX,
-                constants.RIG_CONTAINER_UUID_SUFFIX,
+        # loop through the parent data dic.
+        for dic in self.parenting_data_dic:
+            temp = []
+            rig_container_uuid = dic.get(constants.RIG_CONTAINER_UUID_DIC_KEY)
+            comp_container_uuid_list = dic.get(
+                constants.COMP_CONTAINER_UUID_DIC_KEY
             )
             rig_container_nd = self.get_container_node_from_uuid(
                 rig_container_uuid
@@ -466,27 +466,31 @@ class MainBuild(object):
             rig_container_instance = RigContainer(
                 rig_container=rig_container_nd
             )
-            # get rig container content
+            # get rig container content.
             rig_container_instance.get_container_content()
-            # get the "M_RIG_0_GRP" container
+            # get the rig key.
+            rig_key = [
+                key
+                for key in rig_container_instance.container_content.keys()
+                if "_RIG_" in key
+            ]
+            rig_key = [key for key in rig_key if "_GRP" in key][0]
+            # get the "M_RIG_0_GRP" container.
             m_rig_container_grp = rig_container_instance.container_content.get(
-                "M_RIG_0_GRP"
+                rig_key
             )
-            # get the meta_data
-            meta_data = dic.get("meta_data")
-            for data in meta_data:
-                # get the main_op_uuid
-                main_op_uuid = data.get(constants.UUID_ATTR_NAME)
-                comp_container = self.get_component_container_from_main_op_nd_uuid(
-                    main_op_uuid
+            # loop through the component uuid list.
+            for comp_con_uuid in comp_container_uuid_list:
+                # get each component container.
+                component_container = self.get_container_node_from_uuid(
+                    comp_con_uuid
                 )
-                # Create the component instance for further use
                 comp_container_instance = components.main.CompContainer(
-                    component_container=comp_container
+                    component_container=component_container
                 )
-                # get the bnd root node form component
+                # get the bnd root node from component
                 bnd_root_node = comp_container_instance.get_bnd_root_nd()
-                # at the bnd root to temp list
+                # at the bnd root to temp list.
                 temp.append(bnd_root_node)
             # use temp list for hierarchy creation.
             mayautils.create_hierarchy(temp, True)
@@ -507,11 +511,13 @@ class MainBuild(object):
         for data_dic in self.parenting_data_dic:
             # Filter the rig container in the scene based on his JoMRS uuid.
             rig_container_nd = self.get_container_node_from_uuid(
-                data_dic.get("root_meta_nd_uuid")
+                data_dic.get(constants.RIG_CONTAINER_UUID_DIC_KEY)
             )
             rig_container_nd = RigContainer(rig_container=rig_container_nd)
             # add rig components to rig container
-            for comp_container_uuid in data_dic.get("rig_components_uuid"):
+            for comp_container_uuid in data_dic.get(
+                constants.COMP_CONTAINER_UUID_DIC_KEY
+            ):
                 comp_container = self.get_container_node_from_uuid(
                     comp_container_uuid
                 )
@@ -811,6 +817,7 @@ class RigContainer(mayautils.ContainerNode):
         Args
             rig_name(str): The rig name.
             rig_container(pmc.PyNode()): A rig container to pass.
+
         """
         mayautils.ContainerNode.__init__(self)
         self.meta_nd_name = constants.RIG_META_NODE_NAME
@@ -865,6 +872,7 @@ class RigContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
+        self.set_container_type(constants.META_TYPE_E)
 
     def add_rig_component(self, rig_component=None):
         """

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 22
+# Date:       2021 / 01 / 29
 
 """
 Meta node creation module.
@@ -117,6 +117,25 @@ class MetaNode(pmc.nt.Network):
         Get the uuid string
         """
         return self.attr(constants.UUID_ATTR_NAME).get()
+
+    def set_meta_type(self, type):
+        """
+        Set the meta type of the meta node
+
+        Args:
+            type(str): The meta class type to set.
+
+        """
+        self.attr(constants.META_TYPE).set(type)
+
+    def get_meta_type(self):
+        """
+        Get the meta type.
+
+        Returns:
+            String: The meta class type.
+        """
+        return self.attr(constants.META_TYPE)
 
 
 class GodMetaNode(MetaNode):

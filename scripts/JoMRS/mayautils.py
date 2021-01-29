@@ -1434,3 +1434,23 @@ class ContainerNode(object):
             return self.meta_nd
         except:
             return
+
+    def set_container_type(self, type):
+        """
+        Set the container type meta data
+
+        Args:
+            type(str): The container type.
+
+        """
+        self.meta_nd.set_meta_type(type)
+
+    def get_container_type(self):
+        """
+        Get the container type meta data
+
+        Returns:
+            String: The container meta type class
+
+        """
+        return self.meta_nd.get_meta_type()

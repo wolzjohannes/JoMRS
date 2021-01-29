@@ -110,6 +110,12 @@ META_TYPE_C = "sub_operator_meta_class"
 
 META_TYPE_D = "container_meta_class"
 
+META_TYPE_E = "rig_container_meta_class"
+
+META_TYPE_F = "comp_container_meta_class"
+
+META_TYPE_G = "op_root_container_meta_class"
+
 META_DEFAULT_CONNECTION_TYPES = "connection_types"
 
 META_ROOT_RIG_NAME = "rig_name"
@@ -199,3 +205,9 @@ INPUT_WS_MATRIX_OFFSET_ND = 'input_ws_matrix_offset_nd'
 BND_JNT_DEFAULT_NAME = 'side_BND_name_index_count_JNT'
 
 BND_JNT_ROOT_ND_ATTR = 'BND_jnt_root_nd'
+
+CONTAINER_TYPE_ATTR = 'container_type'
+
+RIG_CONTAINER_UUID_DIC_KEY = 'rig_container_uuid'
+
+COMP_CONTAINER_UUID_DIC_KEY = 'comp_container_uuid'
