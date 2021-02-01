@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 29
+# Date:       2021 / 01 / 30
 
 """
 Meta node creation module.
@@ -117,25 +117,6 @@ class MetaNode(pmc.nt.Network):
         Get the uuid string
         """
         return self.attr(constants.UUID_ATTR_NAME).get()
-
-    def set_meta_type(self, type):
-        """
-        Set the meta type of the meta node
-
-        Args:
-            type(str): The meta class type to set.
-
-        """
-        self.attr(constants.META_TYPE).set(type)
-
-    def get_meta_type(self):
-        """
-        Get the meta type.
-
-        Returns:
-            String: The meta class type.
-        """
-        return self.attr(constants.META_TYPE)
 
 
 class GodMetaNode(MetaNode):
@@ -1001,18 +982,62 @@ class ContainerMetaNode(MetaNode):
             "keyable": False,
         }
 
+        container_type_attr = {
+            "name": constants.META_CONTAINER_TYPE_ATTR,
+            "attrType": "string",
+            "keyable": False,
+        }
+
         container_meta_param_list = [
             container_nd_attr,
             input_ws_matrix_offset_nd_attr,
             bnd_root_node_attr,
+            container_type_attr,
         ]
 
         for attr_ in container_meta_param_list:
             attributes.add_attr(node=newNode, **attr_)
 
     def add_container_node(self, node):
+        """
+        Connect the container node with the meta nd.
+
+        Args:
+            node(pmc.PyNode): The container node to connect.
+
+        """
         node.message.connect(self.attr(constants.CONTAINER_NODE_ATTR_NAME))
         self.message.connect(node.attr(constants.CONTAINER_META_ND_ATTR_NAME))
+
+    def get_container_node(self):
+        """
+        Get the container node form meta nd.
+
+        Returns:
+            pmc.PyNode(): The connected container node.
+
+        """
+        return self.attr(constants.CONTAINER_NODE_ATTR_NAME).get()
+
+    def set_container_type(self, type):
+        """
+        Set the container type.
+
+        Args:
+            type(str): The container type.
+
+        """
+        self.attr(constants.META_CONTAINER_TYPE_ATTR).set(type)
+
+    def get_container_type(self):
+        """
+        Get the container type.
+
+        Returns:
+            String: The container type.
+
+        """
+        return self.attr(constants.META_CONTAINER_TYPE_ATTR).get()
 
 
 pmc.factories.registerVirtualClass(MetaNode, nameRequired=False)

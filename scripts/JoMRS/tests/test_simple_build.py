@@ -20,14 +20,13 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 23
+# Date:       2021 / 02 / 01
 
 """
 Test the build module with a very simple and basic example. We will use
 simple test component which is only one control.
 """
 import pymel.core as pmc
-import pymel.core.datatypes as datatypes
 from tests.mayaunittest import TestCase
 import components.test_single_control.create as test_sc_create
 import build
@@ -103,19 +102,34 @@ class TestSimpleBuild(TestCase):
         self.build_instance = build.MainBuild()
         self.build_instance.execute_building_steps()
 
-    # def test_rig_container_content(self):
-    #     """
-    #     Test the rig container content.
-    #     """
-    #     component_root = self.test_single_control.component_root
-    #     component_root.get_container_content()
-    #     container_content = component_root.container_content
-    #     self.assertIsNotNone(container_content.get('M_BSHP_0_GRP'))
-    #     self.assertIsNotNone(container_content.get('M_COMPONENTS_0_GRP'))
-    #     self.assertIsNotNone(container_content.get('M_GEO_0_GRP'))
-    #     self.assertIsNotNone(container_content.get('M_RIG_0_GRP'))
-    #     self.assertIsNotNone(container_content.get('M_SHARED_ATTR_0_GRP'))
-
+    def test_rig_container_content(self):
+        """
+        Test the rig container content.
+        """
+        # Ifx patterns for check the content dic.
+        content_check_str_patterns = [
+            "_BSHP_",
+            "_COMPONENTS_",
+            "_GEO_",
+            "_RIG_",
+            "_SHARED_ATTR_",
+        ]
+        pmc.select(clear=True)
+        self.build_instance = build.MainBuild()
+        self.build_instance.execute_building_steps()
+        # Get the rig container in the scene based on the meta god nd.
+        rig_container = self.build_instance.get_rig_containers_from_scene()[0]
+        rig_container_instance = build.RigContainer(rig_container=rig_container)
+        # Init to get the container content dic.
+        rig_container_instance.get_container_content()
+        rig_container_content = rig_container_instance.container_content
+        # Check the container_content dic for the patterns.
+        keys = rig_container_content.keys()
+        for key in keys:
+            for pattern in content_check_str_patterns:
+                if pattern in key:
+                    item = rig_container_content.get(key)
+                    self.assertIn(pattern, item.name())
 
     # def bind_rig_container(self):
     #     pass
@@ -165,12 +179,8 @@ class TestSimpleBuild(TestCase):
         pmc.select(clear=True)
         self.build_instance = build.MainBuild()
         self.build_instance.execute_building_steps()
-        # # Test the rig names
-        # print self.test_single_control.get_rig_name()
-        # print self.test_single_control_2.get_rig_name()
-        # print self.test_single_control_4.get_rig_name()
-        # self.assertIn(self.test_single_control.get_rig_name(), self.RIG_NAME)
-        # self.assertIn(self.test_single_control_2.get_rig_name(),
-        #               self.RIG_NAME_1)
-        # self.assertIn(self.test_single_control_4.get_rig_name(),
-        #               self.RIG_NAME_2)
+        # Test the rig names
+        rig_containers = self.build_instance.get_rig_containers_from_scene()
+        self.assertIn(self.RIG_NAME, rig_containers[0].name())
+        self.assertIn(self.RIG_NAME_1, rig_containers[1].name())
+        self.assertIn(self.RIG_NAME_2, rig_containers[2].name())

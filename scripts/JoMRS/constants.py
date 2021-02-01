@@ -110,12 +110,6 @@ META_TYPE_C = "sub_operator_meta_class"
 
 META_TYPE_D = "container_meta_class"
 
-META_TYPE_E = "rig_container_meta_class"
-
-META_TYPE_F = "comp_container_meta_class"
-
-META_TYPE_G = "op_root_container_meta_class"
-
 META_DEFAULT_CONNECTION_TYPES = "connection_types"
 
 META_ROOT_RIG_NAME = "rig_name"
@@ -164,6 +158,8 @@ META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
 
 META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
+META_CONTAINER_TYPE_ATTR = "container_type"
+
 UUID_ATTR_NAME = "JoMRS_UUID"
 
 GOD_META_ND_ARRAY_PLUG_NAME = "meta_nodes"
@@ -211,3 +207,7 @@ CONTAINER_TYPE_ATTR = 'container_type'
 RIG_CONTAINER_UUID_DIC_KEY = 'rig_container_uuid'
 
 COMP_CONTAINER_UUID_DIC_KEY = 'comp_container_uuid'
+
+RIG_CONTAINER_TYPE = 'RIG'
+
+COMPONENT_CONTAINER_TYPE = 'COMP'

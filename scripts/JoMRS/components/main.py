@@ -630,7 +630,6 @@ class CompContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
-        self.set_container_type(constants.META_TYPE_F)
         attributes.add_attr(
             self.container_content.get("input"),
             name=constants.INPUT_WS_PORT_NAME,
@@ -655,6 +654,7 @@ class CompContainer(mayautils.ContainerNode):
             keyable=False,
             hidden=True,
         )
+        self.set_container_type(constants.COMPONENT_CONTAINER_TYPE)
 
     def set_input_ws_matrix_offset_nd(self, offset_nd_list):
         """

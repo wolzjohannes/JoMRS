@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 23
+# Date:       2021 / 01 / 30
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -797,6 +797,30 @@ class MainBuild(object):
             return False
         return comp_container
 
+    def get_rig_containers_from_scene(self):
+        """
+        Gives back all rig containers from scene based on the god meta node.
+
+        Returns:
+            List: All found meta nodes. None if fail
+
+        """
+        rig_containers = []
+        if not self.god_meta_nd:
+            self.get_god_meta_nd_from_scene()
+        if self.god_meta_nd:
+            containers_meta_nd = self.god_meta_nd.list_meta_nodes(
+                class_filter=constants.META_TYPE_D
+            )
+            if containers_meta_nd:
+                for meta_nd in containers_meta_nd:
+                    if (
+                        meta_nd.get_container_type()
+                        == constants.RIG_CONTAINER_TYPE
+                    ):
+                        rig_containers.append(meta_nd.get_container_node())
+        return rig_containers
+
 
 class RigContainer(mayautils.ContainerNode):
     """
@@ -872,7 +896,7 @@ class RigContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
-        self.set_container_type(constants.META_TYPE_E)
+        self.set_container_type(constants.RIG_CONTAINER_TYPE)
 
     def add_rig_component(self, rig_component=None):
         """
