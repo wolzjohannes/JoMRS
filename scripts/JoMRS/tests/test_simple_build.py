@@ -49,7 +49,7 @@ class TestSimpleBuild(TestCase):
 
     def setUp(self):
         """
-        Setup variables for all other tests.
+        Setup a simple operator hierarchy for a simple build.
         """
         self.test_single_control = test_sc_create.MainCreate(
             self.CONTROL_NAME, "M", 0
@@ -106,7 +106,7 @@ class TestSimpleBuild(TestCase):
         """
         Test the rig container content.
         """
-        # Ifx patterns for check the content dic.
+        # The patterns for check the content dic.
         content_check_str_patterns = [
             "_BSHP_",
             "_COMPONENTS_",
@@ -131,8 +131,39 @@ class TestSimpleBuild(TestCase):
                     item = rig_container_content.get(key)
                     self.assertIn(pattern, item.name())
 
-    # def bind_rig_container(self):
-    #     pass
+    def test_bnd_rig_container(self):
+        """
+        Check if the bind rig container has the correct jnts in it.
+        """
+        pmc.select(clear=True)
+        self.build_instance = build.MainBuild()
+        self.build_instance.execute_building_steps()
+        # Get the rig container in the scene based on the meta god nd.
+        rig_container = self.build_instance.get_rig_containers_from_scene()[0]
+        rig_container_instance = build.RigContainer(rig_container=rig_container)
+        rig_container_instance.get_container_content()
+        rig_container_content = rig_container_instance.container_content
+        # Check the container_content dic for the patterns.
+        keys = rig_container_content.keys()
+        bnd_rig_container = None
+        for key in keys:
+            if "_RIG_" in key:
+                bnd_rig_container = rig_container_content.get(key)
+        bnd_rig_container_content = bnd_rig_container.getNodeList()
+        self.assertIsNotNone(bnd_rig_container_content)
+        for jnt in bnd_rig_container_content:
+            self.assertEquals(jnt.nodeType(), "joint")
+            self.assertIn("_BND_", jnt.name())
+        # Merge all joint names into one single string for a easier checkup.
+        bnd_rig_container_content_string = "_".join(
+            [jnt.name() for jnt in bnd_rig_container_content]
+        )
+        self.assertIn(
+            "_{}_".format(self.CONTROL_NAME), bnd_rig_container_content_string
+        )
+        self.assertIn(
+            "_{}_".format(self.CONTROL_NAME_1), bnd_rig_container_content_string
+        )
 
     def test_build_with_multiple_operators_root_nd(self):
         """
