@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 01
+# Date:       2021 / 02 / 07
 
 """
 Test the build module with a very simple and basic example. We will use
@@ -122,14 +122,13 @@ class TestSimpleBuild(TestCase):
         rig_container_instance = build.RigContainer(rig_container=rig_container)
         # Init to get the container content dic.
         rig_container_instance.get_container_content()
-        rig_container_content = rig_container_instance.container_content
         # Check the container_content dic for the patterns.
-        keys = rig_container_content.keys()
-        for key in keys:
-            for pattern in content_check_str_patterns:
-                if pattern in key:
-                    item = rig_container_content.get(key)
-                    self.assertIn(pattern, item.name())
+        for pattern in content_check_str_patterns:
+            container_content = rig_container_instance.get_container_content_by_string_pattern(
+                pattern
+            )
+            self.assertIsNotNone(container_content)
+            self.assertIn(pattern, container_content[0].name())
 
     def test_bnd_rig_container(self):
         """
@@ -142,13 +141,11 @@ class TestSimpleBuild(TestCase):
         rig_container = self.build_instance.get_rig_containers_from_scene()[0]
         rig_container_instance = build.RigContainer(rig_container=rig_container)
         rig_container_instance.get_container_content()
-        rig_container_content = rig_container_instance.container_content
-        # Check the container_content dic for the patterns.
-        keys = rig_container_content.keys()
-        bnd_rig_container = None
-        for key in keys:
-            if "_RIG_" in key:
-                bnd_rig_container = rig_container_content.get(key)
+        bnd_rig_container = rig_container_instance.get_container_content_by_string_pattern(
+            "_RIG_"
+        )[
+            1
+        ]
         bnd_rig_container_content = bnd_rig_container.getNodeList()
         self.assertIsNotNone(bnd_rig_container_content)
         for jnt in bnd_rig_container_content:
@@ -164,6 +161,26 @@ class TestSimpleBuild(TestCase):
         self.assertIn(
             "_{}_".format(self.CONTROL_NAME_1), bnd_rig_container_content_string
         )
+
+    def test_component_container_content(self):
+        """
+        Test if the components container of the rig container has the
+        correct content count.
+        """
+        pmc.select(clear=True)
+        self.build_instance = build.MainBuild()
+        self.build_instance.execute_building_steps()
+        # Get the rig container in the scene based on the meta god nd.
+        rig_container = self.build_instance.get_rig_containers_from_scene()[0]
+        rig_container_instance = build.RigContainer(rig_container=rig_container)
+        rig_container_instance.get_container_content()
+        component_container = rig_container_instance.get_container_content_by_string_pattern(
+            "_COMPONENTS_"
+        )[
+            0
+        ]
+        components = component_container.getNodeList()
+        self.assertEqual(len(components), 2)
 
     def test_build_with_multiple_operators_root_nd(self):
         """

@@ -1383,6 +1383,26 @@ class ContainerNode(object):
         for node in container_nodes:
             self.container_content[node.nodeName()] = node
 
+    def get_container_content_by_string_pattern(self, pattern):
+        """
+        Get a container content by a string pattern.
+
+        Args:
+            pattern(str): The string pattern for searching
+
+        Return:
+            List: Found container content. None if fail.
+
+        """
+        result = []
+        if not self.container_content:
+            self.get_container_content()
+        keys = self.container_content.keys()
+        for key in keys:
+            if pattern in key:
+                result.append(self.container_content.get(key))
+        return result
+
     def add_node_to_container_content(self, node, content_name):
         """
         Add node to container content
