@@ -1,0 +1,242 @@
+{
+    "operators_meta_data": [
+        {
+            "meta_data": [
+                {
+                    "JoMRS_UUID": "bf9480a7-2bd2-4477-8711-672a2cc74bf7-main_op", 
+                    "child_nd": [
+                        "L_MAIN_op_Test_1_METAND"
+                    ], 
+                    "component_index": 0, 
+                    "component_name": "MOM", 
+                    "component_side": "M", 
+                    "component_type": "test_single_control", 
+                    "connect_nd": null, 
+                    "connection_types": [
+                        "translate", 
+                        "rotate", 
+                        "scale"
+                    ], 
+                    "control_shape": 1, 
+                    "ik_spaces_ref": null, 
+                    "main_op_nd_ws_matrix": [
+                        [
+                            1.0, 
+                            0.0, 
+                            0.0, 
+                            0.0
+                        ], 
+                        [
+                            0.0, 
+                            1.0, 
+                            0.0, 
+                            0.0
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            1.0, 
+                            0.0
+                        ], 
+                        [
+                            -10.324418116814778, 
+                            10.0, 
+                            0.0, 
+                            1.0
+                        ]
+                    ], 
+                    "parent_nd": null, 
+                    "parent_output_ws_matrix_index": 0, 
+                    "sub_op_nd_ws_matrix": []
+                }, 
+                {
+                    "JoMRS_UUID": "e997887f-8d23-4c7e-9d92-ae030adf7729-main_op", 
+                    "child_nd": [], 
+                    "component_index": 1, 
+                    "component_name": "Test", 
+                    "component_side": "L", 
+                    "component_type": "test_single_control", 
+                    "connect_nd": null, 
+                    "connection_types": [
+                        "translate", 
+                        "rotate", 
+                        "scale"
+                    ], 
+                    "control_shape": 2, 
+                    "ik_spaces_ref": null, 
+                    "main_op_nd_ws_matrix": [
+                        [
+                            0.04989780993932158, 
+                            0.5542862365685408, 
+                            -0.8308290898337292, 
+                            0.0
+                        ], 
+                        [
+                            0.43936517861793034, 
+                            0.7348664464943979, 
+                            0.5166522482625332, 
+                            0.0
+                        ], 
+                        [
+                            0.8969216511944025, 
+                            -0.390817187144296, 
+                            -0.20686584505743544, 
+                            0.0
+                        ], 
+                        [
+                            2.7995818831852226, 
+                            23.397, 
+                            -9.37, 
+                            1.0
+                        ]
+                    ], 
+                    "parent_nd": "M_MAIN_op_MOM_0_METAND", 
+                    "parent_output_ws_matrix_index": 0, 
+                    "sub_op_nd_ws_matrix": []
+                }
+            ], 
+            "root_meta_nd": "M_ROOT_op_0_METAND"
+        }, 
+        {
+            "meta_data": [
+                {
+                    "JoMRS_UUID": "a8e2861b-6883-49e7-82fe-5fef4c4e27f5-main_op", 
+                    "child_nd": [
+                        "L_MAIN_op_AUNT_1_METAND"
+                    ], 
+                    "component_index": 0, 
+                    "component_name": "DAD", 
+                    "component_side": "M", 
+                    "component_type": "test_single_control", 
+                    "connect_nd": null, 
+                    "connection_types": [
+                        "translate", 
+                        "rotate", 
+                        "scale"
+                    ], 
+                    "control_shape": 1, 
+                    "ik_spaces_ref": null, 
+                    "main_op_nd_ws_matrix": [
+                        [
+                            1.0, 
+                            0.0, 
+                            0.0, 
+                            0.0
+                        ], 
+                        [
+                            0.0, 
+                            1.0, 
+                            0.0, 
+                            0.0
+                        ], 
+                        [
+                            0.0, 
+                            0.0, 
+                            1.0, 
+                            0.0
+                        ], 
+                        [
+                            2.0, 
+                            10.0, 
+                            0.0, 
+                            1.0
+                        ]
+                    ], 
+                    "parent_nd": null, 
+                    "parent_output_ws_matrix_index": 0, 
+                    "sub_op_nd_ws_matrix": []
+                }, 
+                {
+                    "JoMRS_UUID": "c407e1fb-ffad-4580-a2cb-c2bc27a5c257-main_op", 
+                    "child_nd": [], 
+                    "component_index": 1, 
+                    "component_name": "AUNT", 
+                    "component_side": "L", 
+                    "component_type": "test_single_control", 
+                    "connect_nd": null, 
+                    "connection_types": [
+                        "translate", 
+                        "rotate", 
+                        "scale"
+                    ], 
+                    "control_shape": 2, 
+                    "ik_spaces_ref": null, 
+                    "main_op_nd_ws_matrix": [
+                        [
+                            0.04989780993932158, 
+                            0.5542862365685408, 
+                            -0.8308290898337292, 
+                            0.0
+                        ], 
+                        [
+                            0.43936517861793034, 
+                            0.7348664464943979, 
+                            0.5166522482625332, 
+                            0.0
+                        ], 
+                        [
+                            0.8969216511944025, 
+                            -0.390817187144296, 
+                            -0.20686584505743544, 
+                            0.0
+                        ], 
+                        [
+                            15.124, 
+                            23.397, 
+                            -9.37, 
+                            1.0
+                        ]
+                    ], 
+                    "parent_nd": "M_MAIN_op_DAD_0_METAND", 
+                    "parent_output_ws_matrix_index": 0, 
+                    "sub_op_nd_ws_matrix": []
+                }
+            ], 
+            "root_meta_nd": "M_ROOT_op_1_METAND"
+        }
+    ], 
+    "parenting_data_dic": [
+        {
+            "comp_container_uuid": [
+                "bf9480a7-2bd2-4477-8711-672a2cc74bf7-comp_container", 
+                "e997887f-8d23-4c7e-9d92-ae030adf7729-comp_container"
+            ], 
+            "rig_container_uuid": "c6074ffb-e5f9-45b4-8e8c-aae58a543217-rig_container"
+        }, 
+        {
+            "comp_container_uuid": [
+                "a8e2861b-6883-49e7-82fe-5fef4c4e27f5-comp_container", 
+                "c407e1fb-ffad-4580-a2cb-c2bc27a5c257-comp_container"
+            ], 
+            "rig_container_uuid": "7985aafc-2608-4ae8-baab-c245d13d6b24-rig_container"
+        }
+    ], 
+    "rig_meta_data": [
+        {
+            "meta_data": {
+                "JoMRS_UUID": "c6074ffb-e5f9-45b4-8e8c-aae58a543217-root_op", 
+                "l_rig_color": 13, 
+                "l_rig_sub_color": 18, 
+                "m_rig_color": 17, 
+                "m_rig_sub_color": 11, 
+                "r_rig_color": 6, 
+                "r_rig_sub_color": 9, 
+                "rig_name": "MOM"
+            }, 
+            "root_meta_nd": "M_ROOT_op_0_METAND"
+        }, 
+        {
+            "meta_data": {
+                "JoMRS_UUID": "7985aafc-2608-4ae8-baab-c245d13d6b24-root_op", 
+                "l_rig_color": 13, 
+                "l_rig_sub_color": 18, 
+                "m_rig_color": 17, 
+                "m_rig_sub_color": 11, 
+                "r_rig_color": 6, 
+                "r_rig_sub_color": 9, 
+                "rig_name": "DAD"
+            }, 
+            "root_meta_nd": "M_ROOT_op_1_METAND"
+        }
+    ]
+}

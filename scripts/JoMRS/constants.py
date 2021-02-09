@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 11 / 22
+# Date:       2021 / 02 / 09
 
 """
 JoMRS constants module for global values.
@@ -31,6 +31,10 @@ import os
 DEFAULT_CONTROL_NAME_PATTERN = 'M_name_index_CON'
 
 ICONS_PATH = os.path.normpath('{}/icons'.format(
+    os.environ.get("JoMRS").split("scripts")[0])
+)
+
+BUILD_JSON_PATH = os.path.normpath('{}/json'.format(
     os.environ.get("JoMRS").split("scripts")[0])
 )
 

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 30
+# Date:       2021 / 02 / 09
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -38,6 +38,8 @@ import mayautils
 import strings
 import importlib
 import os
+import json
+import copy
 
 ##########################################################
 # GLOBALS
@@ -147,12 +149,12 @@ class MainBuild(object):
         # If no data passed generate it.
         if not operator_meta_data:
             if not self.selection:
-                self.get_meta_data_from_god_node("operators")
+                self.get_meta_data_from_all_root_meta_nodes_in_scene("operators")
             else:
                 self.get_operators_meta_data_from_root_meta_node()
         if not rig_meta_data:
             if not self.selection:
-                self.get_meta_data_from_god_node("rig")
+                self.get_meta_data_from_all_root_meta_nodes_in_scene("rig")
             else:
                 self.get_rig_meta_data_from_root_meta_node(
                     self.component_instance.root_meta_nd
@@ -546,6 +548,7 @@ class MainBuild(object):
         self.connect_components_inputs_with_components_rig_offsets_grp()
         self.parent_components()
         self.arrange_deformation_hierarchy()
+        self.save_meta_data_as_json()
 
     def get_root_meta_nd_from_god_meta_node(self):
         """
@@ -710,7 +713,7 @@ class MainBuild(object):
         )
         return False
 
-    def get_meta_data_from_god_node(self, meta_data_type):
+    def get_meta_data_from_all_root_meta_nodes_in_scene(self, meta_data_type):
         """
         Collect the meta data from all root meta nodes in the scene.
 
@@ -820,6 +823,100 @@ class MainBuild(object):
                     ):
                         rig_containers.append(meta_nd.get_container_node())
         return rig_containers
+
+    def save_meta_data_as_json(self):
+        """
+        Save the operators_meta data as json file in temp folder.
+        """
+        operators_meta_data = (
+            self.refactor_operators_meta_data_for_json_export()
+        )
+        rig_meta_data = self.refactor_rig_meta_data_for_json_export()
+        data = {
+            "operators_meta_data": operators_meta_data,
+            "rig_meta_data": rig_meta_data,
+            "parenting_data_dic": self.parenting_data_dic,
+        }
+        with open(
+            os.path.normpath(
+                "{}/temp/latest_rig_build.json".format(
+                    constants.BUILD_JSON_PATH
+                )
+            ),
+            "w",
+        ) as json_file:
+            json.dump(data, json_file, sort_keys=True, indent=4)
+
+    def refactor_operators_meta_data_for_json_export(self):
+        """
+        Refactor the operators_meta so that it can be exported as json file.
+        Its mainly refactor all PyMel related stuff to json serializable
+        formats.
+
+        Returns:
+            List: The refactored list.
+
+        """
+        # Create a deepcopy of the meta data list to keep the stored meta
+        # data in memory untouched.
+        meta_data_list = copy.deepcopy(self.operators_meta_data)
+        for dic in meta_data_list:
+            root_meta_nd = dic.get("root_meta_nd")
+            dic["root_meta_nd"] = root_meta_nd.name()
+            meta_data = dic.get("meta_data")
+            for data in meta_data:
+                # Get stuff for json refactor. Thats stuff which are pymel
+                # related and can not be json serialized.
+                connect_nd = data.get(constants.META_MAIN_CONNECT_ND)
+                parent_nd = data.get(constants.META_MAIN_PARENT_ND)
+                child_nd = data.get(constants.META_MAIN_CHILD_ND)
+                main_op_ws_matrix = data.get(
+                    constants.META_MAIN_OP_ND_WS_MATRIX_STR
+                )
+                sub_op_ws_matrix = data.get(
+                    constants.META_SUB_OP_ND_WS_MATRIX_STR
+                )
+                # Get all PyMel PyNodes and refactor them to strings.
+                if connect_nd:
+                    data[constants.META_MAIN_CONNECT_ND] = connect_nd.name()
+                if parent_nd:
+                    data[constants.META_MAIN_PARENT_ND] = parent_nd.name()
+                if child_nd:
+                    data[constants.META_MAIN_CHILD_ND] = [
+                        node.name() for node in child_nd
+                    ]
+                # Get all PyMel Matrix Objects to refactor them to nested lists.
+                if main_op_ws_matrix:
+                    data[constants.META_MAIN_OP_ND_WS_MATRIX_STR] = [
+                        list(mat) for mat in main_op_ws_matrix
+                    ]
+                # THe sub operators objects are special because for each
+                # sub_operators node you will find a Matrix Object in the
+                # list. That is why we have to loop twice.
+                if sub_op_ws_matrix:
+                    sub_op_ws_matrix_temp_list = [
+                        list(mat) for mat in sub_op_ws_matrix
+                    ]
+                    data[constants.META_SUB_OP_ND_WS_MATRIX_STR] = [
+                        list(mat) for mat in sub_op_ws_matrix_temp_list
+                    ]
+        return meta_data_list
+
+    def refactor_rig_meta_data_for_json_export(self):
+        """
+        Refactor the rig_meta so that it can be exported as json file.
+        Its mainly refactor all PyMel related stuff to json serializable
+        formats.
+
+        Returns:
+            List: The refactored list.
+
+        """
+        rig_meta_data = copy.deepcopy(self.rig_meta_data)
+        for dic in rig_meta_data:
+            root_meta_nd = dic.get("root_meta_nd")
+            dic["root_meta_nd"] = root_meta_nd.name()
+        return rig_meta_data
 
 
 class RigContainer(mayautils.ContainerNode):
