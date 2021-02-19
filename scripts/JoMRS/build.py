@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 14
+# Date:       2021 / 02 / 19
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -42,6 +42,7 @@ import os
 import json
 import copy
 import meta
+reload(components.main)
 
 ##########################################################
 # GLOBALS
@@ -198,11 +199,13 @@ class MainBuild(object):
             for op_meta_data in self.operators_meta_data:
                 data_dic = {}
                 for rig_meta_data in self.rig_meta_data:
-                    if op_meta_data.get("root_meta_nd") == rig_meta_data.get(
-                        "root_meta_nd"
-                    ):
+                    if op_meta_data.get(
+                        constants.META_DATA_DIC_ITEM_0
+                    ) == rig_meta_data.get(constants.META_DATA_DIC_ITEM_0):
                         rig_components_list = []
-                        for rig_components in op_meta_data.get("meta_data"):
+                        for rig_components in op_meta_data.get(
+                            constants.META_DATA_DIC_ITEM_1
+                        ):
                             comp_container_uuid = strings.search_and_replace(
                                 rig_components.get(constants.UUID_ATTR_NAME),
                                 constants.MAIN_OP_ND_UUID_SUFFIX,
@@ -212,9 +215,9 @@ class MainBuild(object):
                         data_dic[
                             constants.RIG_CONTAINER_UUID_DIC_KEY
                         ] = strings.search_and_replace(
-                            rig_meta_data.get("meta_data").get(
-                                constants.UUID_ATTR_NAME
-                            ),
+                            rig_meta_data.get(
+                                constants.META_DATA_DIC_ITEM_1
+                            ).get(constants.UUID_ATTR_NAME),
                             constants.OP_ROOT_ND_UUID_SUFFIX,
                             constants.RIG_CONTAINER_UUID_SUFFIX,
                         )
@@ -236,7 +239,7 @@ class MainBuild(object):
         # Loop through the rig meta data.
         for data in self.rig_meta_data:
             self.rig_container = RigContainer(
-                data.get("meta_data").get("rig_name")
+                data.get(constants.META_DATA_DIC_ITEM_1).get("rig_name")
             )
             self.rig_container.create_rig_container()
             # Refactor root_op uuid to rig_container uuid. So we are able to
@@ -245,7 +248,7 @@ class MainBuild(object):
             # and the rig container. This is important for the component
             # parenting.
             self.rig_container_uuid = (
-                data.get("meta_data")
+                data.get(constants.META_DATA_DIC_ITEM_1)
                 .get(constants.UUID_ATTR_NAME)
                 .replace(
                     constants.OP_ROOT_ND_UUID_SUFFIX,
@@ -272,30 +275,37 @@ class MainBuild(object):
         # Loop through the operators meta data
         for data in self.operators_meta_data:
             # Get root meta node. This represent the operators root node.
-            root_meta_nd = data.get("root_meta_nd")
+            root_meta_nd = data.get(constants.META_DATA_DIC_ITEM_0)
+            # Loop trough rig_meta_data and get the correct rig meta data based
+            # on the root_meta_nd.
+            rig_m_data = None
+            for rig_data in self.rig_meta_data:
+                if rig_data.get(constants.META_DATA_DIC_ITEM_0) == root_meta_nd:
+                    rig_m_data = rig_data.get(constants.META_DATA_DIC_ITEM_1)
             # Get the operators meta data belongs to root_meta_nd.
-            meta_data = data.get("meta_data")
+            meta_data = data.get(constants.META_DATA_DIC_ITEM_1)
             logger.log(
                 level="info",
                 message="Build components for {}".format(root_meta_nd),
                 logger=_LOGGER,
             )
             # loop through meta data
-            for m_data in meta_data:
+            for op_m_data in meta_data:
                 # based on the component type stored in the meta data create
                 # the python import statement string for each found component
                 # type.
                 component_module_name = "components.{}.create".format(
-                    m_data.get(constants.META_MAIN_COMP_TYPE)
+                    op_m_data.get(constants.META_MAIN_COMP_TYPE)
                 )
                 # import correct module for each component based on the
                 # formatted import statement string.
                 create_module = importlib.import_module(component_module_name)
+                reload(create_module)
                 # instance the MainCreate class which is the base of each rig
                 # component.
                 main_create = create_module.MainCreate()
                 # build each component
-                main_create.build_from_operator(m_data)
+                main_create.build_from_operator(op_m_data, rig_m_data)
 
     def connect_components(self):
         """
@@ -314,7 +324,7 @@ class MainBuild(object):
         # loop trough the operators_meta_data.
         for dic in self.operators_meta_data:
             # get the meta data form dic.
-            meta_data = dic.get("meta_data")
+            meta_data = dic.get(constants.META_DATA_DIC_ITEM_1)
             for data in meta_data:
                 # try to get the parent meta data node.
                 parent_meta_nd = data.get(constants.META_MAIN_PARENT_ND)
@@ -404,7 +414,7 @@ class MainBuild(object):
         # loop through the operators_meta_data
         for dic in self.operators_meta_data:
             # get the meta_data
-            meta_data = dic.get("meta_data")
+            meta_data = dic.get(constants.META_DATA_DIC_ITEM_1)
             for data in meta_data:
                 # get the main_op_uuid
                 main_op_uuid = data.get(constants.UUID_ATTR_NAME)
@@ -503,12 +513,14 @@ class MainBuild(object):
                 # get the bnd root node from component
                 bnd_root_node = comp_container_instance.get_bnd_root_nd()
                 # at the bnd root to temp list.
-                temp.append(bnd_root_node)
-            # use temp list for hierarchy creation.
-            mayautils.create_hierarchy(temp, True)
-            # add the rig hierarchy root node to the rig container. The last
-            # object in the temp list is always the rig hierarchy root node.
-            m_rig_container_grp.addNode(temp)
+                if bnd_root_node:
+                    temp.append(bnd_root_node)
+            if temp:
+                # use temp list for hierarchy creation.
+                mayautils.create_hierarchy(temp, True)
+                # add the rig hierarchy root node to the rig container. The last
+                # object in the temp list is always the rig hierarchy root node.
+                m_rig_container_grp.addNode(temp)
 
     def parent_components(self):
         """
@@ -592,7 +604,8 @@ class MainBuild(object):
 
         Returns:
             List: Filled with a dictionary for each root_meta_nd.
-            [{"root_meta_nd":pmc.PyNode(), "meta_data":List}]
+            [{constants.META_DATA_DIC_ITEM_0:pmc.PyNode(),
+            constants.META_DATA_DIC_ITEM_1:List}]
 
         """
         meta_data = []
@@ -603,7 +616,7 @@ class MainBuild(object):
         # Filter the meta nodes from the dic.
         main_meta_nodes = main_meta_nodes_data.get("main_meta_nodes")
         # Filter the root meta nodes from the dic.
-        root_meta_nd = main_meta_nodes_data.get("root_meta_nd")
+        root_meta_nd = main_meta_nodes_data.get(constants.META_DATA_DIC_ITEM_0)
         # if main meta nodes exist. Get the operators meta data and store it
         # in a list.
         if main_meta_nodes:
@@ -621,9 +634,17 @@ class MainBuild(object):
                 component_instance.get_operator_meta_data()
                 meta_data.append(component_instance.operator_meta_data)
         self.operators_meta_data = [
-            {"root_meta_nd": root_meta_nd, "meta_data": meta_data}
+            {
+                constants.META_DATA_DIC_ITEM_0: root_meta_nd,
+                constants.META_DATA_DIC_ITEM_1: meta_data,
+            }
         ]
-        return [{"root_meta_nd": root_meta_nd, "meta_data": meta_data}]
+        return [
+            {
+                constants.META_DATA_DIC_ITEM_0: root_meta_nd,
+                constants.META_DATA_DIC_ITEM_1: meta_data,
+            }
+        ]
 
     def get_rig_meta_data_from_root_meta_node(self, root_meta_nd=None):
         """
@@ -656,8 +677,8 @@ class MainBuild(object):
         component_instance.get_rig_meta_data()
         self.rig_meta_data = [
             {
-                "root_meta_nd": root_meta_nd,
-                "meta_data": component_instance.rig_meta_data,
+                constants.META_DATA_DIC_ITEM_0: root_meta_nd,
+                constants.META_DATA_DIC_ITEM_1: component_instance.rig_meta_data,
             }
         ]
         return self.rig_meta_data
@@ -671,7 +692,7 @@ class MainBuild(object):
 
         Returns:
             Dict: ALl connected meta_nodes.
-            {"root_meta_nd":pmc.PyNode(), "main_meta_nodes":List}
+            {constants.META_DATA_DIC_ITEM_0:pmc.PyNode(), "main_meta_nodes":List}
             False if fail.
 
         """
@@ -686,7 +707,7 @@ class MainBuild(object):
                 )
                 return False
         return {
-            "root_meta_nd": root_meta_nd,
+            constants.META_DATA_DIC_ITEM_0: root_meta_nd,
             "main_meta_nodes": root_meta_nd.get_main_meta_nodes(),
         }
 
@@ -737,7 +758,8 @@ class MainBuild(object):
 
         Returns:
             List: Filled with a dictionary for each root_meta_nd.
-            [{"root_meta_nd":pmc.PyNode(), "meta_data":List}]
+            [{constants.META_DATA_DIC_ITEM_0:pmc.PyNode(),
+            constants.META_DATA_DIC_ITEM_1:List}]
 
         """
         result = []
@@ -875,9 +897,9 @@ class MainBuild(object):
         # data in memory untouched.
         meta_data_list = copy.deepcopy(self.operators_meta_data)
         for dic in meta_data_list:
-            root_meta_nd = dic.get("root_meta_nd")
-            dic["root_meta_nd"] = root_meta_nd.name()
-            meta_data = dic.get("meta_data")
+            root_meta_nd = dic.get(constants.META_DATA_DIC_ITEM_0)
+            dic[constants.META_DATA_DIC_ITEM_0] = root_meta_nd.name()
+            meta_data = dic.get(constants.META_DATA_DIC_ITEM_1)
             for data in meta_data:
                 # Get stuff for json refactor. That is stuff which is PyMel
                 # related and can not be json serialized.
@@ -916,7 +938,8 @@ class MainBuild(object):
                     ]
         return meta_data_list
 
-    def refactor_operators_meta_data_from_json_import(self, json_data):
+    @staticmethod
+    def refactor_operators_meta_data_from_json_import(json_data):
         """
         Refactor back all needed PyMel objects in json dictionary.
 
@@ -929,7 +952,7 @@ class MainBuild(object):
         """
         operators_meta_data = json_data.get("operators_meta_data")
         for dic in operators_meta_data:
-            meta_data = dic.get("meta_data")
+            meta_data = dic.get(constants.META_DATA_DIC_ITEM_1)
             for data in meta_data:
                 # Find all world matrix lists.
                 main_op_nd_ws_matrix = data.get(
@@ -962,8 +985,8 @@ class MainBuild(object):
         """
         rig_meta_data = copy.deepcopy(self.rig_meta_data)
         for dic in rig_meta_data:
-            root_meta_nd = dic.get("root_meta_nd")
-            dic["root_meta_nd"] = root_meta_nd.name()
+            root_meta_nd = dic.get(constants.META_DATA_DIC_ITEM_0)
+            dic[constants.META_DATA_DIC_ITEM_0] = root_meta_nd.name()
         return rig_meta_data
 
     @staticmethod
@@ -1028,7 +1051,7 @@ class RigContainer(mayautils.ContainerNode):
             rig_container(pmc.PyNode()): A rig container to pass.
 
         """
-        mayautils.ContainerNode.__init__(self)
+        super(RigContainer, self).__init__()
         self.meta_nd_name = constants.RIG_META_NODE_NAME
         self.name = constants.RIG_ROOT_NODE
         self.icon = os.path.normpath(

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 07
+# Date:       2021 / 02 / 18
 
 """
 Test the build module with a very simple and basic example. We will use
@@ -30,6 +30,8 @@ import pymel.core as pmc
 from tests.mayaunittest import TestCase
 import components.test_single_control.create as test_sc_create
 import build
+import os
+import constants
 
 
 class TestSimpleBuild(TestCase):
@@ -232,3 +234,14 @@ class TestSimpleBuild(TestCase):
         self.assertIn(self.RIG_NAME, rig_containers[0].name())
         self.assertIn(self.RIG_NAME_1, rig_containers[1].name())
         self.assertIn(self.RIG_NAME_2, rig_containers[2].name())
+
+    def test_build_rig_from_json_file(self):
+        """
+        Test for building a rig with a json file.
+        """
+        file_path = os.path.normpath(
+            "{}/temp/test_rig_build.json".format(constants.BUILD_JSON_PATH)
+        )
+        pmc.newFile(force=True)
+        self.build_instance = build.MainBuild()
+        self.build_instance.build_from_json_file(file_path)

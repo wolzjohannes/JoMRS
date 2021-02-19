@@ -20,10 +20,11 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 17
+# Date:       2021 / 02 / 19
 
 """
-Build a single_control for testing purposes.
+Build a single_control. Which can be used as main control or as simple fk
+component
 """
 
 import pymel.core as pmc
@@ -35,6 +36,7 @@ import logging
 import logger
 import strings
 import mayautils
+reload(mayautils)
 
 ##########################################################
 # GLOBALS
@@ -49,10 +51,12 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 
 class MainCreate(components.main.Component):
     """
-    Single test Component class
+    Single FK control class. This class creates a single control and single
+    joint component which could be used as main control for attribute
+    purposes or as single fk rig component.
     """
 
-    COMP_TYPE = "test_single_control"
+    COMP_TYPE = "single_control"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = True
     AXES = "X"
@@ -66,6 +70,8 @@ class MainCreate(components.main.Component):
         {"shape": "hexagon", "instance": curves.HexagonControl()},
     ]
     CONTROL_SHAPE_ATTR_NAME = "control_shape"
+    BND_JNT_ATTR_NAME = "bnd_joint"
+    WS_ORIENTATION_ATTR_NAME = "worldspace_orientation"
 
     def __init__(
         self,
@@ -113,10 +119,31 @@ class MainCreate(components.main.Component):
             "writable": True,
             "channelBox": False,
         }
+        self.bnd_joint = {
+            "name": self.BND_JNT_ATTR_NAME,
+            "attrType": "bool",
+            "keyable": False,
+            "channelBox": False,
+        }
+        self.world_space_orientation_attr = {
+            "name": self.WS_ORIENTATION_ATTR_NAME,
+            "attrType": "bool",
+            "keyable": False,
+            "channelBox": False,
+        }
+        # Add the attributes to the main_meta_nd of the operator.
         attributes.add_enum_attribute(
             node=self.main_meta_nd, **self.control_shapes_attr
         )
+        cd_attributes_list = [self.bnd_joint, self.world_space_orientation_attr]
+        for attr_ in cd_attributes_list:
+            attributes.add_attr(node=self.main_meta_nd, **attr_)
+        # It is important to append all user defined attributes to this list.
+        # So they are registered as meta data in the meta node.
+        # Please append the attributes name not the the attribute dict.
         self.cd_attributes.append(self.CONTROL_SHAPE_ATTR_NAME)
+        self.cd_attributes.append(self.BND_JNT_ATTR_NAME)
+        self.cd_attributes.append(self.WS_ORIENTATION_ATTR_NAME)
 
     def _init_operator(self, parent=None):
         """
@@ -134,13 +161,12 @@ class MainCreate(components.main.Component):
         Build Component logic. It is derivative method from parent class.
         """
         # Name reformatting.
+        component_side = self.operator_meta_data.get(
+            constants.META_MAIN_COMP_SIDE
+        )
         control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
         control_name = strings.search_and_replace(
-            control_name,
-            "M_",
-            "{}_".format(
-                self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE)
-            ),
+            control_name, "M_", "{}_".format(component_side)
         )
         control_name = strings.search_and_replace(
             control_name,
@@ -152,23 +178,41 @@ class MainCreate(components.main.Component):
             "index",
             str(self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)),
         )
+        # Find correct control shape based on meta data.
+        for index, shape_instance in enumerate(self.CONTROL_SHAPES):
+            if index is self.operator_meta_data.get(
+                self.CONTROL_SHAPE_ATTR_NAME
+            ):
+                curve_instance = shape_instance.get("instance")
+        # Get match matrix from meta data.
+        orig_match_matrix = self.operator_meta_data.get(
+            constants.META_MAIN_OP_ND_WS_MATRIX_STR
+        )
+        # Get world space bool in meta data.
+        worldspace_orientation = self.operator_meta_data.get(
+            self.WS_ORIENTATION_ATTR_NAME
+        )
+        # Get bnd jnt creation bool in meta data.
+        bnd_jnt_creation = self.operator_meta_data.get(self.BND_JNT_ATTR_NAME)
+        # normalize the match matrix in scale.
+        tweaked_matrix = mayautils.matrix_normalize_scale(orig_match_matrix)
+        # Reset the matrix in rotation.
+        if worldspace_orientation:
+            tweaked_matrix = mayautils.matrix_reset_rotation(tweaked_matrix)
+        # Get control curve color from rig meta data.
+        control_curve_color = self.get_control_curve_color_from_rig_meta_data(
+            component_side, "control"
+        )
+        # Create the control curve.
+        curve = curve_instance.create_curve(
+            name=control_name,
+            match=tweaked_matrix,
+            scale=orig_match_matrix.scale,
+            color_index=control_curve_color,
+        )
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_GRP".format(control_name)
-        )
-        # Find correct control shape based on meta data.
-        for index, shape_instance in enumerate(self.CONTROL_SHAPES):
-            if index is self.operator_meta_data["control_shape"]:
-                curve_instance = shape_instance.get("instance")
-        # Create control curve and match it with main_op_nd.
-        match_matrix = self.operator_meta_data.get(
-            constants.META_MAIN_OP_ND_WS_MATRIX_STR
-        )
-        scale_normalized_matrix = mayautils.matrix_normalize_scale(match_matrix)
-        curve = curve_instance.create_curve(
-            name=control_name,
-            match=scale_normalized_matrix,
-            scale=match_matrix.scale,
         )
         # At control to offset group.
         offset_grp.addChild(curve[0])
@@ -176,7 +220,8 @@ class MainCreate(components.main.Component):
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         self.output_matrix_nd_list.append(curve[1])
-        self.bnd_output_matrix.append(curve[1])
+        if bnd_jnt_creation:
+            self.bnd_output_matrix.append(curve[1])
         logger.log(
             level="info",
             message="Component logic created "
@@ -198,9 +243,7 @@ class MainCreate(components.main.Component):
         """
         for index, data in enumerate(self.CONTROL_SHAPES):
             if control_shape is data["shape"]:
-                self.main_meta_nd.attr(self.CONTROL_SHAPE_ATTR_NAME).set(
-                    index
-                )
+                self.main_meta_nd.attr(self.CONTROL_SHAPE_ATTR_NAME).set(index)
                 return
         logger.log(
             level="error",
@@ -208,3 +251,23 @@ class MainCreate(components.main.Component):
                 control_shape, self.CONTROL_SHAPES
             ),
         )
+
+    def set_worldspace_orientation(self, value):
+        """
+        Set the control to worldspace orientation.
+
+        Args:
+            value(bool): Set the control to worldspace orientation.
+
+        """
+        self.main_meta_nd.attr(self.WS_ORIENTATION_ATTR_NAME).set(value)
+
+    def set_bnd_joint_creation(self, value=True):
+        """
+        Enable/Disable the bind joint creation.
+
+        Args:
+            value(bool): Enable/Disable the bnd joint creation.
+
+        """
+        self.main_meta_nd.attr(self.BND_JNT_ATTR_NAME).set(value)

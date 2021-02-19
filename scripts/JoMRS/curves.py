@@ -37,9 +37,6 @@ import logging
 import logger
 import attributes
 
-reload(utils)
-reload(strings)
-
 
 ##########################################################
 # GLOBALS

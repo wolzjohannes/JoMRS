@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 09
+# Date:       2021 / 02 / 18
 
 """
 JoMRS constants module for global values.
@@ -178,8 +178,6 @@ OUTPUT_WS_PORT_NAME = "output_ws_matrix"
 
 INPUT_WS_PORT_NAME = "input_ws_matrix"
 
-CONTROL_SHAPE_ATTR_NAME = "control_shape"
-
 NODE_LIST_ATTR_NAME = "node_list"
 
 RIG_ROOT_NODE = "M_RIG_name_0_GRP"
@@ -215,3 +213,7 @@ COMP_CONTAINER_UUID_DIC_KEY = 'comp_container_uuid'
 RIG_CONTAINER_TYPE = 'RIG'
 
 COMPONENT_CONTAINER_TYPE = 'COMP'
+
+META_DATA_DIC_ITEM_0 = 'root_meta_nd'
+
+META_DATA_DIC_ITEM_1 = 'meta_data'

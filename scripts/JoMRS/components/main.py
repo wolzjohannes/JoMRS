@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 23
+# Date:       2021 / 02 / 19
 
 """
 Rig components main module. This class is the template to create a rig
@@ -454,10 +454,6 @@ class Component(operators.ComponentOperator):
                 self.component_root.add_node_to_container_content(
                     node, "component"
                 )
-        # Clear lists for reuse!
-        del self.bnd_output_matrix[:]
-        del self.input_matrix_offset_grp[:]
-        del self.component_rig_list[:]
         # Step feedback
         logger.log(
             level="info",
@@ -472,13 +468,13 @@ class Component(operators.ComponentOperator):
         """
         Create the component bind joints.
         """
-        temp = []
         output_nd = self.component_root.container_content.get("output")
-        connected_bnd_outputs = (
-            self.component_root.container_content.get("output")
-            .attr(constants.OUTPUT_WS_PORT_NAME)
-            .get()
-        )
+        connected_bnd_outputs = output_nd.attr(
+            constants.BND_OUTPUT_WS_PORT_NAME
+        ).get()
+        if not connected_bnd_outputs:
+            return False
+        temp = []
         for count in range(len(connected_bnd_outputs)):
             # Bind joint name creation.
             bnd_joint_name = strings.search_and_replace(
@@ -562,23 +558,70 @@ class Component(operators.ComponentOperator):
             logger=_LOGGER,
         )
 
-    def build_from_operator(self, operator_meta_data=None):
+    def build_from_operator(self, operator_meta_data=None, rig_meta_data=None):
         """
         Build the whole Component rig from operator.
         With initial hierarchy.
 
         Args:
             operator_meta_data(dict): Operators meta data.
+            rig_meta_data(dict): Rig meta data.
 
         """
         if not operator_meta_data:
             self.get_operator_meta_data()
         else:
             self.operator_meta_data = operator_meta_data
+        if not rig_meta_data:
+            self.get_rig_meta_data()
+        else:
+            self.rig_meta_data = rig_meta_data
+        self.clean_objects()
         self.create_component_container()
         self.build_component_logic()
         self.connect_inner_component_edges()
         self.create_BND_joints()
+
+    def clean_objects(self):
+        """
+        Clean class objects for reuse.
+        """
+        del self.component_rig_list[:]
+        del self.bnd_output_matrix[:]
+        del self.input_matrix_offset_grp[:]
+        del self.output_matrix_nd_list[:]
+
+    def get_control_curve_color_from_rig_meta_data(self, side, control_typ):
+        """
+        Get the the control curve color from rig meta data.
+
+        Args:
+            side(str): Define the control curve side.
+            Valid values are ['L', 'R', 'M']
+            control_typ(str): Define if the control is sub or normal control
+            curve. Valid values are ['control', 'sub_control']
+
+        Returns:
+             Integer: The maya color index specified for that control_type
+             and side in the rig meta data.
+
+        """
+        if not self.rig_meta_data:
+            logger.log(level='error', message='No rig meta data found.',
+                       logger=_LOGGER)
+            return False
+        if side == 'L' and control_typ == 'control':
+            return self.rig_meta_data.get(constants.META_LEFT_RIG_COLOR)
+        elif side == 'L' and control_typ == 'sub_control':
+            return self.rig_meta_data.get(constants.META_LEFT_RIG_SUB_COLOR)
+        elif side == 'R' and control_typ == 'control':
+            return self.rig_meta_data.get(constants.META_RIGHT_RIG_COLOR)
+        elif side == 'R' and control_typ == 'sub_control':
+            return self.rig_meta_data.get(constants.META_RIGHT_RIG_SUB_COLOR)
+        elif side == 'M' and control_typ == 'control':
+            return self.rig_meta_data.get(constants.META_MID_RIG_COLOR)
+        elif side == 'M' and control_typ == 'sub_control':
+            return self.rig_meta_data.get(constants.META_MID_RIG_SUB_COLOR)
 
 
 class CompContainer(mayautils.ContainerNode):
@@ -602,8 +645,8 @@ class CompContainer(mayautils.ContainerNode):
             comp_index(int): The component index.
             component_container(pmc.PyNode()): A component container to pass.
         """
-        mayautils.ContainerNode.__init__(
-            self, container_node=component_container, content_root_node=True
+        super(CompContainer, self).__init__(
+            container_node=component_container, content_root_node=True
         )
         self.name = "M_ROOT_name_component_0_GRP"
         self.meta_nd_name = constants.COMP_META_NODE_NAME

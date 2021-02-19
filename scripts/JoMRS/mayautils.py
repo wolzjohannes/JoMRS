@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 19
+# Date:       2021 / 02 / 19
 
 """
 JoMRS maya utils module. Utilities helps
@@ -1258,6 +1258,51 @@ def create_ref_transform(
     if child:
         ref_trs.addChild(child)
     return ref_trs
+
+
+def matrix_normalize_scale(matrix):
+    """
+    Will normalize the scale in given four by four matrix to 1 or -1.
+
+    Args:
+        matrix(dt.Matrix): Four by four matrix.
+
+    Return:
+        dt.Matrix: The scale normalized matrix.
+
+    """
+    scale = matrix.scale
+    tm = dt.TransformationMatrix(matrix)
+    if scale[0] > 0:
+        scale[0] = 1
+    else:
+        scale[0] = -1
+    if scale[1] > 0:
+        scale[1] = 1
+    else:
+        scale[1] = -1
+    if scale[2] > 0:
+        scale[2] = 1
+    else:
+        scale[2] = -1
+    tm.setScale(scale, space="world")
+    return dt.Matrix(tm)
+
+
+def matrix_reset_rotation(matrix):
+    """
+    Will reset the rotation values in four by four matrix to zero in worldspace.
+
+    Args:
+        matrix(dt.Matrix): Four by four matrix.
+
+    Return:
+        dt.Matrix: The matrix reset in rotation.
+
+    """
+    tm = dt.TransformationMatrix(matrix)
+    tm.setRotation((0, 0, 0))
+    return dt.Matrix(tm)
 
 
 ##########################################################
