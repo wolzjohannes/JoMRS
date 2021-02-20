@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 18
+# Date:       2021 / 02 / 20
 
 """
 Test the build module with a very simple and basic example. We will use
@@ -36,7 +36,7 @@ import constants
 
 class TestSimpleBuild(TestCase):
     """
-    Test the operators module.
+    Test the rig build with a simple example.
     """
 
     RIG_NAME = "MOM"

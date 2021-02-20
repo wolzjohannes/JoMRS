@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 19
+# Date:       2021 / 02 / 20
 
 """
 Build a single_control. Which can be used as main control or as simple fk
@@ -36,7 +36,6 @@ import logging
 import logger
 import strings
 import mayautils
-reload(mayautils)
 
 ##########################################################
 # GLOBALS
@@ -72,6 +71,17 @@ class MainCreate(components.main.Component):
     CONTROL_SHAPE_ATTR_NAME = "control_shape"
     BND_JNT_ATTR_NAME = "bnd_joint"
     WS_ORIENTATION_ATTR_NAME = "worldspace_orientation"
+    LOCK_TRANSFORMATION_ATTRIBUTES = [
+        "lock_translateX",
+        "lock_translateY",
+        "lock_translateZ",
+        "lock_rotateX",
+        "lock_rotateY",
+        "lock_rotateZ",
+        "lock_scaleX",
+        "lock_scaleY",
+        "lock_scaleZ",
+    ]
 
     def __init__(
         self,
@@ -136,14 +146,27 @@ class MainCreate(components.main.Component):
             node=self.main_meta_nd, **self.control_shapes_attr
         )
         cd_attributes_list = [self.bnd_joint, self.world_space_orientation_attr]
+        for lock_attr in self.LOCK_TRANSFORMATION_ATTRIBUTES:
+            attributes_dic = {
+                "name": lock_attr,
+                "attrType": "bool",
+                "keyable": False,
+                "channelBox": False,
+            }
+            cd_attributes_list.append(attributes_dic)
         for attr_ in cd_attributes_list:
             attributes.add_attr(node=self.main_meta_nd, **attr_)
         # It is important to append all user defined attributes to this list.
-        # So they are registered as meta data in the meta node.
+        # So they are registered as meta data in the meta node.,
         # Please append the attributes name not the the attribute dict.
-        self.cd_attributes.append(self.CONTROL_SHAPE_ATTR_NAME)
-        self.cd_attributes.append(self.BND_JNT_ATTR_NAME)
-        self.cd_attributes.append(self.WS_ORIENTATION_ATTR_NAME)
+        cd_attributes_ref_list = [
+            self.CONTROL_SHAPE_ATTR_NAME,
+            self.BND_JNT_ATTR_NAME,
+            self.WS_ORIENTATION_ATTR_NAME,
+        ]
+        cd_attributes_ref_list.extend(self.LOCK_TRANSFORMATION_ATTRIBUTES)
+        for reg_attr in cd_attributes_ref_list:
+            self.cd_attributes.append(reg_attr)
 
     def _init_operator(self, parent=None):
         """
@@ -204,24 +227,32 @@ class MainCreate(components.main.Component):
             component_side, "control"
         )
         # Create the control curve.
-        curve = curve_instance.create_curve(
+        control_curve = curve_instance.create_curve(
             name=control_name,
             match=tweaked_matrix,
             scale=orig_match_matrix.scale,
             color_index=control_curve_color,
+            lock_visibility=True,
         )
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_GRP".format(control_name)
         )
         # At control to offset group.
-        offset_grp.addChild(curve[0])
-        self.controls.append(curve[1])
+        offset_grp.addChild(control_curve[0])
+        self.controls.append(control_curve[1])
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
-        self.output_matrix_nd_list.append(curve[1])
+        self.output_matrix_nd_list.append(control_curve[1])
+        # lock and hide transform attributes if it is defined in the meta data.
+        for lock_attr in self.LOCK_TRANSFORMATION_ATTRIBUTES:
+            if self.operator_meta_data.get(lock_attr):
+                attribute_string = lock_attr.split("_")[1]
+                attributes.lock_and_hide_attributes(
+                    control_curve[1], attributes=attribute_string
+                )
         if bnd_jnt_creation:
-            self.bnd_output_matrix.append(curve[1])
+            self.bnd_output_matrix.append(control_curve[1])
         logger.log(
             level="info",
             message="Component logic created "
@@ -271,3 +302,20 @@ class MainCreate(components.main.Component):
 
         """
         self.main_meta_nd.attr(self.BND_JNT_ATTR_NAME).set(value)
+
+    def set_lock_and_hide_transform_attribute(self, transform_attribute, value):
+        """
+        Lock and hide attribute on created component.
+
+        Args:
+            transform_attribute(str): The attribute to lock.
+            Valid values are [
+            'translateX', 'translateY', 'translateZ', 'rotateX', 'rotateY',
+            'rotateZ', 'scaleX', 'scaleY', 'scaleZ'
+            ]
+            value(bool): Lock and unlock.
+
+        """
+        for lock_attr in self.LOCK_TRANSFORMATION_ATTRIBUTES:
+            if transform_attribute in lock_attr:
+                self.main_meta_nd.attr(lock_attr).set(value)

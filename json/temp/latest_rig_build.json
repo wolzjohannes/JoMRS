@@ -3,51 +3,96 @@
         {
             "meta_data": [
                 {
-                    "JoMRS_UUID": "7e7faf8e-4f86-44c5-b1ec-60e81dee1896-main_op", 
-                    "bnd_joint": false, 
-                    "child_nd": [], 
+                    "JoMRS_UUID": "0ba14d35-5a2e-499f-95d4-03332dedf8a5-main_op", 
+                    "child_nd": [
+                        "10ca4d52-3d60-4cfc-bf16-fb1e3955966a-main_op"
+                    ], 
                     "component_index": 0, 
                     "component_name": "MOM", 
-                    "component_side": "L", 
-                    "component_type": "single_control", 
+                    "component_side": "M", 
+                    "component_type": "test_single_control", 
                     "connect_nd": null, 
                     "connection_types": [
                         "translate", 
                         "rotate", 
                         "scale"
                     ], 
-                    "control_shape": 3, 
+                    "control_shape": 1, 
                     "ik_spaces_ref": null, 
                     "main_op_nd_ws_matrix": [
                         [
-                            1.476146584714852, 
-                            -0.13539792266717618, 
-                            0.059795413117857084, 
+                            1.0, 
+                            0.0, 
+                            0.0, 
                             0.0
                         ], 
                         [
-                            0.106026951293543, 
-                            1.38547232125752, 
-                            0.5197514416396938, 
+                            0.0, 
+                            1.0, 
+                            0.0, 
                             0.0
                         ], 
                         [
-                            -0.10327814140426073, 
-                            -0.5128846634717759, 
-                            1.3882362104272343, 
+                            0.0, 
+                            0.0, 
+                            1.0, 
                             0.0
                         ], 
                         [
-                            4.117751220287126, 
-                            8.692924874288693, 
-                            -10.637444876003656, 
+                            2.0, 
+                            10.0, 
+                            0.0, 
                             1.0
                         ]
                     ], 
                     "parent_nd": null, 
                     "parent_output_ws_matrix_index": 0, 
-                    "sub_op_nd_ws_matrix": [], 
-                    "worldspace_orientation": true
+                    "sub_op_nd_ws_matrix": []
+                }, 
+                {
+                    "JoMRS_UUID": "10ca4d52-3d60-4cfc-bf16-fb1e3955966a-main_op", 
+                    "child_nd": [], 
+                    "component_index": 1, 
+                    "component_name": "Test", 
+                    "component_side": "L", 
+                    "component_type": "test_single_control", 
+                    "connect_nd": null, 
+                    "connection_types": [
+                        "translate", 
+                        "rotate", 
+                        "scale"
+                    ], 
+                    "control_shape": 2, 
+                    "ik_spaces_ref": null, 
+                    "main_op_nd_ws_matrix": [
+                        [
+                            0.04989780993932158, 
+                            0.5542862365685408, 
+                            -0.8308290898337292, 
+                            0.0
+                        ], 
+                        [
+                            0.43936517861793034, 
+                            0.7348664464943979, 
+                            0.5166522482625332, 
+                            0.0
+                        ], 
+                        [
+                            0.8969216511944025, 
+                            -0.390817187144296, 
+                            -0.20686584505743544, 
+                            0.0
+                        ], 
+                        [
+                            15.124, 
+                            23.397, 
+                            -9.37, 
+                            1.0
+                        ]
+                    ], 
+                    "parent_nd": "0ba14d35-5a2e-499f-95d4-03332dedf8a5-main_op", 
+                    "parent_output_ws_matrix_index": 0, 
+                    "sub_op_nd_ws_matrix": []
                 }
             ], 
             "root_meta_nd": "M_ROOT_op_0_METAND"
@@ -56,22 +101,23 @@
     "parenting_data_dic": [
         {
             "comp_container_uuid": [
-                "7e7faf8e-4f86-44c5-b1ec-60e81dee1896-comp_container"
+                "0ba14d35-5a2e-499f-95d4-03332dedf8a5-comp_container", 
+                "10ca4d52-3d60-4cfc-bf16-fb1e3955966a-comp_container"
             ], 
-            "rig_container_uuid": "a9f58782-a3cb-4313-8783-c6633cfd06f9-rig_container"
+            "rig_container_uuid": "eaca555c-af8f-41dc-9e43-387bb74bce56-rig_container"
         }
     ], 
     "rig_meta_data": [
         {
             "meta_data": {
-                "JoMRS_UUID": "a9f58782-a3cb-4313-8783-c6633cfd06f9-root_op", 
+                "JoMRS_UUID": "eaca555c-af8f-41dc-9e43-387bb74bce56-root_op", 
                 "l_rig_color": 13, 
                 "l_rig_sub_color": 18, 
                 "m_rig_color": 17, 
                 "m_rig_sub_color": 11, 
                 "r_rig_color": 6, 
                 "r_rig_sub_color": 9, 
-                "rig_name": "single_control"
+                "rig_name": "MOM"
             }, 
             "root_meta_nd": "M_ROOT_op_0_METAND"
         }

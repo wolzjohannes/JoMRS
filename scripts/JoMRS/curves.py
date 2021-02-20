@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 09 / 21
+# Date:       2021 / 02 / 20
 
 """
 JoMRS nurbsCurve modification module.
@@ -97,6 +97,7 @@ class ControlCurves(object):
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
         for shape in shapes:
+            shape.isHistoricallyInteresting.set(False)
             pmc.rename(shape, name + "Shape")
         if scale:
             for shape_ in shapes:
