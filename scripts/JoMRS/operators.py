@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 17
+# Date:       2021 / 01 / 11
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -37,11 +37,7 @@ import meta
 import os
 import strings
 import re
-
-reload(meta)
-reload(curves)
-reload(strings)
-reload(attributes)
+import uuid
 
 ##########################################################
 # GLOBALS
@@ -103,6 +99,26 @@ def valid_node(node, typ):
         return False
 
 
+def parent_operator_node(child, parent):
+    """
+    Parent a JoMRS main_op_nd to a JoMRS root_op_nd, main_op_nd or sub_op_nd.
+    It always add the child node to the correct container and sets all needed
+    meta data as well.
+
+    Args:
+        parent(pmc.PyNode()): The parent node.
+        child(pmc.PyNode()): The child node.
+
+    """
+    child_instance = ComponentOperator(child, child, child)
+    parent_instance = ComponentOperator(parent, parent, parent)
+    parent_instance.add_node(child_instance.main_op_nd)
+    if parent_instance.op_root_nd is not parent:
+        parent.addChild(child)
+        child_instance.set_parent_ws_output_index(parent)
+        child_instance.set_parent_nd(parent_instance.main_op_nd)
+
+
 ##########################################################
 # CLASSES
 ##########################################################
@@ -124,13 +140,15 @@ class OperatorsRootNode(object):
             None if given operators_root_node is not valid.
 
         """
+        self.god_meta_nd = None
+        self.root_meta_nd = None
         self.op_root_nd = operators_root_node
         # Check if node is a valid root node.
         if self.op_root_nd:
             if not valid_node(self.op_root_nd, typ="JoMRS_root"):
                 self.op_root_nd = None
-        self.god_meta_nd = None
-        self.root_meta_nd = None
+            else:
+                self.get_root_meta_nd_from_op_root_nd()
         self.root_op_attr = {
             "name": constants.OP_ROOT_TAG_NAME,
             "attrType": "bool",
@@ -159,16 +177,23 @@ class OperatorsRootNode(object):
 
         """
         # Create a asset container as root node.
-        self.op_root_nd = pmc.createNode("container", n=constants.OP_ROOT_NAME)
         icon = os.path.normpath(
             "{}/root_operator_logo.png".format(constants.ICONS_PATH)
         )
-        self.op_root_nd.iconName.set(icon)
+        container_node = mayautils.ContainerNode(constants.OP_ROOT_NAME, icon)
+        container_node.create_container(meta_nd=False)
+        self.op_root_nd = container_node.container
+        self.op_root_nd.rename(
+            strings.normalize_suffix_1(self.op_root_nd.name(), _LOGGER)
+        )
         for attr_ in self.op_root_nd_param_list:
             attributes.add_attr(node=self.op_root_nd, **attr_)
         # Create the meta node for the root node.
         self.root_meta_nd = meta.RootOpMetaNode(
             n=constants.ROOT_OP_META_NODE_NAME
+        )
+        self.root_meta_nd.rename(
+            strings.normalize_suffix_1(self.root_meta_nd.name(), _LOGGER)
         )
         # add root meta nd to container node.
         self.op_root_nd.addNode(self.root_meta_nd)
@@ -177,6 +202,9 @@ class OperatorsRootNode(object):
             self.op_root_nd.attr(constants.ROOT_OP_META_ND_ATTR_NAME)
         )
         self.root_meta_nd.set_root_op_nd(self.op_root_nd)
+        self.root_meta_nd.set_uuid(
+            "{}-{}".format(str(uuid.uuid4()), constants.OP_ROOT_ND_UUID_SUFFIX)
+        )
 
     def add_node(self, node):
         """
@@ -240,6 +268,152 @@ class OperatorsRootNode(object):
             constants.ROOT_OP_MESSAGE_ATTR_NAME
         ).get()
         return self.op_root_nd
+
+    def set_rig_name(self, name):
+        """
+        Set rig name
+
+        Attr:
+            name(str)
+
+        """
+        self.root_meta_nd.attr(constants.META_ROOT_RIG_NAME).set(name)
+
+    def set_l_control_rig_color(self, color_index):
+        """
+        Set left rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_LEFT_RIG_COLOR).set(color_index)
+
+    def set_l_sub_control_rig_color(self, color_index):
+        """
+        Set left sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_LEFT_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def set_r_control_rig_color(self, color_index):
+        """
+        Set right rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_RIGHT_RIG_COLOR).set(color_index)
+
+    def set_r_sub_control_rig_color(self, color_index):
+        """
+        Set right sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_RIGHT_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def set_m_control_rig_color(self, color_index):
+        """
+        Set middle rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_MID_RIG_COLOR).set(color_index)
+
+    def set_m_sub_control_rig_color(self, color_index):
+        """
+        Set middle sub rig control color index.
+
+        Args:
+            color_index(int): Maya color index range.
+
+        """
+        self.root_meta_nd.attr(constants.META_MID_RIG_SUB_COLOR).set(
+            color_index
+        )
+
+    def get_rig_name(self):
+        """
+        Get rig name
+
+        Return:
+            String: Given rig name.
+
+        """
+        return self.root_meta_nd.attr(constants.META_ROOT_RIG_NAME).get()
+
+    def get_l_control_rig_color(self):
+        """
+        Get left rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_LEFT_RIG_COLOR).get()
+
+    def get_l_sub_control_rig_color(self):
+        """
+        Get left rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_LEFT_RIG_SUB_COLOR).get()
+
+    def get_r_control_rig_color(self):
+        """
+        Get right rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_RIGHT_RIG_COLOR).get()
+
+    def get_r_sub_control_rig_color(self):
+        """
+        Get right rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_RIGHT_RIG_SUB_COLOR).get()
+
+    def get_m_control_rig_color(self):
+        """
+        Get middle rig control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_MID_RIG_COLOR).get()
+
+    def get_m_sub_control_rig_color(self):
+        """
+        Get middle rig sub control color index.
+
+        Return:
+            Integer: Maya color index range.
+
+        """
+        return self.root_meta_nd.attr(constants.META_MID_RIG_SUB_COLOR).get()
 
 
 class MainOperatorNode(OperatorsRootNode):
@@ -342,6 +516,9 @@ class MainOperatorNode(OperatorsRootNode):
             attributes.add_attr(node=self.main_op_nd, **attr_)
         # Connect main operator node with main meta node.
         self.set_main_meta_nd()
+        self.main_meta_nd.set_uuid(
+            "{}-{}".format(str(uuid.uuid4()), constants.MAIN_OP_ND_UUID_SUFFIX)
+        )
 
     def set_main_meta_nd(self):
         """
@@ -349,6 +526,7 @@ class MainOperatorNode(OperatorsRootNode):
 
         Args:
             name(str): The operator name.
+
         """
         self.main_meta_nd = meta.MainOpMetaNode(n=self.main_meta_nd_name)
         self.main_meta_nd.message.connect(
@@ -400,7 +578,7 @@ class MainOperatorNode(OperatorsRootNode):
 
 class ComponentOperator(MainOperatorNode):
     """
-    Create the whole component operator.
+    Create the whole Component operator.
     """
 
     SUB_ND_COLOR_INDEX = 21
@@ -425,19 +603,37 @@ class ComponentOperator(MainOperatorNode):
 
         Example:
             (1)
-            Example without selection.
+            Example without selection. Basic creation of a operator.
+            Index, side and sub_operators_count are on default.
             >>> import operators
-            >>> component_op.create_component_op_node('test', sub_operators_count=2)
+            >>> component_op = operators.ComponentOperator()
+            >>> component_op.create_component_op_node('Test')
             (2)
-            Example with selection.
-            >>> import pymel.core as pmc
+            Example to pass a selected JoMRS Operator object in the operators
+            class. So you are able to use all getters and setters.
             >>> import operators
-            >>> selection = []
-            >>> selection.extend(pmc.ls(sl=True, containers=True))
-            >>> selection.extend(pmc.ls(sl=True, tr=True))
-            >>> component_op = operators.ComponentOperator(selection[0],
-            >>> selection[0], selection[0])
-            >>> component_op.create_component_op_node('test', sub_operators_count=2)
+            >>> import components.main as main
+            >>> selection = main.selected()
+            >>> component_op = operators.ComponentOperator(
+            >>> operators_root_node=selection, main_operator_node=selection,
+            >>> sub_operator_node=selection)
+            (3)
+            Example to build a new operator as child of selected JoMRS
+            Operator object
+            >>> import operators
+            >>> import components.main as main
+            >>> component_op_test = operators.ComponentOperator()
+            >>> component_op_test.create_component_op_node(name='test',
+            >>> sub_operators_count=2)
+            # Select the created operator container or main operator node or
+            the sub operator node. Then store the selection with the
+            main.selected() function.
+            >>> selection = main.selected()
+            >>> component_op_test = operators.ComponentOperator(selection,
+            >>> selection, selection)
+            >>> component_op_test.create_component_op_node(name='mom',
+            >>> sub_operators_count=1, parent=selection)
+
 
         """
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
@@ -537,6 +733,7 @@ class ComponentOperator(MainOperatorNode):
             )
         self.sub_operators.append(sub_op_node)
         self.linear_curve_drivers.append(sub_op_node)
+        self.sub_meta_nd.set_ws_output_index(count + 1)
 
     def create_component_op_node(
         self,
@@ -560,13 +757,15 @@ class ComponentOperator(MainOperatorNode):
             sub_operators_count(int): Sub operators count.
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
-            parent(pmc.PyNode): The parent node.
+            parent(pmc.PyNode()): The parent node.
 
         """
         # Check at start if a parent node is passed. If it is not a valid not
         # method will break.
         if parent:
-            if valid_node(parent, "JoMRS_main"):
+            if valid_node(parent, "JoMRS_root"):
+                pass
+            elif valid_node(parent, "JoMRS_main"):
                 self.parent = parent
                 self.parent_main_op_nd = parent
                 self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
@@ -577,6 +776,11 @@ class ComponentOperator(MainOperatorNode):
                 self.get_root_meta_nd_from_main_op_nd(self.parent_main_op_nd)
                 self.get_root_nd_from_root_meta_nd()
             else:
+                logger.log(
+                    level="error",
+                    message="Parent node is not a JoMRS node.",
+                    logger=_LOGGER,
+                )
                 return
         # Bypass axes for later refactoring.
         vec = constants.DEFAULT_SPACING
@@ -596,8 +800,6 @@ class ComponentOperator(MainOperatorNode):
         # If not create a new root operator node.
         if not self.op_root_nd:
             self.create_root_op_node()
-        else:
-            self.get_root_meta_nd_from_op_root_nd()
         # Set meta data.
         self.set_root_meta_nd()
         self.set_component_side(side)
@@ -693,7 +895,11 @@ class ComponentOperator(MainOperatorNode):
         # if valid parent is passed parent the new operator under the
         # specified parent node.
         if self.parent:
+            # Parent new operator under selected JoMRS node.
             self.parent.addChild(self.main_op_nd)
+            # Get ws output index and set it as parent ws output index.
+            self.set_parent_ws_output_index(self.parent)
+            # Set the parent meta nd.
             self.set_parent_nd(self.parent_main_op_nd)
         # fill the all_container_nodes list.
         self.set_node_list()
@@ -701,20 +907,20 @@ class ComponentOperator(MainOperatorNode):
 
     def set_component_type(self, type):
         """
-        Set the component type.
+        Set the Component type.
 
         Args:
-                type(str): The component type.
+                type(str): The Component type.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_TYPE).set(type)
 
     def set_component_name(self, name):
         """
-        Set the component name.
+        Set the Component name.
 
         Args:
-                name(str): The component name.
+                name(str): The Component name.
 
         """
         name = strings.normalize_string(name, _LOGGER)
@@ -722,20 +928,20 @@ class ComponentOperator(MainOperatorNode):
 
     def set_component_side(self, side):
         """
-        Set the component side.
+        Set the Component side.
 
         Args:
-                side(str): The component side.
+                side(str): The Component side.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_SIDE).set(side)
 
     def set_component_index(self, index):
         """
-        Set the component index.
+        Set the Component index.
 
         Args:
-                index(int): The component index.
+                index(int): The Component index.
 
         """
         self.main_meta_nd.attr(constants.META_MAIN_COMP_INDEX).set(index)
@@ -781,6 +987,26 @@ class ComponentOperator(MainOperatorNode):
         ).get()
         parent_main_meta_nd.add_child_node(self.main_meta_nd)
 
+    def set_parent_ws_output_index(self, parent_node):
+        """
+        Set parent ws output index from parent node ws output index.
+
+        Args:
+            parent_node(pmc.PyNode()): The parent node.
+
+        """
+        try:
+            meta_node = parent_node.attr(
+                constants.SUB_OP_META_ND_ATTR_NAME
+            ).get()
+        except:
+            meta_node = parent_node.attr(
+                constants.MAIN_OP_META_ND_ATTR_NAME
+            ).get()
+        self.main_meta_nd.set_parent_ws_output_index(
+            meta_node.get_ws_output_index()
+        )
+
     def set_node_list(self):
         """
         Connect all corresponding nodes of the main operator to
@@ -807,7 +1033,7 @@ class ComponentOperator(MainOperatorNode):
 
     def set_cd_attributes(self):
         """
-        Set the component defined attributes data on meta node.
+        Set the Component defined attributes data on meta node.
         """
         if self.cd_attributes:
             attributes = ";".join(self.cd_attributes)
@@ -837,7 +1063,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_type(self):
         """
-        Get component type.
+        Get Component type.
 
         Return:
                 string: Component type.
@@ -847,7 +1073,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_name(self):
         """
-        Get component name.
+        Get Component name.
 
         Return:
                 string: Component name.
@@ -856,7 +1082,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_side(self):
         """
-        Get component side.
+        Get Component side.
 
         Return:
                 string: Component side.
@@ -865,7 +1091,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_component_index(self):
         """
-        Get component index.
+        Get Component index.
 
         Return:
                 string: Component side.
@@ -1010,7 +1236,7 @@ class ComponentOperator(MainOperatorNode):
 
     def get_cd_attributes(self):
         """
-        Get the component defined attribute.
+        Get the Component defined attribute.
 
         Return:
             List: Dictionary with attributes names and values.
@@ -1027,7 +1253,7 @@ class ComponentOperator(MainOperatorNode):
 
     def rename_operator_nodes(self, name):
         """
-        Change operator and component name. Search string is the component
+        Change operator and Component name. Search string is the Component
         name in the meta data.
 
         Args:

@@ -11,17 +11,17 @@ Step 2. Get Operators data and collect them as dictonary
 2. Find the parent of the main operators if the parent is a sub operator
 find that main operator. Get the world space of the parent and the
 connection type. The parents output node is the main operators input node.
-3. Find the component type and the component name and side.
+3. Find the Component type and the Component name and side.
 4. Store these as dic
 
 Step 3. Initial hierarchy and componentConnections
 -----------------------------------------------------------
 1. Iritate the dicts and create the main rig hierarchy and sets.
-2. Create the component hierarchies and the input output connections.
+2. Create the Component hierarchies and the input output connections.
 
 Step 4. Build the components
 --------------------------------------------------------------
-1. Build each component and connect them.
+1. Build each Component and connect them.
 2. Setup the spaces.
 3. Build the deforamtion rig.
 
@@ -48,5 +48,5 @@ Order of operations
 1. Collect data of guides.
 2. Build Initial Hierarchy.
 3. Build components structure and hook up input and outputs.
-4. Build components and sort them to component structures.
+4. Build components and sort them to Component structures.
 5. Rig build and sort them.

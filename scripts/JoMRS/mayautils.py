@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 05 / 22
+# Date:       2021 / 02 / 19
 
 """
 JoMRS maya utils module. Utilities helps
@@ -39,6 +39,9 @@ import attributes
 import strings
 import logging
 import logger
+import constants
+import meta
+import uuid
 
 ##########################################################
 # GLOBAL
@@ -292,7 +295,7 @@ def constraint_ui_node_(constraint=None, target=None):
     if target and constraint:
         if not isinstance(target, list):
             target = [target]
-        constraint_ui = pmc.creatNode(
+        constraint_ui = pmc.createNode(
             "transform", n="{}{}".format(str(constraint), "_UI_GRP")
         )
         constraint.addChild(constraint_ui)
@@ -599,8 +602,12 @@ def create_aim_constraint(
 
 
 def decompose_matrix_constraint(
-    source, target, translation=True, rotation=True, scale=True,
-    target_plug=None
+    source,
+    target,
+    translation=True,
+    rotation=True,
+    scale=True,
+    target_plug=None,
 ):
     """
     Create decompose matrix constraint.
@@ -617,7 +624,7 @@ def decompose_matrix_constraint(
     """
     decomp = pmc.createNode("decomposeMatrix", n=str(source) + "_0_DEMAND")
     if not target_plug:
-        target_plug = 'worldMatrix[0]'
+        target_plug = "worldMatrix[0]"
     target.attr(target_plug).connect(decomp.inputMatrix)
     if translation:
         decomp.outputTranslate.connect(source.translate, force=True)
@@ -628,7 +635,7 @@ def decompose_matrix_constraint(
     return decomp
 
 
-def calculate_matrix_offset_(target, source):
+def calculate_matrix_offset_(target, source, target_plug=None):
     """
     Calculate the matrix offset of the source to the target.
     Args:
@@ -637,7 +644,11 @@ def calculate_matrix_offset_(target, source):
     Return:
             The offset matrix values from target to source.
     """
-    tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
+
+    if not target_plug:
+        tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
+    else:
+        tm = dt.Matrix(target.attr(target_plug).get()).inverse()
     sm = dt.Matrix(source.getMatrix(ws=True))
     return sm.__mul__(tm)
 
@@ -652,35 +663,40 @@ def matrix_constraint_ui_grp_(source):
     Return:
             tuple: The UI_GRP node.
     """
-    ui_grp = pmc.creatNode(
+    ui_grp = pmc.createNode(
         "transform", n=str(source) + "_matrixConstraint_UI_GRP"
     )
-    attributes.add_attr(node=ui_grp, name="offset_matrix", attr_type="matrix")
+    attributes.add_attr(node=ui_grp, name="offset_matrix", attrType="matrix")
     attributes.lock_and_hide_attributes(node=ui_grp)
     source.addChild(ui_grp)
     return ui_grp
 
 
-def mult_matrix_setup_(source, target, maintainOffset=None):
+def mult_matrix_setup_(source, target, maintainOffset=None, target_plug=None):
     """
     Creates the multMatrix setup for further use.
     Args:
             source(dagnode): The source node.
             target(dagnode): The target node.
             maintainOffste(bool): Enable/Disable the maintainOffset option.
+            target_plug(str): The targets plug name.
     Return:
             tuple: The created multMatrix node.
     """
     parent = source.getParent()
-    mul_ma_nd = pmc.creatNode("multMatrix", n=str(source) + "_0_MUMAND")
-    target.worldMatrix[0].connect(mul_ma_nd.matrixIn[1])
+    mul_ma_nd = pmc.createNode("multMatrix", n=str(source) + "_0_MUMAND")
+    if not target_plug:
+        target_plug = "worldMatrix[0]"
+    target.attr(target_plug).connect(mul_ma_nd.matrixIn[1])
     if parent:
         parent.worldInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
     else:
         source.parentInverseMatrix[0].connect(mul_ma_nd.matrixIn[2])
     if maintainOffset:
         ui_grp = matrix_constraint_ui_grp_(source=source)
-        ui_grp.offset_matrix.set(calculate_matrix_offset_(target, source))
+        ui_grp.offset_matrix.set(
+            calculate_matrix_offset_(target, source, target_plug)
+        )
         ui_grp.offset_matrix.connect(mul_ma_nd.matrixIn[0])
     return mul_ma_nd
 
@@ -692,6 +708,7 @@ def create_matrix_constraint(
     rotation=True,
     scale=True,
     maintain_offset=None,
+    target_plug=None,
 ):
     """
     Creates the matrix constraint.
@@ -702,13 +719,20 @@ def create_matrix_constraint(
             rotation(bool): Connect/Disconnect the rotation channel.
             scale(bool): Connect/Disconnect the scale channel.
             maintainOffste(bool): Enable/Disable the maintain_offset option.
+            target_plug(str): The targets plug name.
+
+    Returns:
+        pmc.PyNode(): The mul matrix node of the constraint setup.
     """
     axis = ["X", "Y", "Z"]
-    decomp_mat_nd = pmc.creatNode(
+    decomp_mat_nd = pmc.createNode(
         "decomposeMatrix", n=str(source) + "_0_DEMAND"
     )
     mul_ma_nd = mult_matrix_setup_(
-        source=source, target=target, maintainOffset=maintain_offset
+        source=source,
+        target=target,
+        maintainOffset=maintain_offset,
+        target_plug=target_plug,
     )
     mul_ma_nd.matrixSum.connect(decomp_mat_nd.inputMatrix)
     if translation:
@@ -726,6 +750,7 @@ def create_matrix_constraint(
             decomp_mat_nd.attr("outputScale" + axe).connect(
                 source.attr("scale" + axe)
             )
+    return mul_ma_nd
 
 
 def ancestors(node):
@@ -1041,7 +1066,7 @@ def create_motion_path(
     """
     axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, _LOGGER)
-    mpnd = pmc.creatNode("motionPath", n=name)
+    mpnd = pmc.createNode("motionPath", n=name)
     mpnd.fractionMode.set(1)
     mpnd.uValue.set(position)
     curve_shape.worldSpace[0].connect(mpnd.geometryPath)
@@ -1098,20 +1123,25 @@ def create_motion_path(
     return mpnd
 
 
-def create_hierarchy(nodes=None, inverse_scale=None):
+def create_hierarchy(nodes=None, inverse_scale=None, include_parent=None):
     """
     Create a hierarchy of nodes.
     Args:
             nodes(list): List of nodes.
             inverse_scale(bool): Disconnect the inverse scale
             plugs of the joints.
+            include_parent(bool): Include the parent node into the hierarchy.
+
     Return:
             list: The list of nodes in the hierarchy.
     """
     temp = nodes[:]
     for number in range(len(temp)):
         if len(temp) > 1:
-            temp[-2].addChild(temp[-1])
+            if not include_parent:
+                temp[-2].addChild(temp[-1])
+            else:
+                temp[-2].addChild(temp[-1].getParent())
             temp.remove(temp[-1])
     if inverse_scale:
         for node in nodes:
@@ -1213,7 +1243,7 @@ def create_ref_transform(
     Example:
             >>> create_ref_transform('test', 'M', 0, True,
             >>> [1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0,
-            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('yournode'))
+            >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('your_node'))
 
     Return:
             The new ref node.
@@ -1233,3 +1263,264 @@ def create_ref_transform(
     if child:
         ref_trs.addChild(child)
     return ref_trs
+
+
+def matrix_normalize_scale(matrix):
+    """
+    Will normalize the scale in given four by four matrix to 1 or -1.
+
+    Args:
+        matrix(dt.Matrix): Four by four matrix.
+
+    Return:
+        dt.Matrix: The scale normalized matrix.
+
+    """
+    scale = matrix.scale
+    tm = dt.TransformationMatrix(matrix)
+    if scale[0] > 0:
+        scale[0] = 1
+    else:
+        scale[0] = -1
+    if scale[1] > 0:
+        scale[1] = 1
+    else:
+        scale[1] = -1
+    if scale[2] > 0:
+        scale[2] = 1
+    else:
+        scale[2] = -1
+    tm.setScale(scale, space="world")
+    return dt.Matrix(tm)
+
+
+def matrix_reset_rotation(matrix):
+    """
+    Will reset the rotation values in four by four matrix to zero in worldspace.
+
+    Args:
+        matrix(dt.Matrix): Four by four matrix.
+
+    Return:
+        dt.Matrix: The matrix reset in rotation.
+
+    """
+    tm = dt.TransformationMatrix(matrix)
+    tm.setRotation((0, 0, 0))
+    return dt.Matrix(tm)
+
+
+##########################################################
+# CLASSES
+##########################################################
+
+
+class ContainerNode(object):
+    """
+    Wrapper for the maya container node. JoMRS expansion.
+    """
+
+    def __init__(
+        self, name=None, icon=None, container_node=None, content_root_node=False
+    ):
+        """
+        Init creation of the container node.
+
+        Args:
+            name(str): Container node name.
+            icon(str): Path to the icon file.
+            container_node(pmc.PyNode()): A container node to pass.
+            content_root_node(bool): Enable/Disable content root node creation.
+
+        """
+        self.meta_nd = None
+        self.meta_nd_name = constants.CONTAINER_META_NODE_NAME
+        self.container_meta_nd = None
+        self.container_attr_list = []
+        self.container = container_node
+        self.name = name
+        self.icon = icon
+        self.container_content = {}
+        self.meta_node = None
+        self.container_content_root = None
+        self.content_root_node = content_root_node
+        self.container_meta_nd_attr = {
+            "name": constants.CONTAINER_META_ND_ATTR_NAME,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+        self.container_attr_list.append(self.container_meta_nd_attr)
+        if content_root_node:
+            self.container_content_root_name = "M_content_root_0_GRP"
+        if self.container:
+            self.get_meta_nd()
+
+    def create_container(self, meta_nd=True):
+        """
+        Create the actual container node with a icon.
+
+        Args:
+            meta_nd(bool): Enable/Disable meta node creation.
+
+        """
+        self.container = pmc.nt.Container(n=self.name)
+        self.container.iconName.set(self.icon)
+        if self.content_root_node:
+            self.container_content_root = pmc.createNode(
+                "transform", n=self.container_content_root_name
+            )
+            self.container.addNode(
+                self.container_content_root,
+                ish=True,
+                ihb=True,
+                iha=True,
+                inc=True,
+            )
+        for attr_ in self.container_attr_list:
+            attributes.add_attr(node=self.container, **attr_)
+        if meta_nd:
+            self.meta_nd = meta.ContainerMetaNode(n=self.meta_nd_name)
+            self.meta_nd.rename(
+                strings.normalize_suffix_1(self.meta_nd.name(), _LOGGER)
+            )
+            self.meta_nd.add_container_node(self.container)
+            self.container.addNode(self.meta_nd)
+            self.set_uuid()
+
+    def create_transform(self, name):
+        """
+        Create a simple transform as container part.
+
+        Args:
+            name(str): Transform name.
+
+        """
+        self.container_content[name] = pmc.createNode("transform", n=name)
+        self.container.addNode(
+            self.container_content[name], ish=True, ihb=True, iha=True, inc=True
+        )
+        if self.content_root_node:
+            self.container_content_root.addChild(self.container_content[name])
+
+    def create_container_content_from_list(self, list):
+        """
+        Create the transform container content from list
+        
+        Args:
+            list(list): List of string.
+
+        Returns:
+            False if fail.
+
+        """
+        for str_ in list:
+            if not isinstance(str_, str):
+                logger.log(
+                    "error",
+                    "Only string as list content allowed.",
+                    self.create_container_content_from_list(),
+                    logger=_LOGGER,
+                )
+                return False
+            self.create_transform(str_)
+
+    def get_container_content(self):
+        """
+        Get the container nodes and store them in a dictionary.
+        """
+        container_nodes = self.container.getNodeList()
+        for node in container_nodes:
+            self.container_content[node.nodeName()] = node
+
+    def get_container_content_by_string_pattern(self, pattern):
+        """
+        Get a container content by a string pattern.
+
+        Args:
+            pattern(str): The string pattern for searching
+
+        Return:
+            List: Found container content. None if fail.
+
+        """
+        result = []
+        if not self.container_content:
+            self.get_container_content()
+        keys = self.container_content.keys()
+        for key in keys:
+            if pattern in key:
+                result.append(self.container_content.get(key))
+        return result
+
+    def add_node_to_container_content(self, node, content_name):
+        """
+        Add node to container content
+
+        Args:
+            node(pmc.PyNode()): The node to add.
+            content_name(str): The content node.
+
+        """
+        self.container.addNode(node, ish=True, ihb=True, iha=True, inc=True)
+        self.container_content.get(content_name).addChild(node)
+
+    def set_uuid(self, uuid_=None):
+        """
+        Set the JoMRS uuid string
+
+        Args:
+            uuid_(str): The uuid string
+
+        """
+        if not uuid_:
+            uuid_ = "{}-{}".format(
+                str(uuid.uuid4()), constants.CONTAINER_UUID_SUFFIX
+            )
+        self.meta_nd.set_uuid(uuid_)
+
+    def get_uuid(self):
+        """
+        Get the JoMRS uuid from meta
+
+        Returns:
+            String: The given uuid.
+
+        """
+        return self.meta_nd.get_uuid()
+
+    def get_meta_nd(self):
+        """
+        Get the meta node.
+
+        Returns:
+            pmc.PyNode(): The connected meta node. None if not found
+
+        """
+        try:
+            self.meta_nd = self.container.attr(
+                constants.CONTAINER_META_ND_ATTR_NAME
+            ).get()
+            return self.meta_nd
+        except:
+            return
+
+    def set_container_type(self, type):
+        """
+        Set the container type at the meta data nd.
+
+        Args:
+            type(str): The container type.
+
+        """
+        self.meta_nd.set_container_type(type)
+
+    def get_container_type(self):
+        """
+        Get the container type from meta data nd.
+
+        Returns:
+            String: The container meta type class
+
+        """
+        return self.meta_nd.get_container_type()

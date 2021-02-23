@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 15
+# Date:       2021 / 01 / 18
 
 """
 JoMRS operator unittest module
@@ -30,6 +30,7 @@ import pymel.core as pmc
 import pymel.core.datatypes as datatypes
 from tests.mayaunittest import TestCase
 import re
+import constants
 
 
 class TestOperators(TestCase):
@@ -62,7 +63,11 @@ class TestOperators(TestCase):
         self.test_op_0.main_op_nd.translate.set(10, 5, 3)
         self.test_op_0.main_op_nd.rotate.set(100, 20.56, 342.11)
 
-        self.test_op_1 = operators.ComponentOperator()
+        self.test_op_1 = operators.ComponentOperator(
+            self.test_op_0.sub_operators[-1],
+            self.test_op_0.sub_operators[-1],
+            self.test_op_0.sub_operators[-1],
+        )
         self.test_op_1.create_component_op_node(
             name=self.TEST_1_OP_NAME,
             side=self.TEST_1_OP_SIDE,
@@ -155,17 +160,18 @@ class TestOperators(TestCase):
         self.test_op_1.set_component_index(10)
         comp_index = self.test_op_1.get_component_index()
         self.assertEqual(comp_index, 10)
-        # Test component type data.
-        self.test_op_1.set_component_type("single_control")
+        # Test Component type data.
+        self.test_op_1.set_component_type("test_single_control")
         comp_type = self.test_op_1.get_component_type()
-        self.assertEqual(comp_type, "single_control")
+        self.assertEqual(comp_type, "test_single_control")
         # Test connection types
-        self.assertFalse(self.test_op_1.set_connection_type('translate'))
-        self.test_op_1.set_connection_type(['translate', 'rotate'])
-        self.assertEqual(self.test_op_1.get_connection_types(), ['translate',
-                                                                 'rotate'])
+        self.assertFalse(self.test_op_1.set_connection_type("translate"))
+        self.test_op_1.set_connection_type(["translate", "rotate"])
+        self.assertEqual(
+            self.test_op_1.get_connection_types(), ["translate", "rotate"]
+        )
         # Test ik ref data.
-        self.assertFalse(self.test_op_1.set_ik_spaces_ref('world'))
+        self.assertFalse(self.test_op_1.set_ik_spaces_ref("world"))
         self.test_op_1.set_ik_spaces_ref(list(["world", "root", "chest"]))
         spaces = self.test_op_1.get_ik_spaces_ref().split(";")
         self.assertEqual(spaces, list(["world", "root", "chest"]))
@@ -187,6 +193,11 @@ class TestOperators(TestCase):
         sub_operators = self.test_op_1.get_sub_op_nodes_from_main_op_nd()
         self.assertIs(len(sub_operators), self.TEST_1_OP_SUB_COUNT)
         self.assertEqual(sub_operators, self.test_op_1.sub_operators)
+        # Test UUID
+        root_op_nd_uuid_string = self.test_op_1.root_meta_nd.get_uuid()
+        main_op_nd_uuid_string = self.test_op_1.main_meta_nd.get_uuid()
+        self.assertIn(constants.OP_ROOT_ND_UUID_SUFFIX, root_op_nd_uuid_string)
+        self.assertIn(constants.MAIN_OP_ND_UUID_SUFFIX, main_op_nd_uuid_string)
 
     def test_naming_convention(self):
         """
@@ -246,3 +257,27 @@ class TestOperators(TestCase):
         )
         lra_buffer_test_rotation = datatypes.Vector([3.1108, 20.9634, 16.6992])
         self.assertEqual(lra_buffer_local_rotation, lra_buffer_test_rotation)
+
+    def test_parent_ws_output_input_index(self):
+        """
+        Test the parent input output index for a correct parenting.
+        """
+        # Test the main op node ws output index. This should be 0.
+        self.assertIs(self.test_op_1.main_meta_nd.get_ws_output_index(), 0)
+        # Test the first sub op node ws output index this should be 1.
+        self.assertIs(
+            self.test_op_0.sub_operators[0]
+            .attr(constants.SUB_OP_META_ND_ATTR_NAME)
+            .get()
+            .get_ws_output_index(),
+            1,
+        )
+        # Test if the child main op nd ws parent output index is the parent
+        # sub nd parent ws output index.
+        self.assertIs(
+            self.test_op_1.main_meta_nd.get_parent_ws_output_index(),
+                        self.test_op_0.sub_operators[-1]
+            .attr(constants.SUB_OP_META_ND_ATTR_NAME)
+            .get()
+            .get_ws_output_index(),
+        )

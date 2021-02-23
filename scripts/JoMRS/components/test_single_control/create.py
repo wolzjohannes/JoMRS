@@ -20,25 +20,21 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2020 / 10 / 20
+# Date:       2021 / 02 / 17
 
 """
-Build a single single_control
+Build a single_control_component for testing purposes.
 """
 
 import pymel.core as pmc
 import attributes
 import constants
 import curves
-from components import main
+import components.main
 import logging
 import logger
 import strings
-
-reload(curves)
-reload(attributes)
-reload(main)
-reload(constants)
+import mayautils
 
 ##########################################################
 # GLOBALS
@@ -51,12 +47,12 @@ _LOGGER = logging.getLogger(__name__ + ".py")
 ##########################################################
 
 
-class Main(main.component):
+class MainCreate(components.main.Component):
     """
-    Single single_control component class
+    Single test Component class
     """
 
-    COMP_TYPE = "single_control"
+    COMP_TYPE = "test_single_control"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = True
     AXES = "X"
@@ -69,12 +65,13 @@ class Main(main.component):
         {"shape": "circle", "instance": curves.CircleControl()},
         {"shape": "hexagon", "instance": curves.HexagonControl()},
     ]
+    CONTROL_SHAPE_ATTR_NAME = "control_shape"
 
     def __init__(
         self,
-        name=None,
-        side=None,
-        index=None,
+        name=constants.DEFAULT_OPERATOR_NAME,
+        side=constants.DEFAULT_SIDE,
+        index=constants.DEFAULT_INDEX,
         operators_root_node=None,
         main_operator_node=None,
         sub_operator_node=None,
@@ -84,15 +81,15 @@ class Main(main.component):
 
         Args:
             name(str, optional): Component name.
-            side(str, optional): The component side.
-            index(int, optional): The component index.
+            side(str, optional): The Component side.
+            index(int, optional): The Component index.
             operators_root_node(pmc.PyNode(), optional): The operators root
             node.
             main_operator_node(pmc.PyNode(), optional): The main operator_node.
             sub_operator_node(pmc.PyNode(), optional)): The sub operator node.
 
         """
-        main.component.__init__(
+        components.main.Component.__init__(
             self,
             name,
             self.COMP_TYPE,
@@ -105,11 +102,11 @@ class Main(main.component):
 
     def add_component_defined_attributes(self):
         """
-        Add component specific attributes to operator.
+        Add Component specific attributes to operator.
         And fill the cd_attributes list for meta data.
         """
         self.control_shapes_attr = {
-            "name": constants.CONTROL_SHAPE_ATTR_NAME,
+            "name": self.CONTROL_SHAPE_ATTR_NAME,
             "enum": [data["shape"] for data in self.CONTROL_SHAPES],
             "keyable": False,
             "hidden": False,
@@ -119,7 +116,7 @@ class Main(main.component):
         attributes.add_enum_attribute(
             node=self.main_meta_nd, **self.control_shapes_attr
         )
-        self.cd_attributes.append(constants.CONTROL_SHAPE_ATTR_NAME)
+        self.cd_attributes.append(self.CONTROL_SHAPE_ATTR_NAME)
 
     def _init_operator(self, parent=None):
         """
@@ -134,7 +131,7 @@ class Main(main.component):
 
     def build_component_logic(self):
         """
-        Build component logic. It is derivative method from parent class.
+        Build Component logic. It is derivative method from parent class.
         """
         # Name reformatting.
         control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
@@ -164,22 +161,26 @@ class Main(main.component):
             if index is self.operator_meta_data["control_shape"]:
                 curve_instance = shape_instance.get("instance")
         # Create control curve and match it with main_op_nd.
+        match_matrix = self.operator_meta_data.get(
+            constants.META_MAIN_OP_ND_WS_MATRIX_STR
+        )
+        scale_normalized_matrix = mayautils.matrix_normalize_scale(match_matrix)
         curve = curve_instance.create_curve(
             name=control_name,
-            match=self.operator_meta_data.get(
-                constants.META_MAIN_OP_ND_WS_MATRIX_STR
-            ),
+            match=scale_normalized_matrix,
+            scale=match_matrix.scale,
         )
         # At control to offset group.
         offset_grp.addChild(curve[0])
         self.controls.append(curve[1])
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
+        self.output_matrix_nd_list.append(curve[1])
         self.bnd_output_matrix.append(curve[1])
         logger.log(
             level="info",
             message="Component logic created "
-            "for: {} component".format(
+            "for: {} Component".format(
                 self.operator_meta_data[constants.META_MAIN_COMP_NAME]
             ),
             logger=_LOGGER,
@@ -187,7 +188,7 @@ class Main(main.component):
 
     def set_control_shape(self, control_shape):
         """
-        Set the control shape for the component.
+        Set the control shape for the Component.
 
         Args:
             control_shape(str): The controls shapes.
@@ -197,7 +198,7 @@ class Main(main.component):
         """
         for index, data in enumerate(self.CONTROL_SHAPES):
             if control_shape is data["shape"]:
-                self.main_meta_nd.attr(constants.CONTROL_SHAPE_ATTR_NAME).set(
+                self.main_meta_nd.attr(self.CONTROL_SHAPE_ATTR_NAME).set(
                     index
                 )
                 return
