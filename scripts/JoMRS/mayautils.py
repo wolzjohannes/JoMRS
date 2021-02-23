@@ -1123,20 +1123,25 @@ def create_motion_path(
     return mpnd
 
 
-def create_hierarchy(nodes=None, inverse_scale=None):
+def create_hierarchy(nodes=None, inverse_scale=None, include_parent=None):
     """
     Create a hierarchy of nodes.
     Args:
             nodes(list): List of nodes.
             inverse_scale(bool): Disconnect the inverse scale
             plugs of the joints.
+            include_parent(bool): Include the parent node into the hierarchy.
+
     Return:
             list: The list of nodes in the hierarchy.
     """
     temp = nodes[:]
     for number in range(len(temp)):
         if len(temp) > 1:
-            temp[-2].addChild(temp[-1])
+            if not include_parent:
+                temp[-2].addChild(temp[-1])
+            else:
+                temp[-2].addChild(temp[-1].getParent())
             temp.remove(temp[-1])
     if inverse_scale:
         for node in nodes:

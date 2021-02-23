@@ -434,4 +434,3 @@ def normalize_suffix_(string):
             + '" should not have a number. Numbers removed from the suffix',
             logger=_LOGGER,
         )
-

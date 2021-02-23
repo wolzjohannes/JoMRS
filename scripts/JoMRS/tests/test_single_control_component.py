@@ -23,12 +23,12 @@
 # Date:       2021 / 02 / 20
 
 """
-Test the single_control component.
+Test the single_control_component component.
 """
 import pymel.core as pmc
 import pymel.core.datatypes as dt
 from tests.mayaunittest import TestCase
-import components.single_control.create as sc_create
+import components.single_control_component.create as sc_create
 import constants
 
 

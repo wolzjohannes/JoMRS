@@ -23,7 +23,7 @@
 # Date:       2021 / 02 / 17
 
 """
-Build a single_control for testing purposes.
+Build a single_control_component for testing purposes.
 """
 
 import pymel.core as pmc

@@ -42,7 +42,6 @@ import os
 import json
 import copy
 import meta
-reload(components.main)
 
 ##########################################################
 # GLOBALS
@@ -300,7 +299,6 @@ class MainBuild(object):
                 # import correct module for each component based on the
                 # formatted import statement string.
                 create_module = importlib.import_module(component_module_name)
-                reload(create_module)
                 # instance the MainCreate class which is the base of each rig
                 # component.
                 main_create = create_module.MainCreate()

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 30
+# Date:       2021 / 02 / 23
 
 """
 Meta node creation module.
@@ -99,6 +99,7 @@ class MetaNode(pmc.nt.Network):
         newNode.addAttr(constants.META_TYPE, dt="string")
         newNode.attr(constants.META_TYPE).set(constants.META_BASE_TYPE)
         newNode.addAttr(constants.UUID_ATTR_NAME, dt="string")
+        newNode.addAttr(constants.META_DIRTY_EVAL_ATTR, at='bool')
 
     def set_uuid(self, uuid_=None):
         """

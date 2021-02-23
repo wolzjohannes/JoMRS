@@ -23,7 +23,7 @@
 # Date:       2021 / 02 / 20
 
 """
-Build a single_control. Which can be used as main control or as simple fk
+Build a single_control_component. Which can be used as main control or as simple fk
 component
 """
 
@@ -55,7 +55,7 @@ class MainCreate(components.main.Component):
     purposes or as single fk rig component.
     """
 
-    COMP_TYPE = "single_control"
+    COMP_TYPE = "single_control_component"
     SUB_OPERATORS_COUNT = 0
     LOCAL_ROTATION_AXES = True
     AXES = "X"

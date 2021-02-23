@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 20
+# Date:       2021 / 02 / 22
 
 """
 JoMRS nurbsCurve modification module.
@@ -66,9 +66,11 @@ class ControlCurves(object):
         lock_rotate=False,
         lock_scale=False,
         lock_visibility=False,
+        move=None,
     ):
         """
         Create curve method.
+
         Args:
             name(str): The test_single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
@@ -89,8 +91,11 @@ class ControlCurves(object):
             lock_rotate(list): Valid is ['rx,'ry','rz']
             lock_scale(list): Valid is ['sx','sy','sz']
             lock_visibility(bool): Lock/Hide the visibility channels.
-        Return:
+            move(list): Move the control curve shape.
+
+        Returns:
                 list: The buffer group, the test_single_control curve node.
+
         """
         result = []
         name = strings.string_checkup(name, _LOGGER)
@@ -101,7 +106,18 @@ class ControlCurves(object):
             pmc.rename(shape, name + "Shape")
         if scale:
             for shape_ in shapes:
-                pmc.scale(shape_.cv[0:], scale[0], scale[1], scale[2])
+                pmc.scale(shape_.cv[0:], scale)
+        if move:
+            for shape__ in shapes:
+                pmc.move(
+                    shape__.cv[0:],
+                    move,
+                    r=True,
+                    os=True,
+                    wd=True,
+                    xn=True,
+                    xc='edge'
+                )
         if match:
             if isinstance(match, pmc.datatypes.Matrix) is False:
                 pmc.delete(pmc.parentConstraint(match, self.control, mo=False))
@@ -118,15 +134,15 @@ class ControlCurves(object):
             self.control.addChild(child)
         if lock_translate:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=lock_translate
+                self.control, attributes=["tx", "ty", "tz"]
             )
         if lock_rotate:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=lock_rotate
+                self.control, attributes=["rx", "ry", "rz"]
             )
         if lock_scale:
             attributes.lock_and_hide_attributes(
-                self.control, attributes=lock_scale
+                self.control, attributes=["sx", "sy", "sz"]
             )
         if lock_visibility:
             attributes.lock_and_hide_attributes(

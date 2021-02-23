@@ -474,6 +474,12 @@ class Component(operators.ComponentOperator):
         ).get()
         if not connected_bnd_outputs:
             return False
+        main_op_ws_scale = self.operator_meta_data.get(
+            constants.META_MAIN_OP_ND_WS_MATRIX_STR
+        ).scale
+        # calculate the scale average for the correct joint radius.
+        scale_x, scale_y, scale_z = main_op_ws_scale
+        main_op_ws_scale_avg = (scale_x + scale_y + scale_z) / 3
         temp = []
         for count in range(len(connected_bnd_outputs)):
             # Bind joint name creation.
@@ -498,11 +504,12 @@ class Component(operators.ComponentOperator):
                 bnd_joint_name, "count", str(count)
             )
             bnd_joint = mayautils.create_joint(bnd_joint_name, typ="BND")
+            bnd_joint.radius.set(main_op_ws_scale_avg)
             mul_ma_nd = mayautils.create_matrix_constraint(
                 source=bnd_joint,
                 target=output_nd,
                 target_plug="{}[{}]".format(
-                    constants.OUTPUT_WS_PORT_NAME, str(count)
+                    constants.BND_OUTPUT_WS_PORT_NAME, str(count)
                 ),
             )
             # get the matrix constraint nodes and add them to the component
@@ -540,14 +547,14 @@ class Component(operators.ComponentOperator):
                         )
                     )
             temp.append(bnd_joint)
-            # If it is more then one joint it will create a hierarchy.
-            if len(temp) > 1:
-                mayautils.create_hierarchy(temp, True)
-            # set joint orient to zero because this would mess up the matrix
-            # constraint setup.
-            for jnt in temp:
-                jnt.jointOrient.set(0, 0, 0)
-            self.component_root.set_bnd_root_nd(temp[-1])
+        # If it is more then one joint it will create a hierarchy.
+        if len(temp) > 1:
+            mayautils.create_hierarchy(temp, True)
+        # set joint orient to zero because this would mess up the matrix
+        # constraint setup.
+        for jnt in temp:
+            jnt.jointOrient.set(0, 0, 0)
+        self.component_root.set_bnd_root_nd(temp[-1])
         # Step feedback
         logger.log(
             level="info",
@@ -607,20 +614,21 @@ class Component(operators.ComponentOperator):
 
         """
         if not self.rig_meta_data:
-            logger.log(level='error', message='No rig meta data found.',
-                       logger=_LOGGER)
+            logger.log(
+                level="error", message="No rig meta data found.", logger=_LOGGER
+            )
             return False
-        if side == 'L' and control_typ == 'control':
+        if side == "L" and control_typ == "control":
             return self.rig_meta_data.get(constants.META_LEFT_RIG_COLOR)
-        elif side == 'L' and control_typ == 'sub_control':
+        elif side == "L" and control_typ == "sub_control":
             return self.rig_meta_data.get(constants.META_LEFT_RIG_SUB_COLOR)
-        elif side == 'R' and control_typ == 'control':
+        elif side == "R" and control_typ == "control":
             return self.rig_meta_data.get(constants.META_RIGHT_RIG_COLOR)
-        elif side == 'R' and control_typ == 'sub_control':
+        elif side == "R" and control_typ == "sub_control":
             return self.rig_meta_data.get(constants.META_RIGHT_RIG_SUB_COLOR)
-        elif side == 'M' and control_typ == 'control':
+        elif side == "M" and control_typ == "control":
             return self.rig_meta_data.get(constants.META_MID_RIG_COLOR)
-        elif side == 'M' and control_typ == 'sub_control':
+        elif side == "M" and control_typ == "sub_control":
             return self.rig_meta_data.get(constants.META_MID_RIG_SUB_COLOR)
 
 
