@@ -269,9 +269,10 @@ class Component(operators.ComponentOperator):
         Init rig component container its contents..
         """
         self.component_root = CompContainer(
-            self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
-            self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
-            self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX),
+            comp_name=self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
+            comp_side=self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
+            comp_index=self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX),
+            component_type=self.operator_meta_data.get(constants.META_MAIN_COMP_TYPE),
         )
         self.component_root.create_comp_container()
         # Refactor Main op uuid to comp uuid
@@ -645,13 +646,15 @@ class CompContainer(mayautils.ContainerNode):
         comp_side=None,
         comp_index=0,
         component_container=None,
+        component_type=None,
     ):
         """
-        Args
+        Args:
             comp_name(str): The rig component name.
             comp_side(str): The component side.
             comp_index(int): The component index.
             component_container(pmc.PyNode()): A component container to pass.
+            component_type(str): The rig component type.
         """
         super(CompContainer, self).__init__(
             container_node=component_container, content_root_node=True
@@ -661,6 +664,7 @@ class CompContainer(mayautils.ContainerNode):
         self.icon = os.path.normpath(
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
+        self.component_type = component_type
         if comp_name and comp_side:
             self.meta_nd_name = self.meta_nd_name.replace("COMP", comp_name)
             self.name = (
@@ -681,6 +685,13 @@ class CompContainer(mayautils.ContainerNode):
         """
         self.create_container()
         self.create_container_content_from_list(self.CONTENT_GROUPS)
+        attributes.add_attr(
+            node=self.meta_nd,
+            name=constants.META_MAIN_COMP_TYPE,
+            attrType="string",
+            keyable=False,
+            channelBox=False,
+        )
         attributes.add_attr(
             self.container_content.get("input"),
             name=constants.INPUT_WS_PORT_NAME,
@@ -706,6 +717,7 @@ class CompContainer(mayautils.ContainerNode):
             hidden=True,
         )
         self.set_container_type(constants.COMPONENT_CONTAINER_TYPE)
+        self.set_component_type(self.component_type)
 
     def set_input_ws_matrix_offset_nd(self, offset_nd_list):
         """
@@ -741,6 +753,16 @@ class CompContainer(mayautils.ContainerNode):
         Set the bnd root nd.
         """
         node.message.connect(self.meta_nd.attr(constants.BND_JNT_ROOT_ND_ATTR))
+
+    def set_component_type(self, type):
+        """
+        Set the component type in component container meta nd.
+
+        Args:
+            type(str): The component type.
+
+        """
+        self.meta_nd.attr(constants.META_MAIN_COMP_TYPE).set(type)
 
     def get_bnd_root_nd(self):
         """

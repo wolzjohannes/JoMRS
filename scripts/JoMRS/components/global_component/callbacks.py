@@ -42,25 +42,28 @@ CHANGEPIVOTATTR = ["change_pivot", "reset_pivot"]
 ROOTNDREFTAG = "component_root_nd"
 METANDREFTAG = "meta_nd"
 
-
 #########################################################################
-# FUNCTIONS
+# CLASSES
 #########################################################################
 
 
 class ChangePivotCallback(object):
     def __init__(self):
         self.meta_nd_tag = "meta_node"
-        self.container_nd_attr = "CONTAINER_NODE_ATTR_NAME"
         self.change_pivot_attr = "change_pivot"
         self.reset_pivot_attr = "reset_pivot"
         self.god_meta_nd_name = "god_meta_0_METAND"
         self.god_meta_nd_class = "god_meta_class"
+        self.god_meta_nd_array_attr_name = "meta_nodes"
         self.meta_class_attr = "meta_class"
         self.component_type = "global_control_component"
+        self.component_type_attr_name = "component_type"
+        self.container_type_attr_name = "container_type"
+        self.container_type = "COMP"
         self.meta_nd = None
         self.god_meta_nodes = []
-        self.dirty_attr = "dirty"
+        self.meta_nodes = []
+        self.dirty_eval_attr = "dirty"
 
     def get_god_meta_nodes_in_scene(self):
         """
@@ -99,27 +102,27 @@ class ChangePivotCallback(object):
             )
         self.god_meta_nodes = temp_1
 
+    def get_component_meta_nodes(self):
+        """
+        Get component meta node from god_meta_nd.
+        """
+        self.get_god_meta_nodes_in_scene()
+        for god_meta_nd in self.god_meta_nodes:
+            self.meta_nodes = [
+                meta_nd
+                for meta_nd in god_meta_nd.attr(
+                    self.god_meta_nd_array_attr_name
+                ).get()
+                if meta_nd.attr(self.meta_nd_tag).get() is True
+                and meta_nd.hasAttr(self.container_type_attr_name)
+                and meta_nd.attr(self.container_type_attr_name).get()
+                == self.container_type
+                and meta_nd.hasAttr(self.component_type_attr_name)
+                and meta_nd.attr(self.component_type_attr_name).get()
+                == self.component_type
+            ]
 
-#     def get_component_meta_node(self):
-#         """
-#         Get component meta node from god_meta_nd.
-#         """
-#         # meta_nodes = [
-#         #     node
-#         #     for node in pmc.ls(typ=meta_node_typ)
-#         #     if node.hasAttr(meta_node_tag)
-#         #     and node.attr(meta_node_tag).get() == True
-#         # ]
-#         # meta_nodes = [
-#         #     node
-#         #     for node in meta_nodes
-#         #     if node.hasAttr('component_type')
-#         #     and node.component_type.get() == component_type]
-#         # meta_nodes = [
-#         #     node.attr(root_nd_reference).get().attr(meta_nd_reference).get()
-#         #     for node in meta_nodes
-#         # ]
-#         # return meta_nodes
+
 #
 # def removeCallbacksFromNode(node_mob):
 #     """
