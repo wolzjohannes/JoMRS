@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 17
+# Date:       2021 / 02 / 24
 
 """
 Build a single_control_component for testing purposes.
@@ -100,7 +100,7 @@ class MainCreate(components.main.Component):
             sub_operator_node,
         )
 
-    def add_component_defined_attributes(self):
+    def add_ud_attributes_to_operators_meta_nd(self):
         """
         Add Component specific attributes to operator.
         And fill the cd_attributes list for meta data.

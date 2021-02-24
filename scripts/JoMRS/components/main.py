@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 19
+# Date:       2021 / 02 / 24
 
 """
 Rig components main module. This class is the template to create a rig
@@ -136,12 +136,24 @@ class Component(operators.ComponentOperator):
         self.controls = []
         self.operator_meta_data = {}
         self.rig_meta_data = {}
+        self.container_meta_nd_ud_attr_list = []
+        self.container_meta_nd_ud_enum_attr_list = []
 
-    def add_component_defined_attributes(self):
+    def add_ud_attributes_to_operators_meta_nd(self):
         """
-        Method to implement extra ud attributes.
+        Method to implement extra ud attributes to the operators meta node..
         """
-        raise NotImplemented()
+        logger.log(level='info', message='Not implemented yet',
+                   func=self.add_ud_attributes_to_operators_meta_nd,
+                   logger=_LOGGER)
+
+    def add_ud_attributes_to_comp_container_meta_nd(self):
+        """
+        Method to add extra ud attributes to container meta nd.
+        """
+        logger.log(level='info', message='Not implemented yet',
+                   func=self.add_ud_attributes_to_comp_container_meta_nd,
+                   logger=_LOGGER)
 
     def build_operator(
         self,
@@ -179,7 +191,7 @@ class Component(operators.ComponentOperator):
         self.set_component_type(self.component_type)
         self.set_component_side(self.side)
         self.set_component_index(self.index)
-        self.add_component_defined_attributes()
+        self.add_ud_attributes_to_operators_meta_nd()
         self.set_cd_attributes()
         if connect_node:
             self.set_connect_nd(connect_node)
@@ -586,6 +598,7 @@ class Component(operators.ComponentOperator):
             self.rig_meta_data = rig_meta_data
         self.clean_objects()
         self.create_component_container()
+        self.add_ud_attributes_to_comp_container_meta_nd()
         self.build_component_logic()
         self.connect_inner_component_edges()
         self.create_BND_joints()

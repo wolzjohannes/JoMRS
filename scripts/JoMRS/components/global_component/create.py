@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 22
+# Date:       2021 / 02 / 24
 
 """
 Build a global control component
@@ -63,6 +63,11 @@ class MainCreate(components.main.Component):
     AXES = "Y"
     BND_JNT_ATTR_NAME = "bnd_joint"
     WS_ORIENTATION_ATTR_NAME = "worldspace_orientation"
+    CHANGE_PIVOT_ATTR = "change_pivot"
+    RESET_PIVOT_ATTR = "reset_pivot"
+    CHANGE_PIVOT_TSR_REF_META_ATTR = "change_pivot_tsr"
+    RESET_PIVOT_TSR_REF_META_ATTR = "reset_pivot_tsr"
+    LOCAL_CON_REF_META_ATTR = "local_control"
 
     def __init__(
         self,
@@ -93,7 +98,7 @@ class MainCreate(components.main.Component):
             sub_operator_node,
         )
 
-    def add_component_defined_attributes(self):
+    def add_ud_attributes_to_operators_meta_nd(self):
         """
         Add Component specific attributes to operator.
         And fill the cd_attributes list for meta data.
@@ -125,6 +130,48 @@ class MainCreate(components.main.Component):
         for reg_attr in cd_attributes_ref_list:
             self.cd_attributes.append(reg_attr)
 
+    def add_ud_attributes_to_comp_container_meta_nd(self):
+        # Define custom attributes for comp container meta nd.
+        local_control_ref_attr = {
+            "name": self.LOCAL_CON_REF_META_ATTR,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+        change_pivot_attr = {
+            "name": self.CHANGE_PIVOT_ATTR,
+            "attrType": "bool",
+            "keyable": False,
+            "channelBox": False,
+        }
+        reset_pivot_attr = {
+            "name": self.RESET_PIVOT_ATTR,
+            "attrType": "bool",
+            "keyable": False,
+            "channelBox": False,
+        }
+        change_pivot_ref_tsr_attr = {
+            "name": self.CHANGE_PIVOT_TSR_REF_META_ATTR,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+        reset_pivot_ref_tsr_attr = {
+            "name": self.RESET_PIVOT_TSR_REF_META_ATTR,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
+        container_meta_nd_ud_attr_list = [
+            local_control_ref_attr,
+            change_pivot_attr,
+            reset_pivot_attr,
+            change_pivot_ref_tsr_attr,
+            reset_pivot_ref_tsr_attr,
+        ]
+        for attr_ in container_meta_nd_ud_attr_list:
+            attributes.add_attr(self.component_root.meta_nd, **attr_)
+
     def _init_operator(self, parent=None):
         """
         Init the operator creation.
@@ -145,8 +192,12 @@ class MainCreate(components.main.Component):
         side = self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE)
         global_control_name = "{}_global_{}_CON".format(side, str(index))
         local_control_name = "{}_local_{}_CON".format(side, str(index))
-        cop_control_name = "{}_COP_{}_CON".format(side, str(index))
-        cop_offset_name = "{}_COP_{}_offset_CON".format(side, str(index))
+        change_pivot_name = "{}_cop_change_pivot_{}_CON".format(
+            side, str(index)
+        )
+        reset_pivot_name = "{}_cop_reset_pivot_{}_TRS".format(side, str(index))
+        cop_control_name = "{}_cop_{}_CON".format(side, str(index))
+        cop_offset_name = "{}_cop_offset_{}_CON".format(side, str(index))
         # Get match matrix from meta data.
         orig_main_op_match_matrix = self.operator_meta_data.get(
             constants.META_MAIN_OP_ND_WS_MATRIX_STR
@@ -161,7 +212,8 @@ class MainCreate(components.main.Component):
         sub_op_tweaked_matrix = mayautils.matrix_normalize_scale(
             orig_sub_op_match_matrix
         )
-        # average the sub_op_nd ws matrix scale.
+        # average the sub_op_nd ws matrix scale. We will need it to multiply
+        # the z axes move of the control cv from the cop control curve.
         scale_x, scale_y, scale_z = orig_main_op_match_matrix.scale
         sub_op_ws_matrix_scale_avg = (scale_x + scale_y + scale_z) / 3
         # Get world space bool in meta data.
@@ -199,6 +251,15 @@ class MainCreate(components.main.Component):
             lock_visibility=True,
             lock_scale=True,
         )
+        change_pivot_control_curve = curves.LocatorControl().create_curve(
+            name=change_pivot_name,
+            match=sub_op_tweaked_matrix,
+            scale=orig_sub_op_match_matrix.scale,
+            color_index=sub_control_curve_color,
+            lock_visibility=True,
+            lock_scale=True,
+            move=[0, 0, -5 * sub_op_ws_matrix_scale_avg],
+        )
         cop_offset_control_curve = curves.PyramideControl().create_curve(
             name=cop_offset_name,
             match=sub_op_tweaked_matrix,
@@ -220,12 +281,55 @@ class MainCreate(components.main.Component):
         controls_curves_list = [
             global_control_curve[1],
             local_control_curve[1],
+            change_pivot_control_curve[1],
             cop_offset_control_curve[1],
             cop_control_curve[1],
         ]
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_GRP".format(global_control_name)
+        )
+        # Connect local control with the comp container meta_nd.
+        local_control_curve[1].message.connect(
+            self.component_root.meta_nd.attr(self.LOCAL_CON_REF_META_ATTR)
+        )
+        # Change Pivot transform node.
+        change_pivot_trs = pmc.createNode("transform", n=change_pivot_name)
+        change_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
+        cop_control_curve[1].addChild(change_pivot_trs)
+        change_pivot_trs.message.connect(
+            self.component_root.meta_nd.attr(
+                self.CHANGE_PIVOT_TSR_REF_META_ATTR
+            )
+        )
+        # Reset Pivot transform node.
+        reset_pivot_trs = pmc.createNode("transform", n=reset_pivot_name)
+        reset_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
+        local_control_curve[1].addChild(reset_pivot_trs)
+        reset_pivot_trs.message.connect(
+            self.component_root.meta_nd.attr(self.RESET_PIVOT_TSR_REF_META_ATTR)
+        )
+        # Add reset / change pivot attr to cop offset control.
+        change_pivot_attr = {
+            "name": self.CHANGE_PIVOT_ATTR,
+            "attrType": "bool",
+            "keyable": True,
+            "channelBox": True,
+        }
+        reset_pivot_attr = {
+            "name": self.RESET_PIVOT_ATTR,
+            "attrType": "bool",
+            "keyable": True,
+            "channelBox": True,
+        }
+        attributes.add_attr(change_pivot_control_curve[1], **change_pivot_attr)
+        attributes.add_attr(change_pivot_control_curve[1], **reset_pivot_attr)
+        # Connect reset / change pivot attr to comp container meta_nd.
+        change_pivot_control_curve[1].attr(self.CHANGE_PIVOT_ATTR).connect(
+            self.component_root.meta_nd.attr(self.CHANGE_PIVOT_ATTR)
+        )
+        change_pivot_control_curve[1].attr(self.RESET_PIVOT_ATTR).connect(
+            self.component_root.meta_nd.attr(self.RESET_PIVOT_ATTR)
         )
         # Parent controls as hierarchy.
         mayautils.create_hierarchy(
@@ -236,10 +340,10 @@ class MainCreate(components.main.Component):
         # At objects to output class lists.
         for control_curve in controls_curves_list:
             self.controls.append(control_curve)
-        for control_curve in [local_control_curve[1], cop_control_curve[1]]:
-            self.output_matrix_nd_list.append(control_curve)
+        for transform in [local_control_curve[1], change_pivot_trs]:
+            self.output_matrix_nd_list.append(transform)
             if bnd_jnt_creation:
-                self.bnd_output_matrix.append(control_curve)
+                self.bnd_output_matrix.append(transform)
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         logger.log(
