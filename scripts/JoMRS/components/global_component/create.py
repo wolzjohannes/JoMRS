@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 24
+# Date:       2021 / 02 / 25
 
 """
 Build a global control component
@@ -65,9 +65,11 @@ class MainCreate(components.main.Component):
     WS_ORIENTATION_ATTR_NAME = "worldspace_orientation"
     CHANGE_PIVOT_ATTR = "change_pivot"
     RESET_PIVOT_ATTR = "reset_pivot"
+    CHANGE_PIVOT_CONTROL_CURVE = "change_pivot_control"
     CHANGE_PIVOT_TSR_REF_META_ATTR = "change_pivot_tsr"
     RESET_PIVOT_TSR_REF_META_ATTR = "reset_pivot_tsr"
     LOCAL_CON_REF_META_ATTR = "local_control"
+    COP_CONTROL_CURVE = "cop_control_curve"
 
     def __init__(
         self,
@@ -132,6 +134,12 @@ class MainCreate(components.main.Component):
 
     def add_ud_attributes_to_comp_container_meta_nd(self):
         # Define custom attributes for comp container meta nd.
+        change_pivot_control_attr = {
+            "name": self.CHANGE_PIVOT_CONTROL_CURVE,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
         local_control_ref_attr = {
             "name": self.LOCAL_CON_REF_META_ATTR,
             "attrType": "message",
@@ -162,12 +170,20 @@ class MainCreate(components.main.Component):
             "keyable": False,
             "channelBox": False,
         }
+        cop_control_curve_attr = {
+            "name": self.COP_CONTROL_CURVE,
+            "attrType": "message",
+            "keyable": False,
+            "channelBox": False,
+        }
         container_meta_nd_ud_attr_list = [
             local_control_ref_attr,
+            change_pivot_control_attr,
             change_pivot_attr,
             reset_pivot_attr,
             change_pivot_ref_tsr_attr,
             reset_pivot_ref_tsr_attr,
+            cop_control_curve_attr,
         ]
         for attr_ in container_meta_nd_ud_attr_list:
             attributes.add_attr(self.component_root.meta_nd, **attr_)
@@ -195,7 +211,10 @@ class MainCreate(components.main.Component):
         change_pivot_name = "{}_cop_change_pivot_{}_CON".format(
             side, str(index)
         )
-        reset_pivot_name = "{}_cop_reset_pivot_{}_TRS".format(side, str(index))
+        reset_pivot_tsr_name = "{}_cop_reset_pivot_{}_TRS".format(side,
+                                                                str(index))
+        change_pivot_tsr_name = "{}_cop_change_pivot_{}_TRS".format(side,
+                                                                str(index))
         cop_control_name = "{}_cop_{}_CON".format(side, str(index))
         cop_offset_name = "{}_cop_offset_{}_CON".format(side, str(index))
         # Get match matrix from meta data.
@@ -289,12 +308,18 @@ class MainCreate(components.main.Component):
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_GRP".format(global_control_name)
         )
+        # Connect cop control curve with the comp container meta_nd.
+        cop_control_curve[1].message.connect(
+            self.component_root.meta_nd.attr(self.COP_CONTROL_CURVE))
+        # Connect the change pivot control curve with the comp container meta_nd..
+        change_pivot_control_curve[1].message.connect(
+            self.component_root.meta_nd.attr(self.CHANGE_PIVOT_CONTROL_CURVE))
         # Connect local control with the comp container meta_nd.
         local_control_curve[1].message.connect(
             self.component_root.meta_nd.attr(self.LOCAL_CON_REF_META_ATTR)
         )
         # Change Pivot transform node.
-        change_pivot_trs = pmc.createNode("transform", n=change_pivot_name)
+        change_pivot_trs = pmc.createNode("transform", n=change_pivot_tsr_name)
         change_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
         cop_control_curve[1].addChild(change_pivot_trs)
         change_pivot_trs.message.connect(
@@ -303,7 +328,7 @@ class MainCreate(components.main.Component):
             )
         )
         # Reset Pivot transform node.
-        reset_pivot_trs = pmc.createNode("transform", n=reset_pivot_name)
+        reset_pivot_trs = pmc.createNode("transform", n=reset_pivot_tsr_name)
         reset_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
         local_control_curve[1].addChild(reset_pivot_trs)
         reset_pivot_trs.message.connect(

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 24
+# Date:       2021 / 02 / 27
 
 """
 Rig components main module. This class is the template to create a rig
@@ -690,7 +690,7 @@ class CompContainer(mayautils.ContainerNode):
                 "M", comp_side
             ).replace(
                 "content_root", "{}_content_root".format(comp_name)
-            )
+            ).replace("0", str(comp_index))
 
     def create_comp_container(self):
         """

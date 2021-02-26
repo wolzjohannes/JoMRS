@@ -20,16 +20,22 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 24
+# Date:       2021 / 02 / 26
 
 """
 Module for callback creation fro this component
 """
 
 import pymel.core as pmc
-import pymel.core.datatypes as dt
 from pymel.core.system import Namespace
 from maya.api import OpenMaya as om2
+import logging
+
+#########################################################################
+# GLOBALS
+#########################################################################
+
+logging.basicConfig(level=logging.INFO)
 
 #########################################################################
 # CLASSES
@@ -38,12 +44,18 @@ from maya.api import OpenMaya as om2
 
 class ChangePivotCallback(object):
     """
-    OpenMaya callback class. It will change the pivot of the cop control tp
+    OpenMaya callback class. It will change the pivot of the cop control to
     specified position.
     """
+
     META_ND_TAG = "meta_node"
     CHANGE_PIVOT_ATTR = "change_pivot"
     RESET_PIVOT_ATTR = "reset_pivot"
+    CHANGE_PIVOT_TSR_REF_META_ATTR = "change_pivot_tsr"
+    RESET_PIVOT_TSR_REF_META_ATTR = "reset_pivot_tsr"
+    CHANGE_PIVOT_CONTROL_CURVE = "change_pivot_control"
+    LOCAL_CON_REF_META_ATTR = "local_control"
+    COP_CONTROL_CURVE = "cop_control_curve"
     GOD_META_ND_NAME = "god_meta_0_METAND"
     GOD_META_CLASS = "god_meta_class"
     META_NODES_ARRAY_ATTR_NAME = "meta_nodes"
@@ -52,12 +64,20 @@ class ChangePivotCallback(object):
     COMP_TYPE_ATTR_NAME = "component_type"
     CONTAINER_TYPE_ATTR_NAME = "container_type"
     CONTAINER_TYPE = "COMP"
+    CONTAINER_ND_ATTR_NAME = "container_nd"
     DIRTY_EVAL_ATTR = "dirty"
 
     def __init__(self):
-        self.meta_nd = None
         self.god_meta_nodes = []
         self.meta_nodes = []
+        self.reset_pivot_attr_value = None
+        self.reset_pivot_ref_node = None
+        self.change_pivot_control_curve = None
+        self.change_pivot_tsr = None
+        self.local_control_curve = None
+        self.cop_control_curve = None
+        self.container_nd = None
+        self.logger = logging.getLogger(self.__class__.__name__)
 
     def get_god_meta_nodes_in_scene(self):
         """
@@ -116,116 +136,164 @@ class ChangePivotCallback(object):
                 == self.COMP_TYPE
             ]
 
-    def calculate_matrix_offset(self, target, source):
-        """Calculate the matrix offset of the source to the target.
-        Args:
-                target(PyNode): The target node.
-                source(PyNode): The source node.
-        Retruns:
-                The offset matrix values from target to source.
+    def get_all_important_nodes_from_meta_nd(self, meta_nd):
         """
-        tm = dt.Matrix(target.getMatrix(ws=True)).inverse()
-        sm = dt.Matrix(source.getMatrix(ws=True))
-        return sm.__mul__(tm)
+        Get all important nodes from meta nd.
 
-    def cop_reset_pivot(self, meta_node):
-        """
-        Set the offset matrix to the default reset matrix.
         Args:
-                meta_node(dagnode): The network node with component
-                meta data.
-        """
-        reset_pivot = meta_node.reset_pivot.get()
-        ref_node = meta_node.ref_end_node.get()
-        ref_node_matrix_ui = ref_node.getChildren(typ='transform')[0]
-        if reset_pivot:
-            ref_node_matrix_ui.offset_matrix.set(
-                ref_node_matrix_ui.reset_matrix.get())
+            meta_nd(pmc.PyNode()): The component meta_nd.
 
-    def cop_change_pivot(self, meta_node):
         """
-        Disconnect the ref node from cop control. And calculate offset.
-        Then reconnect the ref node.
+        self.reset_pivot_ref_node = meta_nd.attr(
+            self.RESET_PIVOT_TSR_REF_META_ATTR
+        ).get()
+        self.change_pivot_control_curve = meta_nd.attr(
+            self.CHANGE_PIVOT_CONTROL_CURVE
+        ).get()
+        self.change_pivot_tsr = meta_nd.attr(
+            self.CHANGE_PIVOT_TSR_REF_META_ATTR
+        ).get()
+        self.local_control_curve = meta_nd.attr(
+            self.LOCAL_CON_REF_META_ATTR
+        ).get()
+        self.cop_control_curve = meta_nd.attr(self.COP_CONTROL_CURVE).get()
+        self.container_nd = meta_nd.attr(self.CONTAINER_ND_ATTR_NAME).get()
+
+    def cop_reset_pivot(self, meta_nd):
+        """
+        Reset pivot control curve back to default position.
+
         Args:
-                meta_node(dagnode): The network node with component
-                meta data.
+            meta_nd(pmc.PyNode()): The component meta_nd.
+
         """
-        decomp_node_attr = ['outputTranslate', 'outputRotate',
-                            'outputScale']
-        change_pivot = meta_node.change_pivot.get()
-        ref_node = meta_node.ref_end_node.get()
-        ref_node_matrix_ui = ref_node.getChildren(typ='transform')[0]
-        decomp_node = ref_node.decomp_node.get()
-        control = meta_node.main_control.get()
-        if change_pivot:
-            for attr_ in decomp_node_attr:
-                decomp_node.attr(attr_).disconnect()
-            control.getChildren(typ='transform')[0].getShape().visibility.set(0)
-            return
-        ref_node_matrix_ui.offset_matrix.set(
-            calculate_matrix_offset(control, ref_node))
-        control.getChildren(typ='transform')[0].getShape().visibility.set(1)
-        for attr_ in decomp_node_attr:
-            decomp_node.attr(attr_).connect(
-                ref_node.attr(attr_.split('output')[1].lower()))
-#
-    def removeCallbacksFromNode(self, node_mob):
+        self.get_all_important_nodes_from_meta_nd(meta_nd)
+        reset_pivot_attr_value = meta_nd.attr(self.RESET_PIVOT_ATTR).get()
+        if reset_pivot_attr_value:
+            self.local_control_curve.addChild(self.change_pivot_tsr)
+            self.change_pivot_control_curve.setMatrix(
+                self.reset_pivot_ref_node.getMatrix(worldSpace=True),
+                worldSpace=True,
+            )
+            self.cop_control_curve.addChild(self.change_pivot_tsr)
+            self.change_pivot_tsr.translate.set(0, 0, 0)
+            self.change_pivot_tsr.rotate.set(0, 0, 0)
+            self.change_pivot_tsr.scale.set(1, 1, 1)
+            pmc.select(self.change_pivot_control_curve)
+
+    def cop_change_pivot(self, meta_nd):
+        """
+        Unparent the change pivot tsr. So we are able to offset the cop control.
+
+        Args:
+            meta_nd(pmc.PyNode()): The component meta_nd.
+
+        """
+        self.get_all_important_nodes_from_meta_nd(meta_nd)
+        change_pivot_attr_value = meta_nd.attr(self.CHANGE_PIVOT_ATTR).get()
+        if change_pivot_attr_value:
+            try:
+                self.local_control_curve.addChild(self.change_pivot_tsr)
+            except Exception as e:
+                print(
+                    "{}: Change pivot tsr is already a child of {}.".format(
+                        e, self.local_control_curve
+                    )
+                )
+        else:
+            try:
+                self.cop_control_curve.addChild(self.change_pivot_tsr)
+            except Exception as e:
+                print(
+                    "{}: Change pivot tsr is already a child of {}.".format(
+                        e, self.cop_control_curve
+                    )
+                )
+        pmc.select(self.change_pivot_control_curve)
+
+    @staticmethod
+    def remove_callbacks_from_node(node_mob):
         """
         Remove all callback stick to a node.
+
         Args:
-                node_mob(MObject): The node to remove all node
-                                   callbacks from.
+            node_mob(MObject): The node to remove all node
+                               callbacks from.
+
         Return:
-                Int: Number of callbacks removed
+            Int: Number of callbacks removed
+
         """
         cbs = om2.MMessage.nodeCallbacks(node_mob)
-        cbCount = len(cbs)
+        cb_count = len(cbs)
         for eachCB in cbs:
             om2.MMessage.removeCallback(eachCB)
-        return cbCount
-#
+        return cb_count
+
     def callback_(self, msg, plug1, plug2, payload):
         """
-        Open Maya API callback function. Exectue the real callback.
+        Open Maya API callback function. Execute the real callback.
+
         Args:
-                msg(MMessage): The message given back from the API.
-                plug1(MPlug): The first triggered plug of the node.
-                plug2(MPlug): The second triggered plug of the node.
-                payload(): clientData pass in argument.
+            msg(MMessage): The message given back from the API.
+            plug1(MPlug): The first triggered plug of the node.
+            plug2(MPlug): The second triggered plug of the node.
+            payload(): clientData pass in argument.
+
         Return:
-                The message and the plug of the triggered node.
+            The message and the plug of the triggered node.
+            False if plug not exist.
+
         """
-        changepivot_attr = CHANGEPIVOTATTR
         # Check if a plug of the channelbox is triggered. If not fall out.
         if msg != 2056:
             return
-        #Check if the attribute we want is triggered. If not fall out.
-        if plug1.partialName(includeNodeName=False, useAlias=False) == changepivot_attr[0]:
-            cop_change_pivot(meta_node=payload)
-        elif plug1.partialName(includeNodeName=False, useAlias=False) == changepivot_attr[1]:
-            cop_reset_pivot(meta_node=payload)
+        # Check if the attribute we want is triggered. If not fall out.
+        if (
+            plug1.partialName(includeNodeName=False, useAlias=False)
+            == self.CHANGE_PIVOT_ATTR
+        ):
+            self.cop_change_pivot(meta_nd=payload)
+        elif (
+            plug1.partialName(includeNodeName=False, useAlias=False)
+            == self.RESET_PIVOT_ATTR
+        ):
+            self.cop_reset_pivot(meta_nd=payload)
         else:
-            return
+            return False
 
     def init_pivot_callback(self):
         """
         Initialize the callback.
         """
         # Check if the component meta node exist. If not fall out.
-        meta_nodes = get_component_meta_nodes()
-        if not meta_nodes:
-            raise IndexError('No network nodes with meta data to work with')
-            return
-        for node in meta_nodes:
-            callback_node = node.main_control.get()
-            sel = om2.MSelectionList()
-            sel.add(str(callback_node))
-            settingsMob = sel.getDependNode(0)
-            callback_count = removeCallbacksFromNode(settingsMob)
-            print '// INFO: change_pivot callbacks removed:', callback_count
-            om2.MNodeMessage.addAttributeChangedCallback(settingsMob,
-                callback_, node)
-            print '// INFO: change_pivot callback applied to', callback_node
-#
-#
-# init_pivot_callback()
+        self.get_component_meta_nodes()
+        if not self.meta_nodes:
+            raise IndexError(
+                'No meta node with the type "{}" exist'.format(self.COMP_TYPE)
+            )
+        for meta_nd in self.meta_nodes:
+            # check if meta_nd is dirty.
+            if not meta_nd.attr(self.DIRTY_EVAL_ATTR).get():
+                self.get_all_important_nodes_from_meta_nd(meta_nd)
+                # Get callback node.
+                callback_node = meta_nd.attr(self.CHANGE_PIVOT_CONTROL_CURVE).get()
+                # MSelection Object of the callback node
+                sel = om2.MSelectionList()
+                sel.add(str(callback_node))
+                settings_mob = sel.getDependNode(0)
+                # Remove callback if exist.
+                callback_count = self.remove_callbacks_from_node(settings_mob)
+                self.logger.info(
+                    "Component : {} / Callbacks removed: {}".format(
+                        self.container_nd, callback_count
+                    )
+                )
+                om2.MNodeMessage.addAttributeChangedCallback(
+                    settings_mob, self.callback_, meta_nd
+                )
+                self.logger.info(
+                    "Component : {} / Callback applied to: {"
+                    "}".format(self.container_nd, callback_node)
+                )
+                meta_nd.attr(self.DIRTY_EVAL_ATTR).set(1)
