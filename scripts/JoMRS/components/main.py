@@ -136,24 +136,28 @@ class Component(operators.ComponentOperator):
         self.controls = []
         self.operator_meta_data = {}
         self.rig_meta_data = {}
-        self.container_meta_nd_ud_attr_list = []
-        self.container_meta_nd_ud_enum_attr_list = []
 
     def add_ud_attributes_to_operators_meta_nd(self):
         """
         Method to implement extra ud attributes to the operators meta node..
         """
-        logger.log(level='info', message='Not implemented yet',
-                   func=self.add_ud_attributes_to_operators_meta_nd,
-                   logger=_LOGGER)
+        logger.log(
+            level="info",
+            message="Not implemented yet",
+            func=self.add_ud_attributes_to_operators_meta_nd,
+            logger=_LOGGER,
+        )
 
     def add_ud_attributes_to_comp_container_meta_nd(self):
         """
         Method to add extra ud attributes to container meta nd.
         """
-        logger.log(level='info', message='Not implemented yet',
-                   func=self.add_ud_attributes_to_comp_container_meta_nd,
-                   logger=_LOGGER)
+        logger.log(
+            level="info",
+            message="Not implemented yet",
+            func=self.add_ud_attributes_to_comp_container_meta_nd,
+            logger=_LOGGER,
+        )
 
     def build_operator(
         self,
@@ -281,10 +285,18 @@ class Component(operators.ComponentOperator):
         Init rig component container its contents..
         """
         self.component_root = CompContainer(
-            comp_name=self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
-            comp_side=self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE),
-            comp_index=self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX),
-            component_type=self.operator_meta_data.get(constants.META_MAIN_COMP_TYPE),
+            comp_name=self.operator_meta_data.get(
+                constants.META_MAIN_COMP_NAME
+            ),
+            comp_side=self.operator_meta_data.get(
+                constants.META_MAIN_COMP_SIDE
+            ),
+            comp_index=self.operator_meta_data.get(
+                constants.META_MAIN_COMP_INDEX
+            ),
+            component_type=self.operator_meta_data.get(
+                constants.META_MAIN_COMP_TYPE
+            ),
         )
         self.component_root.create_comp_container()
         # Refactor Main op uuid to comp uuid
@@ -678,6 +690,7 @@ class CompContainer(mayautils.ContainerNode):
             "{}/components_logo.png".format(constants.ICONS_PATH)
         )
         self.component_type = component_type
+        self.script_nd = []
         if comp_name and comp_side:
             self.meta_nd_name = self.meta_nd_name.replace("COMP", comp_name)
             self.name = (
@@ -686,11 +699,11 @@ class CompContainer(mayautils.ContainerNode):
                 .replace("0", str(comp_index))
             )
             self.name = strings.string_checkup(self.name)
-            self.container_content_root_name = self.container_content_root_name.replace(
-                "M", comp_side
-            ).replace(
-                "content_root", "{}_content_root".format(comp_name)
-            ).replace("0", str(comp_index))
+            self.container_content_root_name = (
+                self.container_content_root_name.replace("M", comp_side)
+                .replace("content_root", "{}_content_root".format(comp_name))
+                .replace("0", str(comp_index))
+            )
 
     def create_comp_container(self):
         """
@@ -786,3 +799,44 @@ class CompContainer(mayautils.ContainerNode):
 
         """
         return self.meta_nd.attr(constants.BND_JNT_ROOT_ND_ATTR).get()
+
+    def create_script_nd(
+        self,
+        scriptType=1,
+        beforeScript="",
+        afterScript="",
+        name="",
+        sourceType="python",
+    ):
+        """
+        Create a script node which corresponds to the component container.
+        It is add to the component container and connected to the meta node by
+        default.
+
+        Args:
+            scriptType(int): When the script will execute.
+            Valid values are:
+            [0: Execute on demand, 1: Execute on file load or on node
+            deletion, 2: Execute on file load or on node deletion when not in
+            batch mode, 3: Internal, 4: Execute on software render,
+            5: Execute on software frame render, 6: Execute on scene
+            configuration, 7: Execute on time changed.]
+            beforeScript(str): The script executed during file load.
+            afterScript(str): The script executed when the script node is
+            deleted.
+            name(str): The nodes name.
+            sourceType(str): Sets the language type for both the attached
+            scripts. Default is "python".
+
+        """
+        data_dic = {
+            "scriptType": scriptType,
+            "beforeScript": beforeScript,
+            "afterScript": afterScript,
+            "name": name,
+            "sourceType": sourceType,
+        }
+        script_nd = pmc.PyNode(pmc.scriptNode(**data_dic))
+        self.meta_nd.add_script_nd(script_nd)
+        self.container.addNode(script_nd)
+        self.script_nd.append(script_nd)

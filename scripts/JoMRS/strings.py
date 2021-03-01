@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 25
+# Date:       2021 / 02 / 27
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -263,7 +263,7 @@ def valid_suffix(string, logger_=_LOGGER):
     """
     valid = (
         "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND"
-        "|_CONST|_MULDOLINND|_TRS"
+        "|_CONST|_MULDOLINND|_TRS|_REVND|_SCND"
     )
     suffix_pattern = re.compile(valid)
     if not re.search(suffix_pattern, string):

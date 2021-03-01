@@ -115,6 +115,8 @@ class MainCreate(components.main.Component):
             main_operator_node,
             sub_operator_node,
         )
+        self.control_curve = None
+        self.control_name = ""
 
     def add_ud_attributes_to_operators_meta_nd(self):
         """
@@ -187,17 +189,17 @@ class MainCreate(components.main.Component):
         component_side = self.operator_meta_data.get(
             constants.META_MAIN_COMP_SIDE
         )
-        control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
-        control_name = strings.search_and_replace(
-            control_name, "M_", "{}_".format(component_side)
+        self.control_name = constants.DEFAULT_CONTROL_NAME_PATTERN
+        self.control_name = strings.search_and_replace(
+            self.control_name, "M_", "{}_".format(component_side)
         )
-        control_name = strings.search_and_replace(
-            control_name,
+        self.control_name = strings.search_and_replace(
+            self.control_name,
             "name",
             self.operator_meta_data.get(constants.META_MAIN_COMP_NAME),
         )
-        control_name = strings.search_and_replace(
-            control_name,
+        self.control_name = strings.search_and_replace(
+            self.control_name,
             "index",
             str(self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)),
         )
@@ -227,8 +229,8 @@ class MainCreate(components.main.Component):
             component_side, "control"
         )
         # Create the control curve.
-        control_curve = curve_instance.create_curve(
-            name=control_name,
+        self.control_curve = curve_instance.create_curve(
+            name=self.control_name,
             match=tweaked_matrix,
             scale=orig_match_matrix.scale,
             color_index=control_curve_color,
@@ -236,23 +238,23 @@ class MainCreate(components.main.Component):
         )
         # Create offset grp.
         offset_grp = pmc.createNode(
-            "transform", n="{}_offset_GRP".format(control_name)
+            "transform", n="{}_offset_GRP".format(self.control_name)
         )
         # At control to offset group.
-        offset_grp.addChild(control_curve[0])
-        self.controls.append(control_curve[1])
+        offset_grp.addChild(self.control_curve[0])
+        self.controls.append(self.control_curve[1])
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
-        self.output_matrix_nd_list.append(control_curve[1])
+        self.output_matrix_nd_list.append(self.control_curve[1])
         # lock and hide transform attributes if it is defined in the meta data.
         for lock_attr in self.LOCK_TRANSFORMATION_ATTRIBUTES:
             if self.operator_meta_data.get(lock_attr):
                 attribute_string = lock_attr.split("_")[1]
                 attributes.lock_and_hide_attributes(
-                    control_curve[1], attributes=attribute_string
+                    self.control_curve[1], attributes=attribute_string
                 )
         if bnd_jnt_creation:
-            self.bnd_output_matrix.append(control_curve[1])
+            self.bnd_output_matrix.append(self.control_curve[1])
         logger.log(
             level="info",
             message="Component logic created "

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 18
+# Date:       2021 / 03 / 01
 
 """
 JoMRS operator unittest module
@@ -124,14 +124,18 @@ class TestOperators(TestCase):
                 [38.637398874235515, 26.801227101735805, 0.8538679964933436]
             ),
         ]
-
-        self.assertEqual(ws_vec_test_op_1_subs, test_ws_vec_subs)
+        for index, list_ in enumerate(ws_vec_test_op_1_subs):
+            compare_list = test_ws_vec_subs[index]
+            self.assertAlmostEqual(compare_list[0], list_[0])
+            self.assertAlmostEqual(compare_list[1], list_[1])
+            self.assertAlmostEqual(compare_list[2], list_[2])
 
         self.assertEqual(
             ws_matrix_test_op_1.getTranslation("world"), test_ws_vec
         )
 
-        self.assertEqual(ws_matrix_test_op_1.getRotation(), test_ws_rotation)
+        for index, list__ in enumerate(ws_matrix_test_op_1.getRotation()):
+            self.assertAlmostEqual(list__, test_ws_rotation[index])
 
     def test_setters_and_getters(self):
         """
@@ -276,7 +280,7 @@ class TestOperators(TestCase):
         # sub nd parent ws output index.
         self.assertIs(
             self.test_op_1.main_meta_nd.get_parent_ws_output_index(),
-                        self.test_op_0.sub_operators[-1]
+            self.test_op_0.sub_operators[-1]
             .attr(constants.SUB_OP_META_ND_ATTR_NAME)
             .get()
             .get_ws_output_index(),

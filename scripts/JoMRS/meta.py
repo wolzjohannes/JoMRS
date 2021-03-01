@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 23
+# Date:       2021 / 02 / 27
 
 """
 Meta node creation module.
@@ -99,7 +99,7 @@ class MetaNode(pmc.nt.Network):
         newNode.addAttr(constants.META_TYPE, dt="string")
         newNode.attr(constants.META_TYPE).set(constants.META_BASE_TYPE)
         newNode.addAttr(constants.UUID_ATTR_NAME, dt="string")
-        newNode.addAttr(constants.META_DIRTY_EVAL_ATTR, at='bool')
+        newNode.addAttr(constants.META_DIRTY_EVAL_ATTR, at="bool")
 
     def set_uuid(self, uuid_=None):
         """
@@ -989,11 +989,19 @@ class ContainerMetaNode(MetaNode):
             "keyable": False,
         }
 
+        script_nd_array_attr = {
+            "name": constants.META_SCRIPT_ND,
+            "attrType": "message",
+            "keyable": False,
+            "multi": True,
+        }
+
         container_meta_param_list = [
             container_nd_attr,
             input_ws_matrix_offset_nd_attr,
             bnd_root_node_attr,
             container_type_attr,
+            script_nd_array_attr,
         ]
 
         for attr_ in container_meta_param_list:
@@ -1009,6 +1017,18 @@ class ContainerMetaNode(MetaNode):
         """
         node.message.connect(self.attr(constants.CONTAINER_NODE_ATTR_NAME))
         self.message.connect(node.attr(constants.CONTAINER_META_ND_ATTR_NAME))
+
+    def add_script_nd(self, node):
+        """
+        Connect the script node with the meta nd.
+
+        Args:
+            node(pmc.PyNode()): THe script node to add.
+
+        """
+        attributes.connect_next_available(
+            node, self, "message", constants.META_SCRIPT_ND
+        )
 
     def get_container_node(self):
         """
@@ -1039,6 +1059,15 @@ class ContainerMetaNode(MetaNode):
 
         """
         return self.attr(constants.META_CONTAINER_TYPE_ATTR).get()
+
+    def get_script_nd(self):
+        """
+        Get all connected script nodes.
+
+        Returns:
+            List: Found script nodes.
+        """
+        return self.attr(constants.META_SCRIPT_ND).get()
 
 
 pmc.factories.registerVirtualClass(MetaNode, nameRequired=False)

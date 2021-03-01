@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 20
+# Date:       2021 / 03 / 01
 
 """
 Test the single_control_component component.
@@ -34,7 +34,7 @@ import constants
 
 class TestSingleControlComponent(TestCase):
     """
-    Test the operators module.
+    Test single_control_component.
     """
 
     def setUp(self):
@@ -75,7 +75,7 @@ class TestSingleControlComponent(TestCase):
         """
         self.single_control.set_worldspace_orientation(True)
         self.single_control.build_from_operator()
-        control_curve = self.single_control.controls[0]
+        control_curve = self.single_control.control_curve[1]
         ws_matrix = control_curve.getMatrix(worldSpace=True)
         tm_matrix = dt.TransformationMatrix(ws_matrix)
         self.assertEqual(
@@ -96,7 +96,7 @@ class TestSingleControlComponent(TestCase):
                     "{}{}".format(attr, axe), True
                 )
         self.single_control.build_from_operator()
-        control_curve = self.single_control.controls[0]
+        control_curve = self.single_control.control_curve[1]
         for attr_ in lock_attr_list:
             for axe_ in lock_attr_axes:
                 self.assertTrue(

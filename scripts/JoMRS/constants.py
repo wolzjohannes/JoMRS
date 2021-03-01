@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 18
+# Date:       2021 / 02 / 27
 
 """
 JoMRS constants module for global values.
@@ -165,6 +165,8 @@ META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
 META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
 META_CONTAINER_TYPE_ATTR = "container_type"
+
+META_SCRIPT_ND = "script_nd"
 
 UUID_ATTR_NAME = "JoMRS_UUID"
 

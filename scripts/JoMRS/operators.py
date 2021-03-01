@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 01 / 11
+# Date:       2021 / 03 / 01
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -901,6 +901,10 @@ class ComponentOperator(MainOperatorNode):
             self.set_parent_ws_output_index(self.parent)
             # Set the parent meta nd.
             self.set_parent_nd(self.parent_main_op_nd)
+            # move the created main_op_node to parent space.
+            self.main_op_nd.translate.set(0, 0, 0)
+            self.main_op_nd.rotate.set(0, 0, 0)
+            self.main_op_nd.scale.set(1, 1, 1)
         # fill the all_container_nodes list.
         self.set_node_list()
         self.get_node_list()
