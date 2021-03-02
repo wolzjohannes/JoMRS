@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 19
+# Date:       2021 / 03 / 02
 
 """
 JoMRS maya utils module. Utilities helps
@@ -1228,7 +1228,7 @@ def create_joint_skeleton_by_data_dic(data_list):
 
 
 def create_ref_transform(
-    name, side, index, buffer_grp=False, match_matrix=None, child=None
+    name, side, index, count, buffer_grp=False, match_matrix=None, child=None
 ):
     """
     Create a reference transform.
@@ -1236,6 +1236,7 @@ def create_ref_transform(
             name(str): Name for the ref node.
             side(str): The side. Valid values are "M", "R", "L".
             index(int): The index number.
+            count(int): The node count.
             buffer_grp(bool): Enable buffer grp.
             match_matrix(matrix): The match matrix.
             child(dagnode): Child of node.
@@ -1253,7 +1254,7 @@ def create_ref_transform(
         raise AttributeError(
             'Chosen side is not valid. Valid values are ["L", "R", "M"]'
         )
-    name = "{}_REF_{}_{}_GRP".format(side, name, str(index))
+    name = "{}_REF_{}_{}_{}_TRS".format(side, name, str(index), str(count))
     name = strings.string_checkup(name, logger_=_LOGGER)
     ref_trs = pmc.createNode("transform", n=name)
     if match_matrix:
@@ -1308,6 +1309,46 @@ def matrix_reset_rotation(matrix):
     tm = dt.TransformationMatrix(matrix)
     tm.setRotation((0, 0, 0))
     return dt.Matrix(tm)
+
+
+def create_alternate_aim_constraint(aim_nd, source_nd, aim_axe, weight_attr):
+    output_axes = ["X", "Y", "Z"]
+    mult_matrix_nd = pmc.createNode(
+        "multMatrix", n="{}_MUMAND".format(aim_nd.name())
+    )
+    decomp_nd = pmc.createNode(
+        "decomposeMatrix", n="{}_DEMAND".format(aim_nd.name())
+    )
+    angle_between_nd = pmc.createNode(
+        "angleBetween", n="{}_ANBEND".format(aim_nd.name())
+    )
+    anim_blend_nd = pmc.createNode(
+        "animBlendNodeAdditiveRotation", n="{}_ANBLND".format(aim_nd.name())
+    )
+    pair_blend_nd = pmc.createNode(
+        "pairBlend", n="{}_PABLND".format(aim_nd.name())
+    )
+    pair_blend_nd.weight.set(1)
+    anim_blend_nd.weightA.set(-1)
+    angle_between_nd.vector2.set(0, 0, 0)
+    aim_nd.worldMatrix[0].connect(mult_matrix_nd.matrixIn[0])
+    source_nd.worldMatrix[0].connect(mult_matrix_nd.matrixIn[1])
+    mult_matrix_nd.matrixSum.connect(decomp_nd.inputMatrix)
+    decomp_nd.outputTranslate.connect(angle_between_nd.vector1)
+    angle_between_nd.attr("vector2{}".format(aim_axe)).set(1)
+    angle_between_nd.euler.connect(anim_blend_nd.inputA)
+    angle_between_nd.attr("euler{}".format(aim_axe)).connect(
+        pair_blend_nd.attr("inRotate{}2".format(aim_axe))
+    )
+    for axe in output_axes:
+        if axe is not aim_axe:
+            anim_blend_nd.attr("output{}".format(axe)).connect(
+                pair_blend_nd.attr("inRotate{}2".format(axe))
+            )
+    if weight_attr:
+        weight_attr.connect(pair_blend_nd.weight)
+    pair_blend_nd.outRotate.connect(source_nd.rotate)
+    return pair_blend_nd
 
 
 ##########################################################

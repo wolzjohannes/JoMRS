@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 01
+# Date:       2021 / 03 / 02
 
 """
 Build a global control component
@@ -117,13 +117,13 @@ class MainCreate(components.main.Component):
         Add Component specific attributes to operator.
         And fill the cd_attributes list for meta data.
         """
-        self.bnd_joint = {
+        bnd_joint_attr = {
             "name": self.BND_JNT_ATTR_NAME,
             "attrType": "bool",
             "keyable": False,
             "channelBox": False,
         }
-        self.world_space_orientation_attr = {
+        world_space_orientation_attr = {
             "name": self.WS_ORIENTATION_ATTR_NAME,
             "attrType": "bool",
             "keyable": False,
@@ -131,7 +131,7 @@ class MainCreate(components.main.Component):
             "defaultValue": True,
         }
         # Add the attributes to the main_meta_nd of the operator.
-        cd_attributes_list = [self.bnd_joint, self.world_space_orientation_attr]
+        cd_attributes_list = [bnd_joint_attr, world_space_orientation_attr]
         for attr_ in cd_attributes_list:
             attributes.add_attr(node=self.main_meta_nd, **attr_)
         # It is important to append all user defined attributes to this list.
