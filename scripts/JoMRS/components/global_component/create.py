@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 02
+# Date:       2021 / 03 / 07
 
 """
 Build a global control component
@@ -320,7 +320,7 @@ class MainCreate(components.main.Component):
         ]
         # Create offset grp.
         offset_grp = pmc.createNode(
-            "transform", n="{}_offset_GRP".format(self.global_control_name)
+            "transform", n="{}_offset_0_GRP".format(self.global_control_name)
         )
         # Connect cop control curve with the comp container meta_nd.
         self.cop_control_curve[1].message.connect(

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 02
+# Date:       2021 / 03 / 07
 
 """
 JoMRS string module. Module for string handling and naming conventions.
@@ -263,7 +263,7 @@ def valid_suffix(string, logger_=_LOGGER):
     """
     valid = (
         "_CRV|_HANDLE|_JNT|_GEO|_GRP|_CON|_MPND|_DEMAND|_MUMAND|_METAND"
-        "|_CONST|_MULDOLINND|_TRS|_REVND|_SCND|_ANBEND|_ANBLND|_PABLND"
+        "|_CONST|_MULDOLINND|_TRS|_REVND|_SCND|_ANBEND|_ANBLND|_PABLND|_DISND"
     )
     suffix_pattern = re.compile(valid)
     if not re.search(suffix_pattern, string):
@@ -411,26 +411,3 @@ def replace_index_numbers(string, replace):
     numbers = re.sub(r"[a-zA-Z]", "", instance)
     return regex_search_and_replace(string, numbers, '_{}_'.format(str(
         replace)))
-
-def normalize_suffix_(string):
-    numbers_end_string_regex = r"(\d+$)"
-    count_regex = r"(_\d+_\D+)"
-    match = re.search(numbers_end_string_regex, string)
-    # If we find a number in the suffix of the string we delete it. And
-    # generate the correct count and put in the correct place in the string.
-    if match:
-        instance = match.groups()[0]
-        string = re.sub(numbers_end_string_regex, "", string)
-        count_match = re.search(count_regex, string)
-        instance_ = count_match.groups()[0]
-        count_list = [str_ for str_ in instance_.split('_') if str_]
-        new_count = int(count_list[0]) + int(instance)
-        new_count = '_{}_{}'.format(new_count, count_list[1])
-        string = string.replace(instance_, new_count)
-        logger.log(
-            level="warning",
-            message='Suffix of string "'
-            + string
-            + '" should not have a number. Numbers removed from the suffix',
-            logger=_LOGGER,
-        )

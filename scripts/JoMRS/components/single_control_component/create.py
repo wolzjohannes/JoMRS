@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 24
+# Date:       2021 / 03 / 07
 
 """
 Build a single_control_component. Which can be used as main control or as simple fk
@@ -238,7 +238,7 @@ class MainCreate(components.main.Component):
         )
         # Create offset grp.
         offset_grp = pmc.createNode(
-            "transform", n="{}_offset_GRP".format(self.control_name)
+            "transform", n="{}_offset_0_GRP".format(self.control_name)
         )
         # At control to offset group.
         offset_grp.addChild(self.control_curve[0])

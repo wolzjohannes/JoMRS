@@ -66,10 +66,10 @@ def create_buffer_grp(node, name=None):
             tuple: The created buffer dagnode.
     """
     parent = node.getParent()
-    if not name:
-        name = name + "_buffer_GRP"
+    if name:
+        name = "{}_buffer_0_GRP".format(name)
     else:
-        name = str(node) + "_buffer_GRP"
+        name = strings.string_checkup("{}_buffer_GRP".format(node.name()))
     buffer_grp = pmc.createNode("transform", n=name)
     buffer_grp.setMatrix(node.getMatrix(worldSpace=True), worldSpace=True)
     buffer_grp.addChild(node)
@@ -1228,18 +1228,21 @@ def create_joint_skeleton_by_data_dic(data_list):
 
 
 def create_ref_transform(
-    name, side, index, count, buffer_grp=False, match_matrix=None, child=None
+    name, side, index, count, buffer_grp=False, match_matrix=None,
+        child=None, clean_translation=None, clean_rotation=None,
+        clean_scaling=None,
 ):
     """
     Create a reference transform.
+
     Args:
             name(str): Name for the ref node.
             side(str): The side. Valid values are "M", "R", "L".
             index(int): The index number.
             count(int): The node count.
             buffer_grp(bool): Enable buffer grp.
-            match_matrix(matrix): The match matrix.
-            child(dagnode): Child of node.
+            match_matrix(pmc.datatype.Matrix): The match matrix.
+            child(pmc.PyNode()): Child of node.
 
     Example:
             >>> create_ref_transform('test', 'M', 0, True,
@@ -1247,8 +1250,11 @@ def create_ref_transform(
             >>> 0.0, 0.0, 0.0, 1.0], pmc.PyNode('your_node'))
 
     Return:
-            The new ref node.
+            pmc.PyNode(): The new ref node. If buffer group enabled return
+            buffer group instead.
+
     """
+    result = None
     valid_sides = ["L", "R", "M"]
     if side not in valid_sides:
         raise AttributeError(
@@ -1257,13 +1263,14 @@ def create_ref_transform(
     name = "{}_REF_{}_{}_{}_TRS".format(side, name, str(index), str(count))
     name = strings.string_checkup(name, logger_=_LOGGER)
     ref_trs = pmc.createNode("transform", n=name)
+    result = ref_trs
     if match_matrix:
         ref_trs.setMatrix(match_matrix, worldSpace=True)
     if buffer_grp:
-        create_buffer_grp(node=ref_trs)
+        result = create_buffer_grp(node=ref_trs)
     if child:
         ref_trs.addChild(child)
-    return ref_trs
+    return result
 
 
 def matrix_normalize_scale(matrix):
@@ -1311,44 +1318,45 @@ def matrix_reset_rotation(matrix):
     return dt.Matrix(tm)
 
 
-def create_alternate_aim_constraint(aim_nd, source_nd, aim_axe, weight_attr):
+def create_alternate_aim_constraint(aim_nd, source_nd, aim_axe):
+    """
+    Create a alternate aim setup which has a similar aim constraint behaviour.
+
+    Args:
+        aim_nd(pmc.PyNode()): The node to aim to.
+        source_nd(pmc.PyNode()): The node which aim.
+        aim_axe(pmc.PyNode()): The aim axes.
+
+    """
     output_axes = ["X", "Y", "Z"]
     mult_matrix_nd = pmc.createNode(
-        "multMatrix", n="{}_MUMAND".format(aim_nd.name())
+        "multMatrix", n="{}_MUMAND".format(source_nd.name())
     )
     decomp_nd = pmc.createNode(
-        "decomposeMatrix", n="{}_DEMAND".format(aim_nd.name())
+        "decomposeMatrix", n="{}_DEMAND".format(source_nd.name())
     )
     angle_between_nd = pmc.createNode(
-        "angleBetween", n="{}_ANBEND".format(aim_nd.name())
+        "angleBetween", n="{}_ANBEND".format(source_nd.name())
     )
     anim_blend_nd = pmc.createNode(
-        "animBlendNodeAdditiveRotation", n="{}_ANBLND".format(aim_nd.name())
+        "animBlendNodeAdditiveRotation", n="{}_ANBLND".format(source_nd.name())
     )
-    pair_blend_nd = pmc.createNode(
-        "pairBlend", n="{}_PABLND".format(aim_nd.name())
-    )
-    pair_blend_nd.weight.set(1)
     anim_blend_nd.weightA.set(-1)
     angle_between_nd.vector2.set(0, 0, 0)
     aim_nd.worldMatrix[0].connect(mult_matrix_nd.matrixIn[0])
-    source_nd.worldMatrix[0].connect(mult_matrix_nd.matrixIn[1])
+    source_nd.parentInverseMatrix[0].connect(mult_matrix_nd.matrixIn[1])
     mult_matrix_nd.matrixSum.connect(decomp_nd.inputMatrix)
     decomp_nd.outputTranslate.connect(angle_between_nd.vector1)
     angle_between_nd.attr("vector2{}".format(aim_axe)).set(1)
     angle_between_nd.euler.connect(anim_blend_nd.inputA)
     angle_between_nd.attr("euler{}".format(aim_axe)).connect(
-        pair_blend_nd.attr("inRotate{}2".format(aim_axe))
+        source_nd.attr("rotate{}".format(aim_axe))
     )
     for axe in output_axes:
-        if axe is not aim_axe:
+        if axe != aim_axe:
             anim_blend_nd.attr("output{}".format(axe)).connect(
-                pair_blend_nd.attr("inRotate{}2".format(axe))
+                source_nd.attr("rotate{}".format(axe))
             )
-    if weight_attr:
-        weight_attr.connect(pair_blend_nd.weight)
-    pair_blend_nd.outRotate.connect(source_nd.rotate)
-    return pair_blend_nd
 
 
 ##########################################################

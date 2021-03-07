@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 27
+# Date:       2021 / 03 / 05
 
 """
 Rig components main module. This class is the template to create a rig
@@ -215,6 +215,9 @@ class Component(operators.ComponentOperator):
         self.operator_meta_data[
             constants.META_MAIN_OP_ND_WS_MATRIX_STR
         ] = self.get_main_op_ws_matrix()
+        self.operator_meta_data[
+            constants.META_LRA_ND_WS_MATRIX_STR
+        ] = self.get_lra_nd_ws_matrix()
         self.operator_meta_data[
             constants.META_SUB_OP_ND_WS_MATRIX_STR
         ] = self.get_sub_op_nodes_ws_matrix()

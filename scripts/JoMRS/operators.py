@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 01
+# Date:       2021 / 03 / 05
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -1196,6 +1196,16 @@ class ComponentOperator(MainOperatorNode):
 
         """
         return self.main_op_nd.getMatrix(worldSpace=True)
+
+    def get_lra_nd_ws_matrix(self):
+        """
+        Get the world matrix of the lra_nd.
+
+        Return:
+            World Matrix object.
+
+        """
+        return self.lra_node.getMatrix(worldSpace=True)
 
     def get_sub_op_nodes_ws_matrix(self):
         """
