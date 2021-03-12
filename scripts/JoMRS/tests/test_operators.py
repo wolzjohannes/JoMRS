@@ -95,6 +95,9 @@ class TestOperators(TestCase):
         ws_matrix_test_op_1 = datatypes.TransformationMatrix(
             self.test_op_1.get_main_op_ws_matrix()
         )
+        ws_matrix_lra_node_op_1 = datatypes.TransformationMatrix(
+            self.test_op_1.get_lra_nd_ws_matrix()
+        )
         test_ws_vec = datatypes.Vector(
             [27.820655082060398, -0.7524801847300928, -4.0237613976076]
         )
@@ -124,6 +127,9 @@ class TestOperators(TestCase):
                 [38.637398874235515, 26.801227101735805, 0.8538679964933436]
             ),
         ]
+
+        self.assertEqual(ws_matrix_test_op_1, ws_matrix_lra_node_op_1)
+
         for index, list_ in enumerate(ws_vec_test_op_1_subs):
             compare_list = test_ws_vec_subs[index]
             self.assertAlmostEqual(compare_list[0], list_[0])
@@ -244,7 +250,7 @@ class TestOperators(TestCase):
         self.assertIn(
             pmc.PyNode(
                 "L_MAIN_op_{}"
-                "_{}_LRA_CON_buffer_GRP_CONST".format(
+                "_{}_LRA_CON_buffer_0_GRP_CONST".format(
                     self.TEST_1_OP_NAME, self.TEST_1_OP_INDEX
                 )
             ),

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 05
+# Date:       2021 / 03 / 08
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -511,7 +511,6 @@ class MainOperatorNode(OperatorsRootNode):
         self.lra_node_buffer_grp = main_op_node[1]
         self.lra_node = main_op_node[2]
         attributes.add_attr(node=self.lra_node, **self.lra_op_attr)
-        attributes.add_attr(node=self.lra_node_buffer_grp, **self.lra_op_attr)
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd, **attr_)
         # Connect main operator node with main meta node.
@@ -639,6 +638,7 @@ class ComponentOperator(MainOperatorNode):
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
         self.all_container_nodes = []
         self.sub_operators = []
+        self.sub_operators_lra_buffer = []
         self.cd_attributes = []
         self.joint_control = None
         self.main_op_nd_name = None
@@ -656,6 +656,7 @@ class ComponentOperator(MainOperatorNode):
             self.get_root_nd_from_root_meta_nd()
             self.get_sub_op_nodes_from_main_op_nd()
             self.get_node_list()
+            self.get_lra_node()
         if sub_operator_node:
             if valid_node(sub_operator_node, "JoMRS_sub"):
                 # If a valid sub op node is passed get the main_op_nd form
@@ -666,6 +667,7 @@ class ComponentOperator(MainOperatorNode):
                 self.get_root_meta_nd_from_main_op_nd()
                 self.get_root_nd_from_root_meta_nd()
                 self.get_node_list()
+                self.get_lra_node()
 
         self.linear_curve_drivers = []
 
@@ -688,7 +690,9 @@ class ComponentOperator(MainOperatorNode):
             self.root_op_meta_nd_attr,
         ]
 
-    def create_sub_operator(self, name, side, index, count, scale, match):
+    def create_sub_operator(
+        self, name, side, index, count, scale, match, local_rotate_axes=False
+    ):
         """
         Create the sub operators node.
 
@@ -699,6 +703,7 @@ class ComponentOperator(MainOperatorNode):
             count(int): The sub_op_nd count.
             scale(float): Scale value.
             match(pmc.PyNode()): Object to snap for.
+            local_rotate_axes(bool): Enable local rotate axes.
 
         """
         instance = "_op_{}_{}_{}".format(name, str(index), str(count))
@@ -716,6 +721,20 @@ class ComponentOperator(MainOperatorNode):
         )[0]
         for attr_ in self.sub_node_param_list:
             attributes.add_attr(node=sub_op_node, **attr_)
+        if local_rotate_axes:
+            rotate_axe_control = curves.RotateAxesControl()
+            sub_lra_node = rotate_axe_control.create_curve(
+                name=sub_op_nd_name.replace("CON", "LRA_CON"),
+                match=sub_op_node,
+                lock_translate=["tx", "ty", "tz"],
+                lock_rotate=["rx", "ry", "rz"],
+                lock_scale=["sx", "sy", "sz"],
+                buffer_grp=True,
+            )
+            sub_op_node.addChild(sub_lra_node[0])
+            self.sub_operators_lra_buffer.append(sub_lra_node[0])
+            self.all_container_nodes.append(sub_lra_node[0])
+            self.all_container_nodes.append(sub_lra_node[1])
         self.sub_meta_nd = meta.SubOpMetaNode(
             n=sub_op_nd_name.replace("_CON", "")
         )
@@ -745,6 +764,7 @@ class ComponentOperator(MainOperatorNode):
         sub_operators_scale=constants.DEFAULT_SUB_OPERATORS_SCALE,
         local_rotate_axes=True,
         parent=None,
+        sub_operators_local_rotate_axes=False,
     ):
         """
         Init the operators creation.
@@ -758,6 +778,8 @@ class ComponentOperator(MainOperatorNode):
             sub_operators_scale(int): Sub operators node scale factor.
             local_rotate_axes(bool): Enable local rotate axes.
             parent(pmc.PyNode()): The parent node.
+            sub_operators_local_rotate_axes(bool): Enable the local rotate
+            axes for the sub_operators.
 
         """
         # Check at start if a parent node is passed. If it is not a valid not
@@ -830,6 +852,7 @@ class ComponentOperator(MainOperatorNode):
                     count,
                     sub_operators_scale,
                     self.main_op_nd,
+                    sub_operators_local_rotate_axes,
                 )
             # parent the first sub op to the main op because the first sub op is
             # always the master for each sub op.
@@ -875,6 +898,35 @@ class ComponentOperator(MainOperatorNode):
                 )
                 # at the constraint to the container node list
                 self.all_container_nodes.append(aim_con)
+                # If sub operators local rotate axes enabled create the aim
+                # constraint setup.
+                if sub_operators_local_rotate_axes:
+                    for index, sub_op_nd in enumerate(self.sub_operators):
+                        try:
+                            sub_aim_con_name = "{}_CONST".format(
+                                self.sub_operators_lra_buffer[index].name()
+                            )
+                            sub_aim_con = pmc.aimConstraint(
+                                self.sub_operators[index + 1],
+                                self.sub_operators_lra_buffer[index],
+                                aim=aim_vec,
+                                u=up_vec,
+                                wut="object",
+                                worldUpObject=self.sub_operators[index],
+                                mo=True,
+                                n=sub_aim_con_name,
+                            )
+                            # at the constraint to the container node list
+                            self.all_container_nodes.append(sub_aim_con)
+                        except:
+                            logger.log(
+                                level="info",
+                                message="Sub operators "
+                                "lra node aim "
+                                "setup "
+                                "created.",
+                                logger=_LOGGER,
+                            )
             # linear curve section for visualisation purposes.
             linear_curve_name = constants.LINEAR_CURVE_NAME.replace(
                 "M_", "{}_".format(side)
@@ -1264,6 +1316,17 @@ class ComponentOperator(MainOperatorNode):
         for attr_ in cd_attributes:
             result[attr_] = self.main_meta_nd.attr(attr_).get()
         return result
+
+    def get_lra_node(self):
+        """
+        Get the lra node.
+        """
+        for node in self.all_container_nodes:
+            if (
+                node.hasAttr(constants.OP_LRA_TAG_NAME)
+                and node.attr(constants.OP_LRA_TAG_NAME).get() is True
+            ):
+                self.lra_node = node
 
     def rename_operator_nodes(self, name):
         """

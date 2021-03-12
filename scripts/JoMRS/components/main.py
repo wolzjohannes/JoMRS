@@ -167,6 +167,7 @@ class Component(operators.ComponentOperator):
         local_rotate_axes=True,
         connect_node=None,
         ik_space_ref=None,
+        sub_operators_local_rotate_axes=False,
     ):
         """
         Build Component operator.
@@ -178,6 +179,8 @@ class Component(operators.ComponentOperator):
             connect_node(str): The connect node .
             ik_space_ref(list): Spaces given as nodes in a string
             local_rotate_axes(bool): Enable/Disable.
+            sub_operators_local_rotate_axes(bool): Enable the local rotate
+            axes for the sub_operators.
 
         """
         if not parent:
@@ -190,6 +193,7 @@ class Component(operators.ComponentOperator):
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,
             parent=parent,
+            sub_operators_local_rotate_axes=sub_operators_local_rotate_axes
         )
         self.set_component_name(self.name)
         self.set_component_type(self.component_type)

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 07
+# Date:       2021 / 03 / 08
 
 """
 Build a fk chain component
@@ -55,6 +55,7 @@ class MainCreate(components.main.Component):
 
     COMP_TYPE = "fk_chain_component"
     LOCAL_ROTATION_AXES = True
+    SUB_OPERATORS_LOCAL_ROTATE_AXES = True
     PARENT_AIM_ATTR = "parent_aim"
     PARENT_AIM_AXES_ATTR = "parent_aim_axes"
 
@@ -137,10 +138,11 @@ class MainCreate(components.main.Component):
         Init the operator creation.
         """
         self.build_operator(
-            self.axes,
-            self.sub_operators_count,
-            parent,
-            self.LOCAL_ROTATION_AXES,
+            axes=self.axes,
+            sub_operators_count=self.sub_operators_count,
+            parent=parent,
+            local_rotate_axes=self.LOCAL_ROTATION_AXES,
+            sub_operators_local_rotate_axes=self.SUB_OPERATORS_LOCAL_ROTATE_AXES
         )
         self.set_parent_aim_axes(self.axes)
 
@@ -176,6 +178,7 @@ class MainCreate(components.main.Component):
             ref node.
 
         """
+        # Create the setup transforms
         aim_ref_nd = mayautils.create_ref_transform(
             name="{}_aim".format(name),
             side=side,
@@ -190,6 +193,10 @@ class MainCreate(components.main.Component):
             count=count_,
             match_matrix=aim_nd.getMatrix(worldSpace=True),
         )
+        # This is the length ref transform. This transform move on the aim
+        # axes and has the orientation of his parent. If we change the parent
+        # aim then it snap to the length of the distance between control and
+        # parent. Or it snap to the fix distance from creation time.
         parent_aim_length_ref_nd = mayautils.create_ref_transform(
             name="{}_aim_length_parent".format(name),
             side=side,
@@ -211,29 +218,43 @@ class MainCreate(components.main.Component):
             count=count_,
             match_matrix=parent_aim_nd.getMatrix(worldSpace=True),
         )
+        # First create the hierarchy till the parent_aim_length ref node
+        # because we need to clean the rotation of it. We need to this so the
+        # node can slide correctly on the aim axes.
         mayautils.create_hierarchy(
             [offset_aim_ref_nd, parent_aim_ref_nd, parent_aim_length_ref_nd]
         )
+        # Clean the rotation of this transform. To get it on the line of the
+        # aim axes.
         parent_aim_length_ref_nd.rotate.set(0, 0, 0)
+        # Build the rest of the hierarchy.
         mayautils.create_hierarchy(
             [parent_aim_length_ref_nd, aim_ref_buffer_nd, aim_ref_nd]
         )
+        # Parent the whole setup under the chosen parent node.
         parent_nd.addChild(offset_aim_ref_nd)
+        # Create the alternate aim constraint setup.
         mayautils.create_alternate_aim_constraint(
             aim_nd, parent_aim_ref_nd, aim_axe
         )
+        # Create the distance between node name based on the parent aim node.
         distance_nd_name = (
             parent_aim_nd.name()
             .replace(name, "{}_aim".format(name))
             .replace("_CON", "_DISND")
         )
+        # Create the distance between node. So we are able to track the
+        # actually distance between between control and parent control. So we
+        # slide the parent_aim_length_ref_nd on the aim axes based on that
+        # distance.
         distance_shape = pmc.createNode("distanceDimShape")
         distance_shape_trs = distance_shape.getTransform()
         distance_shape_trs.rename(distance_nd_name)
         distance_shape_trs.visibility.set(0)
-        parent_nd_decomp_name = parent_aim_nd.name().replace("TRS", "DEMAND")
-        parent_nd_decomp_name = parent_nd_decomp_name.replace("CON", "DEMAND")
-        aim_nd_decomp_name = aim_nd.name().replace("CON", "DEMAND")
+        parent_nd_decomp_name = "{}_REF_{}_parent_aim_{}_{}_DEMAND".format(
+            side, name, index, count_)
+        aim_nd_decomp_name = "{}_REF_{}_aim_{}_{}_DEMAND".format(
+            side, name, index, count_)
         parent_nd_decomp = pmc.createNode(
             "decomposeMatrix", n=parent_nd_decomp_name
         )
@@ -242,6 +263,7 @@ class MainCreate(components.main.Component):
         aim_nd.worldMatrix[0].connect(aim_nd_decomp.inputMatrix)
         parent_nd_decomp.outputTranslate.connect(distance_shape.startPoint)
         aim_nd_decomp.outputTranslate.connect(distance_shape.endPoint)
+        # So we pass the calculated and actually distance to a pairBlend node
         pair_blend_nd_name = parent_aim_nd.name().replace("TRS", "PABLND")
         pair_blend_nd_name = pair_blend_nd_name.replace("CON", "PABLND")
         pair_blend_nd = pmc.createNode("pairBlend", n=pair_blend_nd_name)
@@ -254,6 +276,8 @@ class MainCreate(components.main.Component):
         pair_blend_nd.attr("outTranslate{}".format(aim_axe)).connect(
             parent_aim_length_ref_nd.attr("translate{}".format(aim_axe))
         )
+        # Connect the control which will have the control attribute with the
+        # pairBlend weight.
         weight_attr.connect(pair_blend_nd.weight)
         return [aim_ref_nd, parent_aim_ref_nd]
 
@@ -317,7 +341,7 @@ class MainCreate(components.main.Component):
             "transform", n="{}_offset_0_GRP".format(self.chain_control_name)
         )
         offset_grp.addChild(self.main_chain_control[0])
-        # If parent_aim enabled.
+        # If parent_aim enabled. We create the parent_aim setup.
         if self.operator_meta_data.get(self.PARENT_AIM_ATTR):
             parent_aim_attr = {
                 "name": self.PARENT_AIM_ATTR,
@@ -340,8 +364,12 @@ class MainCreate(components.main.Component):
                 self.main_chain_control[1],
                 self.sub_chain_controls[0].attr(self.PARENT_AIM_ATTR),
             )
+            # Pass the aim ref node to the output list because this will
+            # actually move the joints later.
             self.output_matrix_nd_list.append(aim_ref[1])
             self.bnd_output_matrix.append(aim_ref[1])
+            # Pass the aim ref node to a temp variable so we are able to use
+            # it as parent node for the next setup hierarchy.
             temp = aim_ref[0]
             for count, sub_control_curve in enumerate(self.sub_chain_controls):
                 count = count + 1
@@ -361,8 +389,12 @@ class MainCreate(components.main.Component):
                     )
                     self.output_matrix_nd_list.append(aim_ref_[1])
                     self.bnd_output_matrix.append(aim_ref_[1])
+                    # Pass the aim ref node to a temp variable so we are able to use
+                    # it as parent node for the next setup hierarchy.
                     temp = aim_ref_[0]
                 except:
+                    # If we reach the end of the loop go out with a exception
+                    # and print a user message.
                     logger.log(
                         level="info",
                         message="Component: {} / Name: {"
@@ -373,6 +405,8 @@ class MainCreate(components.main.Component):
         # At objects to output class lists.
         for control_curve in controls_curves_list:
             self.controls.append(control_curve)
+        # The last temp node is actually the last aim_ref_nd we need to drive
+        # the last bdn joint.
         self.output_matrix_nd_list.append(temp)
         self.bnd_output_matrix.append(temp)
         self.component_rig_list.append(offset_grp)

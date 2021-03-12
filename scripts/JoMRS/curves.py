@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 22
+# Date:       2021 / 03 / 08
 
 """
 JoMRS nurbsCurve modification module.
