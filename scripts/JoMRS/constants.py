@@ -46,6 +46,8 @@ OP_SUB_TAG_NAME = "JOMRS_op_sub"
 
 OP_LRA_TAG_NAME = "JOMRS_op_lra"
 
+SUB_OP_LRA_TAG_NAME = "JOMRS_sub_op_lra"
+
 OP_ROOT_NAME = "M_MAIN_operators_0_GRP"
 
 MAIN_OP_ROOT_NODE_NAME = "M_MAIN_op_0_CON"
@@ -165,6 +167,8 @@ META_MAIN_OP_ND_WS_MATRIX_STR = "main_op_nd_ws_matrix"
 META_SUB_OP_ND_WS_MATRIX_STR = "sub_op_nd_ws_matrix"
 
 META_LRA_ND_WS_MATRIX_STR = "lra_nd_ws_matrix"
+
+META_SUB_LRA_ND_WS_MATRIX_STR = "sub_lra_nd_ws_matrix"
 
 META_CONTAINER_TYPE_ATTR = "container_type"
 

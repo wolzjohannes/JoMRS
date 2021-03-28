@@ -20,17 +20,14 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 08
+# Date:       2021 / 03 / 28
 
 """
 Test the fk_chain_component.
 """
-import pymel.core as pmc
 import pymel.core.datatypes as dt
 from tests.mayaunittest import TestCase
-from components.main import selected
 import components.fk_chain_component.create as fk_chain_comp
-import constants
 
 
 class TestFkChainComponent(TestCase):
@@ -38,110 +35,74 @@ class TestFkChainComponent(TestCase):
     Test fk_chain_component.
     """
 
+    SUB_OPERATORS_COUNT = 3
+
     def setUp(self):
         """
         Test the single control rig component.
         """
-        self.gl_comp_0 = gl_comp.MainCreate()
-        self.gl_comp_0._init_operator()
-        self.gl_comp_0.set_rig_name("test")
-        self.gl_comp_0.main_op_nd.scale.set(5, 5, 5)
-        self.gl_comp_0.main_op_nd.translate.set(-4, 20, -20)
-        self.gl_comp_0.main_op_nd.rotate.set(-60, 70, -47)
-        self.gl_comp_0.sub_operators[0].translate.set(1, 11, -6)
-        pmc.select(self.gl_comp_0.sub_operators[0])
-        self.selection = selected()
-        # For hard testing i create a second component and parent it under
-        # the first one. This component is not designed for that purposes but
-        # this abstraction is good for testing.
-        self.gl_comp_1 = gl_comp.MainCreate(
-            1, self.selection, self.selection, self.selection
+        self.fk_chain_comp_0 = fk_chain_comp.MainCreate(
+            name="Test",
+            side="L",
+            index=1,
+            axes="X",
+            sub_operators_count=self.SUB_OPERATORS_COUNT,
         )
-        self.gl_comp_1._init_operator(parent=self.selection)
-        self.gl_comp_1.main_op_nd.scale.set(5, 5, 5)
-        self.gl_comp_1.main_op_nd.translate.set(32, 20, -20)
-        self.gl_comp_1.main_op_nd.rotate.set(-60, 70, -47)
-        self.gl_comp_1.sub_operators[0].translate.set(1, 11, -6)
+        self.fk_chain_comp_0._init_operator()
+        self.fk_chain_comp_0.main_op_nd.scale.set(10, 10, 10)
+        self.fk_chain_comp_0.set_rig_name("testrig")
+        self.fk_chain_comp_0.main_op_nd.translate.set(-60, 100, 70)
+        self.fk_chain_comp_0.main_op_nd.rotate.set(4, 30, 6)
 
-    # def test_build_from_operator(self):
-    #     """
-    #     Isolated component build testing.
-    #     """
-    #     self.gl_comp_0.build_from_operator()
-    #     self.gl_comp_1.build_from_operator()
-    #
-    # def test_bnd_joint_creation_disabled(self):
-    #     """
-    #     Test the bnd creation for one component. So we check if it works
-    #     separately.
-    #     """
-    #     self.gl_comp_1.set_bnd_joint_creation(True)
-    #     self.gl_comp_0.build_from_operator()
-    #     self.gl_comp_1.build_from_operator()
-    #     output_nd_0 = self.gl_comp_0.component_root.get_container_content_by_string_pattern(
-    #         "output"
-    #     )[
-    #         0
-    #     ]
-    #     self.assertFalse(
-    #         output_nd_0.attr(constants.BND_OUTPUT_WS_PORT_NAME).connections()
-    #     )
-    #     self.assertFalse(self.gl_comp_0.component_root.get_bnd_root_nd())
-    #     output_nd_1 = self.gl_comp_1.component_root.get_container_content_by_string_pattern(
-    #         "output"
-    #     )[
-    #         0
-    #     ]
-    #     self.assertTrue(
-    #         output_nd_1.attr(constants.BND_OUTPUT_WS_PORT_NAME).connections()
-    #     )
-    #     self.assertTrue(self.gl_comp_1.component_root.get_bnd_root_nd())
-    #
-    # def test_control_curve_worldspace_orientation(self):
-    #     """
-    #     Test if the control curve in orientated in worldspace zero.
-    #     """
-    #     self.gl_comp_1.set_worldspace_orientation(False)
-    #     self.gl_comp_0.build_from_operator()
-    #     self.gl_comp_1.build_from_operator()
-    #     global_control_curve_0 = self.gl_comp_0.global_control_curve[1]
-    #     global_control_curve_1 = self.gl_comp_1.global_control_curve[1]
-    #     gl_comp_0_ws_matrix = global_control_curve_0.getMatrix(worldSpace=True)
-    #     gl_comp_1_ws_matrix = global_control_curve_1.getMatrix(worldSpace=True)
-    #     self.assertEqual(
-    #         gl_comp_0_ws_matrix.rotate, dt.Quaternion([0.0, 0.0, 0.0, 1.0])
-    #     )
-    #     self.assertNotEqual(
-    #         gl_comp_1_ws_matrix.rotate, dt.Quaternion([0.0, 0.0, 0.0, 1.0])
-    #     )
-    #
-    # def test_callback_attributes(self):
-    #     """
-    #     Test the change pivot callback.
-    #     """
-    #     self.gl_comp_0.build_from_operator()
-    #     self.gl_comp_1.build_from_operator()
-    #     self.gl_comp_0.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_0.CHANGE_PIVOT_ATTR
-    #     ).set(1)
-    #     self.gl_comp_0.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_0.CHANGE_PIVOT_ATTR
-    #     ).set(0)
-    #     self.gl_comp_1.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_1.CHANGE_PIVOT_ATTR
-    #     ).set(1)
-    #     self.gl_comp_1.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_1.CHANGE_PIVOT_ATTR
-    #     ).set(0)
-    #     self.gl_comp_0.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_0.RESET_PIVOT_ATTR
-    #     ).set(1)
-    #     self.gl_comp_0.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_0.RESET_PIVOT_ATTR
-    #     ).set(0)
-    #     self.gl_comp_1.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_1.RESET_PIVOT_ATTR
-    #     ).set(1)
-    #     self.gl_comp_1.change_pivot_control_curve[1].attr(
-    #         self.gl_comp_1.RESET_PIVOT_ATTR
-    #     ).set(0)
+        self.fk_chain_comp_0.sub_operators[0].translate.set(9, 5, -4)
+        self.fk_chain_comp_0.sub_operators[1].translate.set(6, -2, 6)
+        self.fk_chain_comp_0.sub_operators[2].translate.set(2.5, -5, 6)
+
+    def test_sub_lra_nodes(self):
+        """
+        Test if all sub operators has a lra node.
+        """
+        self.assertEqual(
+            len(self.fk_chain_comp_0.sub_lra_nodes), self.SUB_OPERATORS_COUNT
+        )
+
+    def test_build_with_parent_aim(self):
+        """
+        Test the component build with parent aim option.
+        """
+        self.fk_chain_comp_0.set_parent_aim(True)
+        self.fk_chain_comp_0.build_from_operator()
+        for node in self.fk_chain_comp_0.sub_chain_controls:
+            self.assertTrue(
+                node.hasAttr(self.fk_chain_comp_0.parent_aim_attr_name)
+            )
+
+    def test_build_without_parent_aim(self):
+        """
+        Test the component build without the parent aim.
+        """
+        self.fk_chain_comp_0.build_from_operator()
+        for node in self.fk_chain_comp_0.sub_chain_controls:
+            self.assertFalse(
+                node.hasAttr(self.fk_chain_comp_0.parent_aim_attr_name)
+            )
+
+    def test_end_control_orientation(self):
+        """
+        Test end control orientation.
+        """
+        self.fk_chain_comp_0.build_from_operator()
+        sub_chain_control_rotation_0 = dt.TransformationMatrix(
+            self.fk_chain_comp_0.sub_chain_controls[-1].getMatrix(
+                worldSpace=True
+            )
+        ).getRotation()
+        sub_chain_control_rotation_1 = dt.TransformationMatrix(
+            self.fk_chain_comp_0.sub_chain_controls[-2].getMatrix(
+                worldSpace=True
+            )
+        ).getRotation()
+        for x in range(3):
+            self.assertAlmostEqual(
+                sub_chain_control_rotation_0[x], sub_chain_control_rotation_1[x]
+            )

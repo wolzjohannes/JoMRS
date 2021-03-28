@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 05
+# Date:       2021 / 03 / 14
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -908,6 +908,9 @@ class MainBuild(object):
                     constants.META_MAIN_OP_ND_WS_MATRIX_STR
                 )
                 lra_nd_ws_matrix = data.get(constants.META_LRA_ND_WS_MATRIX_STR)
+                sub_lra_nd_ws_matrix = data.get(
+                    constants.META_SUB_LRA_ND_WS_MATRIX_STR
+                )
                 sub_op_ws_matrix = data.get(
                     constants.META_SUB_OP_ND_WS_MATRIX_STR
                 )
@@ -928,6 +931,10 @@ class MainBuild(object):
                 if lra_nd_ws_matrix:
                     data[constants.META_LRA_ND_WS_MATRIX_STR] = [
                         list(mat) for mat in lra_nd_ws_matrix
+                    ]
+                if sub_lra_nd_ws_matrix:
+                    data[constants.META_SUB_LRA_ND_WS_MATRIX_STR] = [
+                        list(mat) for mat in sub_lra_nd_ws_matrix
                     ]
                 # The sub operators objects are special because for each
                 # sub_operators node you will find a Matrix Object in the
@@ -962,6 +969,9 @@ class MainBuild(object):
                     constants.META_MAIN_OP_ND_WS_MATRIX_STR
                 )
                 lra_nd_ws_matrix = data.get(constants.META_LRA_ND_WS_MATRIX_STR)
+                sub_lra_nd_ws_matrix = data.get(
+                    constants.META_SUB_LRA_ND_WS_MATRIX_STR
+                )
                 sub_op_nd_ws_matrix = data.get(
                     constants.META_SUB_OP_ND_WS_MATRIX_STR
                 )
@@ -974,6 +984,11 @@ class MainBuild(object):
                     data[constants.META_LRA_ND_WS_MATRIX_STR] = dt.Matrix(
                         lra_nd_ws_matrix
                     )
+                if sub_lra_nd_ws_matrix:
+                    data[constants.META_SUB_LRA_ND_WS_MATRIX_STR] = [
+                        dt.Matrix(sub_lra_nd)
+                        for sub_lra_nd in sub_lra_nd_ws_matrix
+                    ]
                 if sub_op_nd_ws_matrix:
                     data[constants.META_SUB_OP_ND_WS_MATRIX_STR] = [
                         dt.Matrix(sub) for sub in sub_op_nd_ws_matrix

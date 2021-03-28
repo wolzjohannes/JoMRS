@@ -2,14 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="eb5ebca5-090b-4069-ab32-156b6f4858ec" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/json/temp/latest_rig_build.json" beforeDir="false" afterPath="$PROJECT_DIR$/json/temp/latest_rig_build.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/build.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/build.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/components/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/curves.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/curves.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/constants.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/constants.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/scripts/JoMRS/operators.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/operators.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -22,8 +22,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="3937">
-              <caret line="134" selection-start-line="134" selection-end-line="134" />
+            <state relative-caret-position="686">
+              <caret line="100" column="33" selection-start-line="100" selection-start-column="13" selection-end-line="100" selection-end-column="33" />
               <folding>
                 <element signature="e#1200#1224#0" expanded="true" />
               </folding>
@@ -31,49 +31,13 @@
           </provider>
         </entry>
       </file>
-      <file pinned="false" current-in-tab="false">
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="806">
-              <caret line="26" column="3" selection-start-line="26" selection-start-column="3" selection-end-line="26" selection-end-column="3" />
+            <state relative-caret-position="190">
+              <caret line="81" column="40" lean-forward="true" selection-start-line="81" selection-start-column="40" selection-end-line="81" selection-end-column="40" />
               <folding>
-                <element signature="e#1201#1225#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="972">
-              <caret line="924" column="47" lean-forward="true" selection-start-line="924" selection-start-column="47" selection-end-line="924" selection-end-column="47" />
-              <folding>
-                <element signature="e#1233#1257#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="4991">
-              <caret line="169" column="39" selection-start-line="169" selection-start-column="8" selection-end-line="169" selection-end-column="39" />
-              <folding>
-                <element signature="e#1313#1322#0" expanded="true" />
-              </folding>
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/scripts/JoMRS/curves.py">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="48670">
-              <caret line="1575" selection-start-line="1575" selection-end-line="1575" />
-              <folding>
-                <element signature="e#1408#1432#0" expanded="true" />
+                <element signature="e#1201#1234#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -111,6 +75,7 @@
       <find>get_main_op_ws</find>
       <find>lra_node</find>
       <find>Join</find>
+      <find>OP</find>
     </findStrings>
     <replaceStrings>
       <replace>createNode</replace>
@@ -177,26 +142,25 @@
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/global_component/callbacks.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_global_component.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_single_control_component.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/constants.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/build.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/global_component/create.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/single_control_component/create.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/mayautils.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/strings.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/curves.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/constants.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/components/main.py" />
-        <option value="$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/build.py" />
         <option value="$PROJECT_DIR$/scripts/JoMRS/operators.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py" />
+        <option value="$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py" />
       </list>
     </option>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
-    <option name="x" value="270" />
-    <option name="y" value="215" />
-    <option name="width" value="1620" />
-    <option name="height" value="1051" />
+    <option name="y" value="41" />
+    <option name="width" value="2160" />
+    <option name="height" value="1399" />
   </component>
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
@@ -331,13 +295,6 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1578807722153</updated>
-    </task>
-    <task id="LOCAL-00002" summary="extend gitignore with pycharm xml">
-      <created>1582401485655</created>
-      <option name="number" value="00002" />
-      <option name="presentableId" value="LOCAL-00002" />
-      <option name="project" value="LOCAL" />
-      <updated>1582401485655</updated>
     </task>
     <task id="LOCAL-00003" summary="get the operators class work">
       <created>1582487749589</created>
@@ -675,7 +632,14 @@
       <option name="project" value="LOCAL" />
       <updated>1615156467115</updated>
     </task>
-    <option name="localTasksCounter" value="51" />
+    <task id="LOCAL-00051" summary="add the lra node setup to the sub operators!">
+      <created>1615589216502</created>
+      <option name="number" value="00051" />
+      <option name="presentableId" value="LOCAL-00051" />
+      <option name="project" value="LOCAL" />
+      <updated>1615589216502</updated>
+    </task>
+    <option name="localTasksCounter" value="52" />
     <servers />
   </component>
   <component name="TodoView">
@@ -691,12 +655,12 @@
     <frame x="0" y="41" width="2160" height="1399" extended-state="6" />
     <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.21516007" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.24246705" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" weight="0.326062" />
-      <window_info anchor="bottom" id="Run" order="2" weight="0.3" />
+      <window_info anchor="bottom" id="Run" order="2" weight="0.29915968" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -751,7 +715,6 @@
     </option>
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Add normaize_suffix_1 function to node creation" />
     <MESSAGE value="Xmas safety push! Add processing parenting data method to build class." />
     <MESSAGE value="Silvester safety push! Add parenting rig components method" />
     <MESSAGE value="Document the build module like hell." />
@@ -776,7 +739,8 @@
     <MESSAGE value="Global control component 100% done" />
     <MESSAGE value="started the fk_chain_component" />
     <MESSAGE value="fk_chain_component 90% done!" />
-    <option name="LAST_COMMIT_MESSAGE" value="fk_chain_component 90% done!" />
+    <MESSAGE value="add the lra node setup to the sub operators!" />
+    <option name="LAST_COMMIT_MESSAGE" value="add the lra node setup to the sub operators!" />
   </component>
   <component name="WindowStateProjectService">
     <state width="1111" height="828" key="Git.Branch.Popup" />
@@ -911,16 +875,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_global_component.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="903">
-          <caret line="147" lean-forward="true" selection-start-line="147" selection-end-line="147" />
-          <folding>
-            <element signature="e#1199#1223#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_single_control_component.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="-993">
@@ -968,33 +922,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="29233">
-          <caret line="955" column="66" selection-start-line="955" selection-start-column="66" selection-end-line="955" selection-end-column="66" />
-          <folding>
-            <element signature="e#1490#1514#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/constants.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4805">
-          <caret line="155" selection-start-line="155" selection-end-line="155" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2260">
-          <caret line="95" column="50" lean-forward="true" selection-start-line="95" selection-start-column="50" selection-end-line="95" selection-end-column="50" />
-          <folding>
-            <element signature="e#1203#1219#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/strings.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="466">
@@ -1005,32 +932,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_global_component.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="3937">
-          <caret line="134" selection-start-line="134" selection-end-line="134" />
+        <state relative-caret-position="3720">
+          <caret line="147" lean-forward="true" selection-start-line="147" selection-end-line="147" />
           <folding>
-            <element signature="e#1200#1224#0" expanded="true" />
+            <element signature="e#1199#1223#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py">
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_operators.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="806">
-          <caret line="26" column="3" selection-start-line="26" selection-start-column="3" selection-end-line="26" selection-end-column="3" />
+        <state relative-caret-position="-806">
+          <caret line="95" column="50" lean-forward="true" selection-start-line="95" selection-start-column="50" selection-end-line="95" selection-end-column="50" />
           <folding>
-            <element signature="e#1201#1225#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="4991">
-          <caret line="169" column="39" selection-start-line="169" selection-start-column="8" selection-end-line="169" selection-end-column="39" />
-          <folding>
-            <element signature="e#1313#1322#0" expanded="true" />
+            <element signature="e#1203#1219#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -1045,12 +962,59 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/build.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1027">
+          <caret line="991" column="39" selection-start-line="991" selection-start-column="39" selection-end-line="991" selection-end-column="39" />
+          <folding>
+            <element signature="e#1490#1514#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/main.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="403">
+          <caret line="13" column="59" selection-start-line="13" selection-start-column="59" selection-end-line="13" selection-end-column="59" />
+          <folding>
+            <element signature="e#1313#1322#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/constants.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1027">
+          <caret line="170" column="29" selection-start-line="170" selection-end-line="170" selection-end-column="29" />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/scripts/JoMRS/operators.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="972">
-          <caret line="924" column="47" lean-forward="true" selection-start-line="924" selection-start-column="47" selection-end-line="924" selection-end-column="47" />
+        <state relative-caret-position="1027">
+          <caret line="959" column="60" selection-start-line="959" selection-start-column="60" selection-end-line="959" selection-end-column="60" />
           <folding>
             <element signature="e#1233#1257#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/components/fk_chain_component/create.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="686">
+          <caret line="100" column="33" selection-start-line="100" selection-start-column="13" selection-end-line="100" selection-end-column="33" />
+          <folding>
+            <element signature="e#1200#1224#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scripts/JoMRS/tests/test_fk_chain_component.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="190">
+          <caret line="81" column="40" lean-forward="true" selection-start-line="81" selection-start-column="40" selection-end-line="81" selection-end-column="40" />
+          <folding>
+            <element signature="e#1201#1234#0" expanded="true" />
           </folding>
         </state>
       </provider>

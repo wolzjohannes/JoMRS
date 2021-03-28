@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 08
+# Date:       2021 / 03 / 20
 
 """
 Build a fk chain component
@@ -34,8 +34,6 @@ import components.main
 import logging
 import logger
 import mayautils
-
-reload(mayautils)
 
 ##########################################################
 # GLOBALS
@@ -56,7 +54,6 @@ class MainCreate(components.main.Component):
     COMP_TYPE = "fk_chain_component"
     LOCAL_ROTATION_AXES = True
     SUB_OPERATORS_LOCAL_ROTATE_AXES = True
-    PARENT_AIM_ATTR = "parent_aim"
     PARENT_AIM_AXES_ATTR = "parent_aim_axes"
 
     def __init__(
@@ -101,6 +98,7 @@ class MainCreate(components.main.Component):
         self.chain_control_name = ""
         self.main_chain_control = None
         self.sub_chain_controls = []
+        self.parent_aim_attr_name = "parent_aim"
 
     def add_ud_attributes_to_operators_meta_nd(self):
         """
@@ -108,7 +106,7 @@ class MainCreate(components.main.Component):
         And fill the cd_attributes list for meta data.
         """
         parent_aim_attr = {
-            "name": self.PARENT_AIM_ATTR,
+            "name": self.parent_aim_attr_name,
             "attrType": "bool",
             "keyable": False,
             "channelBox": False,
@@ -127,7 +125,7 @@ class MainCreate(components.main.Component):
         # So they are registered as meta data in the meta node.,
         # Please append the attributes name not the the attribute dict.
         cd_attributes_ref_list = [
-            self.PARENT_AIM_ATTR,
+            self.parent_aim_attr_name,
             self.PARENT_AIM_AXES_ATTR,
         ]
         for reg_attr in cd_attributes_ref_list:
@@ -142,7 +140,7 @@ class MainCreate(components.main.Component):
             sub_operators_count=self.sub_operators_count,
             parent=parent,
             local_rotate_axes=self.LOCAL_ROTATION_AXES,
-            sub_operators_local_rotate_axes=self.SUB_OPERATORS_LOCAL_ROTATE_AXES
+            sub_operators_local_rotate_axes=self.SUB_OPERATORS_LOCAL_ROTATE_AXES,
         )
         self.set_parent_aim_axes(self.axes)
 
@@ -174,8 +172,8 @@ class MainCreate(components.main.Component):
             pairBlend weight.
 
         Returns:
-            List: pmc.PyNode(): The aim ref node. pmc.PyNode(): The parent aim
-            ref node.
+            List: [pmc.PyNode(): The aim ref node, pmc.PyNode(): The parent aim
+            ref node.]
 
         """
         # Create the setup transforms
@@ -252,9 +250,11 @@ class MainCreate(components.main.Component):
         distance_shape_trs.rename(distance_nd_name)
         distance_shape_trs.visibility.set(0)
         parent_nd_decomp_name = "{}_REF_{}_parent_aim_{}_{}_DEMAND".format(
-            side, name, index, count_)
+            side, name, index, count_
+        )
         aim_nd_decomp_name = "{}_REF_{}_aim_{}_{}_DEMAND".format(
-            side, name, index, count_)
+            side, name, index, count_
+        )
         parent_nd_decomp = pmc.createNode(
             "decomposeMatrix", n=parent_nd_decomp_name
         )
@@ -295,8 +295,8 @@ class MainCreate(components.main.Component):
         orig_lra_nd_match_matrix = self.operator_meta_data.get(
             constants.META_LRA_ND_WS_MATRIX_STR
         )
-        orig_sub_op_match_matrix = self.operator_meta_data.get(
-            constants.META_SUB_OP_ND_WS_MATRIX_STR
+        orig_sub_lra_nd_match_matrix = self.operator_meta_data.get(
+            constants.META_SUB_LRA_ND_WS_MATRIX_STR
         )
         # normalize the match matrix in scale.
         lra_nd_tweaked_matrix = mayautils.matrix_normalize_scale(
@@ -304,7 +304,7 @@ class MainCreate(components.main.Component):
         )
         sub_op_tweaked_matrix = [
             mayautils.matrix_normalize_scale(sub_matrix)
-            for sub_matrix in orig_sub_op_match_matrix
+            for sub_matrix in orig_sub_lra_nd_match_matrix
         ]
         # Get control curve color from rig meta data.
         control_curve_color = self.get_control_curve_color_from_rig_meta_data(
@@ -321,7 +321,7 @@ class MainCreate(components.main.Component):
         )
         controls_curves_list = [self.main_chain_control[1]]
         # for length in the sup operators matrix generate the sub chain
-        for index, sub_op_matrix in enumerate(orig_sub_op_match_matrix):
+        for index, sub_op_matrix in enumerate(orig_sub_lra_nd_match_matrix):
             sub_chain_control = curves.BoxControl().create_curve(
                 name=self.chain_control_name.replace("0", str(index + 1)),
                 match=sub_op_tweaked_matrix[index],
@@ -336,15 +336,17 @@ class MainCreate(components.main.Component):
         mayautils.create_hierarchy(
             nodes=controls_curves_list, include_parent=True
         )
+        # the last sub_chain control need the orientation of his parent.
+        sub_chain_control[-1].getParent().rotate.set(0, 0, 0)
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_0_GRP".format(self.chain_control_name)
         )
         offset_grp.addChild(self.main_chain_control[0])
         # If parent_aim enabled. We create the parent_aim setup.
-        if self.operator_meta_data.get(self.PARENT_AIM_ATTR):
+        if self.operator_meta_data.get(self.parent_aim_attr_name):
             parent_aim_attr = {
-                "name": self.PARENT_AIM_ATTR,
+                "name": self.parent_aim_attr_name,
                 "attrType": "float",
                 "keyable": True,
                 "channelBox": True,
@@ -362,7 +364,7 @@ class MainCreate(components.main.Component):
                 0,
                 aim_axes,
                 self.main_chain_control[1],
-                self.sub_chain_controls[0].attr(self.PARENT_AIM_ATTR),
+                self.sub_chain_controls[0].attr(self.parent_aim_attr_name),
             )
             # Pass the aim ref node to the output list because this will
             # actually move the joints later.
@@ -384,7 +386,7 @@ class MainCreate(components.main.Component):
                         aim_axes,
                         temp,
                         self.sub_chain_controls[count].attr(
-                            self.PARENT_AIM_ATTR
+                            self.parent_aim_attr_name
                         ),
                     )
                     self.output_matrix_nd_list.append(aim_ref_[1])
@@ -402,13 +404,19 @@ class MainCreate(components.main.Component):
                         "created.".format(self.COMP_TYPE, name),
                         logger=_LOGGER,
                     )
+            # The last temp node is actually the last aim_ref_nd we need to drive
+            # the last bdn joint.
+            self.output_matrix_nd_list.append(temp)
+            self.bnd_output_matrix.append(temp)
+        else:
+            self.output_matrix_nd_list.append(self.main_chain_control[1])
+            self.bnd_output_matrix.append(self.main_chain_control[1])
+            for sub_chain_node in self.sub_chain_controls:
+                self.output_matrix_nd_list.append(sub_chain_node)
+                self.bnd_output_matrix.append(sub_chain_node)
         # At objects to output class lists.
         for control_curve in controls_curves_list:
             self.controls.append(control_curve)
-        # The last temp node is actually the last aim_ref_nd we need to drive
-        # the last bdn joint.
-        self.output_matrix_nd_list.append(temp)
-        self.bnd_output_matrix.append(temp)
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
         logger.log(
@@ -428,7 +436,7 @@ class MainCreate(components.main.Component):
             value(bool): Enable/Disable the parent aim setup creation.
 
         """
-        self.main_meta_nd.attr(self.PARENT_AIM_ATTR).set(value)
+        self.main_meta_nd.attr(self.parent_aim_attr_name).set(value)
 
     def set_parent_aim_axes(self, axe):
         """

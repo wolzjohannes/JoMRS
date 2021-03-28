@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 05
+# Date:       2021 / 03 / 14
 
 """
 Rig components main module. This class is the template to create a rig
@@ -193,7 +193,7 @@ class Component(operators.ComponentOperator):
             sub_operators_count=sub_operators_count,
             local_rotate_axes=local_rotate_axes,
             parent=parent,
-            sub_operators_local_rotate_axes=sub_operators_local_rotate_axes
+            sub_operators_local_rotate_axes=sub_operators_local_rotate_axes,
         )
         self.set_component_name(self.name)
         self.set_component_type(self.component_type)
@@ -225,6 +225,9 @@ class Component(operators.ComponentOperator):
         self.operator_meta_data[
             constants.META_SUB_OP_ND_WS_MATRIX_STR
         ] = self.get_sub_op_nodes_ws_matrix()
+        self.operator_meta_data[
+            constants.META_SUB_LRA_ND_WS_MATRIX_STR
+        ] = self.get_sub_lra_nd_ws_matrix()
         self.operator_meta_data[
             constants.META_MAIN_COMP_NAME
         ] = self.get_component_name()

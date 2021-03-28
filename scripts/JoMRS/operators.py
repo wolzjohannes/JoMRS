@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 08
+# Date:       2021 / 03 / 14
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -637,6 +637,7 @@ class ComponentOperator(MainOperatorNode):
         """
         MainOperatorNode.__init__(self, operators_root_node, main_operator_node)
         self.all_container_nodes = []
+        self.sub_lra_nodes = []
         self.sub_operators = []
         self.sub_operators_lra_buffer = []
         self.cd_attributes = []
@@ -657,6 +658,7 @@ class ComponentOperator(MainOperatorNode):
             self.get_sub_op_nodes_from_main_op_nd()
             self.get_node_list()
             self.get_lra_node()
+            self.get_sub_lra_nodes()
         if sub_operator_node:
             if valid_node(sub_operator_node, "JoMRS_sub"):
                 # If a valid sub op node is passed get the main_op_nd form
@@ -668,6 +670,7 @@ class ComponentOperator(MainOperatorNode):
                 self.get_root_nd_from_root_meta_nd()
                 self.get_node_list()
                 self.get_lra_node()
+                self.get_sub_lra_nodes()
 
         self.linear_curve_drivers = []
 
@@ -722,6 +725,12 @@ class ComponentOperator(MainOperatorNode):
         for attr_ in self.sub_node_param_list:
             attributes.add_attr(node=sub_op_node, **attr_)
         if local_rotate_axes:
+            self.lra_op_attr = {
+                "name": constants.SUB_OP_LRA_TAG_NAME,
+                "attrType": "bool",
+                "keyable": False,
+                "defaultValue": 1,
+            }
             rotate_axe_control = curves.RotateAxesControl()
             sub_lra_node = rotate_axe_control.create_curve(
                 name=sub_op_nd_name.replace("CON", "LRA_CON"),
@@ -731,6 +740,7 @@ class ComponentOperator(MainOperatorNode):
                 lock_scale=["sx", "sy", "sz"],
                 buffer_grp=True,
             )
+            attributes.add_attr(sub_lra_node[1], **self.lra_op_attr)
             sub_op_node.addChild(sub_lra_node[0])
             self.sub_operators_lra_buffer.append(sub_lra_node[0])
             self.all_container_nodes.append(sub_lra_node[0])
@@ -960,6 +970,10 @@ class ComponentOperator(MainOperatorNode):
         # fill the all_container_nodes list.
         self.set_node_list()
         self.get_node_list()
+        # Get sub operators lra nodes if enabled! This only can be done when
+        # the node list is set!
+        if sub_operators_local_rotate_axes:
+            self.get_sub_lra_nodes()
 
     def set_component_type(self, type):
         """
@@ -1268,8 +1282,23 @@ class ComponentOperator(MainOperatorNode):
 
         """
         result = []
-        for sub_op in self.sub_operators:
-            result.append(sub_op.getMatrix(worldSpace=True))
+        if self.sub_operators:
+            for sub_op in self.sub_operators:
+                result.append(sub_op.getMatrix(worldSpace=True))
+        return result
+
+    def get_sub_lra_nd_ws_matrix(self):
+        """
+        Get the sub lra nodes ws matrix.
+
+        Return:
+             List: With the sub lra nd world matrix objects.
+
+        """
+        result = []
+        if self.sub_lra_nodes:
+            for sub_lra_nd in self.sub_lra_nodes:
+                result.append(sub_lra_nd.getMatrix(worldSpace=True))
         return result
 
     def get_node_list(self):
@@ -1327,6 +1356,17 @@ class ComponentOperator(MainOperatorNode):
                 and node.attr(constants.OP_LRA_TAG_NAME).get() is True
             ):
                 self.lra_node = node
+
+    def get_sub_lra_nodes(self):
+        """
+        Get the sub lra nodes.
+        """
+        for node in self.all_container_nodes:
+            if (
+                node.hasAttr(constants.SUB_OP_LRA_TAG_NAME)
+                and node.attr(constants.SUB_OP_LRA_TAG_NAME).get() is True
+            ):
+                self.sub_lra_nodes.append(node)
 
     def rename_operator_nodes(self, name):
         """
