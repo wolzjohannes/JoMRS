@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 20
+# Date:       2021 / 04 / 15
 
 """
 Build a fk chain component
@@ -319,7 +319,7 @@ class MainCreate(components.main.Component):
             lock_visibility=True,
             lock_scale=True,
         )
-        controls_curves_list = [self.main_chain_control[1]]
+        controls_curves_list = [self.main_chain_control.control]
         # for length in the sup operators matrix generate the sub chain
         for index, sub_op_matrix in enumerate(orig_sub_lra_nd_match_matrix):
             sub_chain_control = curves.BoxControl().create_curve(
@@ -330,19 +330,19 @@ class MainCreate(components.main.Component):
                 lock_visibility=True,
                 lock_scale=True,
             )
-            self.sub_chain_controls.append(sub_chain_control[1])
-            controls_curves_list.append(sub_chain_control[1])
+            self.sub_chain_controls.append(sub_chain_control.control)
+            controls_curves_list.append(sub_chain_control.control)
         # Parent controls as hierarchy.
         mayautils.create_hierarchy(
             nodes=controls_curves_list, include_parent=True
         )
         # the last sub_chain control need the orientation of his parent.
-        sub_chain_control[-1].getParent().rotate.set(0, 0, 0)
+        sub_chain_control.buffer_grp.rotate.set(0, 0, 0)
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_0_GRP".format(self.chain_control_name)
         )
-        offset_grp.addChild(self.main_chain_control[0])
+        offset_grp.addChild(self.main_chain_control.buffer_grp)
         # If parent_aim enabled. We create the parent_aim setup.
         if self.operator_meta_data.get(self.parent_aim_attr_name):
             parent_aim_attr = {
@@ -359,11 +359,11 @@ class MainCreate(components.main.Component):
                 side,
                 name,
                 index,
-                self.main_chain_control[1],
+                self.main_chain_control.control,
                 self.sub_chain_controls[0],
                 0,
                 aim_axes,
-                self.main_chain_control[1],
+                self.main_chain_control.control,
                 self.sub_chain_controls[0].attr(self.parent_aim_attr_name),
             )
             # Pass the aim ref node to the output list because this will
@@ -409,8 +409,8 @@ class MainCreate(components.main.Component):
             self.output_matrix_nd_list.append(temp)
             self.bnd_output_matrix.append(temp)
         else:
-            self.output_matrix_nd_list.append(self.main_chain_control[1])
-            self.bnd_output_matrix.append(self.main_chain_control[1])
+            self.output_matrix_nd_list.append(self.main_chain_control.control)
+            self.bnd_output_matrix.append(self.main_chain_control.control)
             for sub_chain_node in self.sub_chain_controls:
                 self.output_matrix_nd_list.append(sub_chain_node)
                 self.bnd_output_matrix.append(sub_chain_node)

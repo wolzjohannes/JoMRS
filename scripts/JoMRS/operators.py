@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 14
+# Date:       2021 / 04 / 10
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -507,9 +507,9 @@ class MainOperatorNode(OperatorsRootNode):
             buffer_grp=False,
             match=match,
         )
-        self.main_op_nd = main_op_node[0]
-        self.lra_node_buffer_grp = main_op_node[1]
-        self.lra_node = main_op_node[2]
+        self.main_op_nd = main_op_node.control
+        self.lra_node_buffer_grp = main_op_node.lra_buffer_grp
+        self.lra_node = main_op_node.lra_control
         attributes.add_attr(node=self.lra_node, **self.lra_op_attr)
         for attr_ in self.main_node_param_list:
             attributes.add_attr(node=self.main_op_nd, **attr_)
@@ -740,11 +740,11 @@ class ComponentOperator(MainOperatorNode):
                 lock_scale=["sx", "sy", "sz"],
                 buffer_grp=True,
             )
-            attributes.add_attr(sub_lra_node[1], **self.lra_op_attr)
-            sub_op_node.addChild(sub_lra_node[0])
-            self.sub_operators_lra_buffer.append(sub_lra_node[0])
-            self.all_container_nodes.append(sub_lra_node[0])
-            self.all_container_nodes.append(sub_lra_node[1])
+            attributes.add_attr(sub_lra_node.control, **self.lra_op_attr)
+            sub_op_node.addChild(sub_lra_node.buffer_grp)
+            self.sub_operators_lra_buffer.append(sub_lra_node.buffer_grp)
+            self.all_container_nodes.append(sub_lra_node.buffer_grp)
+            self.all_container_nodes.append(sub_lra_node.control)
         self.sub_meta_nd = meta.SubOpMetaNode(
             n=sub_op_nd_name.replace("_CON", "")
         )

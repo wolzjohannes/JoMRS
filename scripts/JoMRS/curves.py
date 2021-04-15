@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 08
+# Date:       2021 / 04 / 04
 
 """
 JoMRS nurbsCurve modification module.
@@ -30,6 +30,7 @@ JoMRS nurbsCurve modification module.
 # Mirror curve function. And specifie the color of the mirrored curve
 ##########################################################
 
+from collections import namedtuple
 import pymel.core as pmc
 import mayautils as utils
 import strings
@@ -97,7 +98,6 @@ class ControlCurves(object):
                 list: The buffer group, the test_single_control curve node.
 
         """
-        result = []
         name = strings.string_checkup(name, _LOGGER)
         self.control = self.get_curve(name)
         shapes = self.control.getShapes()
@@ -116,7 +116,7 @@ class ControlCurves(object):
                     os=True,
                     wd=True,
                     xn=True,
-                    xc='edge'
+                    xc="edge",
                 )
         if match:
             if isinstance(match, pmc.datatypes.Matrix) is False:
@@ -129,7 +129,6 @@ class ControlCurves(object):
                 shape__.overrideColor.set(color_index)
         if buffer_grp:
             buffer_ = utils.create_buffer_grp(node=self.control, name=name)
-            result.append(buffer_)
         if child:
             self.control.addChild(child)
         if lock_translate:
@@ -148,8 +147,11 @@ class ControlCurves(object):
             attributes.lock_and_hide_attributes(
                 self.control, attributes="visibility"
             )
-        result.append(self.control)
-        return result
+        if buffer_grp:
+            result = namedtuple("result", ["buffer_grp", "control"])
+            return result(buffer_, self.control)
+        result = namedtuple("result", ["control"])
+        return result(self.control)
 
     def get_curve(self):
         raise NotImplemented
@@ -1650,34 +1652,50 @@ class RotateAxesControl:
         )
         arrow1 = SingleArrowThinControl().create_curve(
             name=name, match=match, buffer_grp=False, scale=scale, color_index=6
-        )[0]
+        )
         arrow2 = SingleArrowThinControl().create_curve(
             name=name,
             match=match,
             buffer_grp=False,
             scale=scale,
             color_index=14,
-        )[0]
+        )
         for v in arrowValue0:
-            arrow0[-1].getShape().controlPoints[v["cv"]].xValue.set(
+            arrow0.control.getShape().controlPoints[v["cv"]].xValue.set(
                 v["value"][0]
             )
-            arrow0[-1].getShape().controlPoints[v["cv"]].yValue.set(
+            arrow0.control.getShape().controlPoints[v["cv"]].yValue.set(
                 v["value"][1]
             )
-            arrow0[-1].getShape().controlPoints[v["cv"]].zValue.set(
+            arrow0.control.getShape().controlPoints[v["cv"]].zValue.set(
                 v["value"][2]
             )
         for v in arrowValue1:
-            arrow1.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
-            arrow1.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
-            arrow1.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
+            arrow1.control.getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            arrow1.control.getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            arrow1.control.getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
         for v in arrowValue2:
-            arrow2.getShape().controlPoints[v["cv"]].xValue.set(v["value"][0])
-            arrow2.getShape().controlPoints[v["cv"]].yValue.set(v["value"][1])
-            arrow2.getShape().controlPoints[v["cv"]].zValue.set(v["value"][2])
-        pmc.parent(arrow1.getShape(), arrow0[-1], r=True, shape=True)
-        pmc.parent(arrow2.getShape(), arrow0[-1], r=True, shape=True)
+            arrow2.control.getShape().controlPoints[v["cv"]].xValue.set(
+                v["value"][0]
+            )
+            arrow2.control.getShape().controlPoints[v["cv"]].yValue.set(
+                v["value"][1]
+            )
+            arrow2.control.getShape().controlPoints[v["cv"]].zValue.set(
+                v["value"][2]
+            )
+        pmc.parent(
+            arrow1.control.getShape(), arrow0.control, r=True, shape=True
+        )
+        pmc.parent(
+            arrow2.control.getShape(), arrow0.control, r=True, shape=True
+        )
         pmc.delete(arrow1, arrow2)
         return arrow0
 
@@ -1725,7 +1743,6 @@ class DiamondControl:
         Return:
                 list: The buffer group, the Control Curve node.
         """
-
         spear0 = SpearControl1().create_curve(
             name=name,
             buffer_grp=buffer_grp,
@@ -1743,18 +1760,18 @@ class DiamondControl:
             match=match,
             color_index=color_index,
             buffer_grp=False,
-        )[0]
+        )
         spear2 = SpearControl1().create_curve(
             name=name,
             scale=scale,
             match=match,
             color_index=color_index,
             buffer_grp=False,
-        )[0]
-        pmc.rotate(spear1.cv[:], 0, 45, 0)
-        pmc.rotate(spear2.cv[:], 0, -45, 0)
-        spear0[-1].addChild(spear1.getShape(), r=True, shape=True)
-        spear0[-1].addChild(spear2.getShape(), r=True, shape=True)
+        )
+        pmc.rotate(spear1.control.cv[:], 0, 45, 0)
+        pmc.rotate(spear2.control.cv[:], 0, -45, 0)
+        spear0.control.addChild(spear1.control.getShape(), r=True, shape=True)
+        spear0.control.addChild(spear2.control.getShape(), r=True, shape=True)
         pmc.delete(spear1, spear2)
         if local_rotate_axes:
             instance = RotateAxesControl()
@@ -1767,12 +1784,27 @@ class DiamondControl:
                 lock_scale=["sx", "sy", "sz"],
                 lock_rotate=["ry", "rz"],
             )
-            spear0[-1].addChild(rotate_axes_con[0])
-            rotate_axes_con[0].rotate.set(0, 0, 0)
-            rotate_axes_con[0].translate.set(0, 0, 0)
-            rotate_axes_con[0].scale.set(1, 1, 1)
-            spear0.extend(rotate_axes_con)
-        return spear0
+            spear0.control.addChild(rotate_axes_con.buffer_grp)
+            rotate_axes_con.buffer_grp.rotate.set(0, 0, 0)
+            rotate_axes_con.buffer_grp.translate.set(0, 0, 0)
+            rotate_axes_con.buffer_grp.scale.set(1, 1, 1)
+        if buffer_grp:
+            result = namedtuple(
+                "result",
+                ["buffer_grp", "control", "lra_buffer_grp", "lra_control"],
+            )
+            return result(
+                spear0.buffer_grp,
+                spear0.control,
+                rotate_axes_con.buffer_grp,
+                rotate_axes_con.control,
+            )
+        result = namedtuple(
+            "result", ["control", "lra_buffer_grp", "lra_control"]
+        )
+        return result(
+            spear0.control, rotate_axes_con.buffer_grp, rotate_axes_con.control
+        )
 
 
 def linear_curve(

@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 07
+# Date:       2021 / 04 / 15
 
 """
 Build a single_control_component. Which can be used as main control or as simple fk
@@ -241,20 +241,20 @@ class MainCreate(components.main.Component):
             "transform", n="{}_offset_0_GRP".format(self.control_name)
         )
         # At control to offset group.
-        offset_grp.addChild(self.control_curve[0])
-        self.controls.append(self.control_curve[1])
+        offset_grp.addChild(self.control_curve.buffer_grp)
+        self.controls.append(self.control_curve.control)
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
-        self.output_matrix_nd_list.append(self.control_curve[1])
+        self.output_matrix_nd_list.append(self.control_curve.control)
         # lock and hide transform attributes if it is defined in the meta data.
         for lock_attr in self.LOCK_TRANSFORMATION_ATTRIBUTES:
             if self.operator_meta_data.get(lock_attr):
                 attribute_string = lock_attr.split("_")[1]
                 attributes.lock_and_hide_attributes(
-                    self.control_curve[1], attributes=attribute_string
+                    self.control_curve.control, attributes=attribute_string
                 )
         if bnd_jnt_creation:
-            self.bnd_output_matrix.append(self.control_curve[1])
+            self.bnd_output_matrix.append(self.control_curve.control)
         logger.log(
             level="info",
             message="Component logic created "

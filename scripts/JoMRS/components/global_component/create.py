@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 07
+# Date:       2021 / 04 / 15
 
 """
 Build a global control component
@@ -312,33 +312,33 @@ class MainCreate(components.main.Component):
             move=[0, 0, -5 * sub_op_ws_matrix_scale_avg],
         )
         controls_curves_list = [
-            self.global_control_curve[1],
-            self.local_control_curve[1],
-            self.change_pivot_control_curve[1],
-            self.cop_offset_control_curve[1],
-            self.cop_control_curve[1],
+            self.global_control_curve.control,
+            self.local_control_curve.control,
+            self.change_pivot_control_curve.control,
+            self.cop_offset_control_curve.control,
+            self.cop_control_curve.control,
         ]
         # Create offset grp.
         offset_grp = pmc.createNode(
             "transform", n="{}_offset_0_GRP".format(self.global_control_name)
         )
         # Connect cop control curve with the comp container meta_nd.
-        self.cop_control_curve[1].message.connect(
+        self.cop_control_curve.control.message.connect(
             self.component_root.meta_nd.attr(self.COP_CONTROL_CURVE)
         )
         # Connect the change pivot control curve with the comp container meta_nd.
-        self.change_pivot_control_curve[1].message.connect(
+        self.change_pivot_control_curve.control.message.connect(
             self.component_root.meta_nd.attr(self.CHANGE_PIVOT_CONTROL_CURVE)
         )
         # Connect local control with the comp container meta_nd.
-        self.local_control_curve[1].message.connect(
+        self.local_control_curve.control.message.connect(
             self.component_root.meta_nd.attr(self.LOCAL_CON_REF_META_ATTR)
         )
         # Change Pivot transform node.
         change_pivot_trs = pmc.createNode("transform",
                                           n=self.change_pivot_tsr_name)
         change_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
-        self.cop_control_curve[1].addChild(change_pivot_trs)
+        self.cop_control_curve.control.addChild(change_pivot_trs)
         change_pivot_trs.message.connect(
             self.component_root.meta_nd.attr(
                 self.CHANGE_PIVOT_TSR_REF_META_ATTR
@@ -348,7 +348,7 @@ class MainCreate(components.main.Component):
         reset_pivot_trs = pmc.createNode("transform",
                                          n=self.reset_pivot_tsr_name)
         reset_pivot_trs.setMatrix(sub_op_tweaked_matrix, worldSpace=True)
-        self.local_control_curve[1].addChild(reset_pivot_trs)
+        self.local_control_curve.control.addChild(reset_pivot_trs)
         reset_pivot_trs.message.connect(
             self.component_root.meta_nd.attr(self.RESET_PIVOT_TSR_REF_META_ATTR)
         )
@@ -365,15 +365,17 @@ class MainCreate(components.main.Component):
             "keyable": True,
             "channelBox": True,
         }
-        attributes.add_attr(self.change_pivot_control_curve[1],
+        attributes.add_attr(self.change_pivot_control_curve.control,
                             **change_pivot_attr)
-        attributes.add_attr(self.change_pivot_control_curve[1],
+        attributes.add_attr(self.change_pivot_control_curve.control,
                             **reset_pivot_attr)
         # Connect reset / change pivot attr to comp container meta_nd.
-        self.change_pivot_control_curve[1].attr(self.CHANGE_PIVOT_ATTR).connect(
+        self.change_pivot_control_curve.control.attr(
+            self.CHANGE_PIVOT_ATTR).connect(
             self.component_root.meta_nd.attr(self.CHANGE_PIVOT_ATTR)
         )
-        self.change_pivot_control_curve[1].attr(self.RESET_PIVOT_ATTR).connect(
+        self.change_pivot_control_curve.control.attr(
+            self.RESET_PIVOT_ATTR).connect(
             self.component_root.meta_nd.attr(self.RESET_PIVOT_ATTR)
         )
         # Parent controls as hierarchy.
@@ -384,12 +386,14 @@ class MainCreate(components.main.Component):
         reverse_nd = pmc.createNode(
             "reverse", n=self.change_pivot_name.replace("CON", "REVND")
         )
-        self.change_pivot_control_curve[1].attr(self.CHANGE_PIVOT_ATTR).connect(
+        self.change_pivot_control_curve.control.attr(
+            self.CHANGE_PIVOT_ATTR).connect(
             reverse_nd.inputX
         )
-        reverse_nd.outputX.connect(self.cop_offset_control_curve[0].visibility)
+        reverse_nd.outputX.connect(
+            self.cop_offset_control_curve.buffer_grp.visibility)
         # At control to offset group.
-        offset_grp.addChild(self.global_control_curve[0])
+        offset_grp.addChild(self.global_control_curve.buffer_grp)
         # create the script node for the change pivot callback.
         self.component_root.create_script_nd(
             beforeScript=BEFORE_CHANGE_PIV_SCRIPT_NODE_STR,
@@ -398,7 +402,7 @@ class MainCreate(components.main.Component):
         # At objects to output class lists.
         for control_curve in controls_curves_list:
             self.controls.append(control_curve)
-        for transform in [self.local_control_curve[1], change_pivot_trs]:
+        for transform in [self.local_control_curve.control, change_pivot_trs]:
             self.output_matrix_nd_list.append(transform)
             if bnd_jnt_creation:
                 self.bnd_output_matrix.append(transform)

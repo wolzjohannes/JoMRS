@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 24
+# Date:       2021 / 04 / 15
 
 """
 Build a single_control_component for testing purposes.
@@ -171,12 +171,12 @@ class MainCreate(components.main.Component):
             scale=match_matrix.scale,
         )
         # At control to offset group.
-        offset_grp.addChild(curve[0])
-        self.controls.append(curve[1])
+        offset_grp.addChild(curve.buffer_grp)
+        self.controls.append(curve.control)
         self.component_rig_list.append(offset_grp)
         self.input_matrix_offset_grp.append(offset_grp)
-        self.output_matrix_nd_list.append(curve[1])
-        self.bnd_output_matrix.append(curve[1])
+        self.output_matrix_nd_list.append(curve.control)
+        self.bnd_output_matrix.append(curve.control)
         logger.log(
             level="info",
             message="Component logic created "
