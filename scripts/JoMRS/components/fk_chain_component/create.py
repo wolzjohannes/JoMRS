@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 04 / 15
+# Date:       2021 / 04 / 26
 
 """
 Build a fk chain component
@@ -54,7 +54,6 @@ class MainCreate(components.main.Component):
     COMP_TYPE = "fk_chain_component"
     LOCAL_ROTATION_AXES = True
     SUB_OPERATORS_LOCAL_ROTATE_AXES = True
-    PARENT_AIM_AXES_ATTR = "parent_aim_axes"
 
     def __init__(
         self,
@@ -111,14 +110,8 @@ class MainCreate(components.main.Component):
             "keyable": False,
             "channelBox": False,
         }
-        parent_aim_axes = {
-            "name": self.PARENT_AIM_AXES_ATTR,
-            "attrType": "string",
-            "keyable": False,
-            "channelBox": False,
-        }
         # Add the attributes to the main_meta_nd of the operator.
-        cd_attributes_list = [parent_aim_attr, parent_aim_axes]
+        cd_attributes_list = [parent_aim_attr]
         for attr_ in cd_attributes_list:
             attributes.add_attr(node=self.main_meta_nd, **attr_)
         # It is important to append all user defined attributes to this list.
@@ -126,7 +119,6 @@ class MainCreate(components.main.Component):
         # Please append the attributes name not the the attribute dict.
         cd_attributes_ref_list = [
             self.parent_aim_attr_name,
-            self.PARENT_AIM_AXES_ATTR,
         ]
         for reg_attr in cd_attributes_ref_list:
             self.cd_attributes.append(reg_attr)
@@ -142,7 +134,6 @@ class MainCreate(components.main.Component):
             local_rotate_axes=self.LOCAL_ROTATION_AXES,
             sub_operators_local_rotate_axes=self.SUB_OPERATORS_LOCAL_ROTATE_AXES,
         )
-        self.set_parent_aim_axes(self.axes)
 
     def create_aim_setup_(
         self,
@@ -289,7 +280,7 @@ class MainCreate(components.main.Component):
         name = self.operator_meta_data.get(constants.META_MAIN_COMP_NAME)
         index = self.operator_meta_data.get(constants.META_MAIN_COMP_INDEX)
         side = self.operator_meta_data.get(constants.META_MAIN_COMP_SIDE)
-        aim_axes = self.operator_meta_data.get(self.PARENT_AIM_AXES_ATTR)
+        aim_axes = self.operator_meta_data.get(constants.META_OP_CREATION_AXES)
         self.chain_control_name = "{}_{}_{}_0_CON".format(side, name, index)
         # Get match matrix from meta data.
         orig_lra_nd_match_matrix = self.operator_meta_data.get(
@@ -437,13 +428,3 @@ class MainCreate(components.main.Component):
 
         """
         self.main_meta_nd.attr(self.parent_aim_attr_name).set(value)
-
-    def set_parent_aim_axes(self, axe):
-        """
-        Set parent aim axes.
-
-        Args:
-            axe(str): The aim axe.
-
-        """
-        self.main_meta_nd.attr(self.PARENT_AIM_AXES_ATTR).set(axe)

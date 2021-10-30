@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 03 / 02
+# Date:       2021 / 05 / 08
 
 """
 JoMRS maya utils module. Utilities helps
@@ -42,6 +42,7 @@ import logger
 import constants
 import meta
 import uuid
+import curves
 
 ##########################################################
 # GLOBAL
@@ -1228,9 +1229,14 @@ def create_joint_skeleton_by_data_dic(data_list):
 
 
 def create_ref_transform(
-    name, side, index, count, buffer_grp=False, match_matrix=None,
-        child=None, clean_translation=None, clean_rotation=None,
-        clean_scaling=None,
+    name,
+    side,
+    index,
+    count,
+    buffer_grp=False,
+    match_matrix=None,
+    match_transform=None,
+    child=None,
 ):
     """
     Create a reference transform.
@@ -1242,6 +1248,7 @@ def create_ref_transform(
             count(int): The node count.
             buffer_grp(bool): Enable buffer grp.
             match_matrix(pmc.datatype.Matrix): The match matrix.
+            match_transform(pmc.PyNode()): The match node.
             child(pmc.PyNode()): Child of node.
 
     Example:
@@ -1270,6 +1277,10 @@ def create_ref_transform(
         result = create_buffer_grp(node=ref_trs)
     if child:
         ref_trs.addChild(child)
+    if match_transform:
+        ref_trs.setMatrix(
+            match_transform.getMatrix(worldSpace=True), worldSpace=True
+        )
     return result
 
 
@@ -1318,6 +1329,24 @@ def matrix_reset_rotation(matrix):
     return dt.Matrix(tm)
 
 
+def matrix_transfer_rotation(source_matrix, target_matrix):
+    """
+    Will transfer the rotation from one matrix to another.
+
+    Args:
+        source_matrix(dt.Matrix): The source matrix.
+        target_matrix(dt.Matrix): The target matrix.
+
+    Return:
+        dt.Matrix: The matrix with new rotation.
+        .
+    """
+    source_tm = dt.TransformationMatrix(source_matrix)
+    target_tm = dt.TransformationMatrix(target_matrix)
+    target_tm.setRotation(source_tm.getRotation())
+    return dt.Matrix(target_tm)
+
+
 def create_alternate_aim_constraint(aim_nd, source_nd, aim_axe):
     """
     Create a alternate aim setup which has a similar aim constraint behaviour.
@@ -1357,6 +1386,76 @@ def create_alternate_aim_constraint(aim_nd, source_nd, aim_axe):
             anim_blend_nd.attr("output{}".format(axe)).connect(
                 source_nd.attr("rotate{}".format(axe))
             )
+
+
+def locators_on_cv(shape, connect=False, steps=None, locator_scale=(1, 1, 1)):
+    """
+    Will create a locator for each cv of a nurbscurve shape.
+
+    Args:
+        shape(pmc.PyNode(): The nurbscurve shape.
+        connect(bool): Connect the locators to the nurbscurve cvs.
+        steps(bool): The steps of creation. With that your able to over jump
+        some locator creation.
+        locator_scale(tuple): The locators local scale
+
+    Returns:
+        List: The created locators.
+
+    """
+    result = []
+    for nm, ps in enumerate(shape.getCVs()):
+        loc = pmc.spaceLocator()
+        result.append(loc)
+        loc.translate.set(ps)
+        loc.getShape().localScale.set(locator_scale)
+        if connect:
+            loc.getShape().worldPosition[0].connect(shape.controlPoints[nm])
+    if steps:
+        temp = range(len(result))
+        temp = temp[0::steps]
+        while len(temp) > 1:
+            for x in range(temp[0] + 1, temp[1]):
+                pmc.delete(result[x])
+            temp.remove(temp[0])
+    return result
+
+
+def create_curve_from_transforms(
+    transforms, name, matrices=None, degree=1, connect=False
+):
+    """
+    Create a curve based on selected transforms.
+    By default it will have locators to control the curve points.
+
+    Args:
+            transforms(list): Selected transforms.
+            name(str): The curve name.
+            matrices(list): List of matrices.
+            degree(int): The curve type. By Default is it "linear"
+            connect(bool): Connect the transforms to the curves knotes.
+
+    Return:
+            pmc.PyNode(): The created curve.
+
+    """
+    if transforms:
+        knotes = [
+            node.getMatrix(worldSpace=True).translate for node in transforms
+        ]
+    if matrices:
+        knotes = [mtx.translate for mtx in matrices]
+    curve = pmc.curve(d=degree, p=knotes, n=name)
+    if connect:
+        for index, node in enumerate(transforms):
+            decomp = pmc.createNode(
+                "decomposeMatrix", n="{}_DEMAND".format(node.name())
+            )
+            node.worldMatrix[0].connect(decomp.inputMatrix)
+            decomp.outputTranslate.connect(
+                curve.getShape().controlPoints[index]
+            )
+    return curve
 
 
 ##########################################################

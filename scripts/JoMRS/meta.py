@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 02 / 27
+# Date:       2021 / 04 / 26
 
 """
 Meta node creation module.
@@ -623,6 +623,13 @@ class MainOpMetaNode(MetaNode):
             "defaultValue": 0,
         }
 
+        op_creation_axes = {
+            "name": constants.META_OP_CREATION_AXES,
+            "attrType": "string",
+            "keyable": False,
+            "channelBox": False,
+        }
+
         main_node_param_list = [
             comp_name_attr,
             comp_type_attr,
@@ -640,6 +647,7 @@ class MainOpMetaNode(MetaNode):
             component_defined_attr,
             ws_output_index_attr,
             parent_ws_output_index_attr,
+            op_creation_axes,
         ]
 
         for attr_ in main_node_param_list:

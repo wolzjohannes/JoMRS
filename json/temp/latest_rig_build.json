@@ -3,9 +3,9 @@
         {
             "meta_data": [
                 {
-                    "JoMRS_UUID": "f809a263-40f2-4d35-bb65-b30b76626a38-main_op", 
+                    "JoMRS_UUID": "26e20000-a259-45ff-9dac-37fa196af998-main_op", 
                     "child_nd": [
-                        "74f03bb4-e365-4a7e-b6ad-fd6ed0cb3a3a-main_op"
+                        "9f4ab580-52b5-46e8-b171-f3de5e4dfa96-main_op"
                     ], 
                     "component_index": 0, 
                     "component_name": "MOM", 
@@ -71,13 +71,14 @@
                             1.0
                         ]
                     ], 
+                    "op_creation_axes": "X", 
                     "parent_nd": null, 
                     "parent_output_ws_matrix_index": 0, 
                     "sub_lra_nd_ws_matrix": [], 
                     "sub_op_nd_ws_matrix": []
                 }, 
                 {
-                    "JoMRS_UUID": "74f03bb4-e365-4a7e-b6ad-fd6ed0cb3a3a-main_op", 
+                    "JoMRS_UUID": "9f4ab580-52b5-46e8-b171-f3de5e4dfa96-main_op", 
                     "child_nd": [], 
                     "component_index": 1, 
                     "component_name": "Test", 
@@ -143,7 +144,8 @@
                             1.0
                         ]
                     ], 
-                    "parent_nd": "f809a263-40f2-4d35-bb65-b30b76626a38-main_op", 
+                    "op_creation_axes": "X", 
+                    "parent_nd": "26e20000-a259-45ff-9dac-37fa196af998-main_op", 
                     "parent_output_ws_matrix_index": 0, 
                     "sub_lra_nd_ws_matrix": [], 
                     "sub_op_nd_ws_matrix": []
@@ -155,16 +157,16 @@
     "parenting_data_dic": [
         {
             "comp_container_uuid": [
-                "f809a263-40f2-4d35-bb65-b30b76626a38-comp_container", 
-                "74f03bb4-e365-4a7e-b6ad-fd6ed0cb3a3a-comp_container"
+                "26e20000-a259-45ff-9dac-37fa196af998-comp_container", 
+                "9f4ab580-52b5-46e8-b171-f3de5e4dfa96-comp_container"
             ], 
-            "rig_container_uuid": "735f887c-4dec-41b2-aae0-2fea449c9bf5-rig_container"
+            "rig_container_uuid": "a4702a10-ec90-4a3a-8277-427a440f3c8f-rig_container"
         }
     ], 
     "rig_meta_data": [
         {
             "meta_data": {
-                "JoMRS_UUID": "735f887c-4dec-41b2-aae0-2fea449c9bf5-root_op", 
+                "JoMRS_UUID": "a4702a10-ec90-4a3a-8277-427a440f3c8f-root_op", 
                 "l_rig_color": 13, 
                 "l_rig_sub_color": 18, 
                 "m_rig_color": 17, 

@@ -76,7 +76,7 @@ class ControlCurves(object):
             name(str): The test_single_control name. You should follow the
             JoMRS naming convention. If not it will throw some
             warnings.
-            match(dagnode): The node for transform match.
+            match(dagnode or matrix): The node for transform match.
             scale(list): The scale values.
             color_index(integer): The color of the test_single_control.
             Valid is:

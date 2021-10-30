@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 04 / 12
+# Date:       2021 / 04 / 26
 
 """
 Rig components main module. This class is the template to create a rig
@@ -35,6 +35,7 @@ import logger
 import logging
 import constants
 import mayautils
+reload(operators)
 
 
 ##########################################################
@@ -216,6 +217,9 @@ class Component(operators.ComponentOperator):
         """
         Collect the operators meta data.
         """
+        self.operator_meta_data[
+            constants.META_OP_CREATION_AXES
+        ] = self.get_op_creation_axes()
         self.operator_meta_data[
             constants.META_MAIN_OP_ND_WS_MATRIX_STR
         ] = self.get_main_op_ws_matrix()

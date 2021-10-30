@@ -174,6 +174,8 @@ META_CONTAINER_TYPE_ATTR = "container_type"
 
 META_SCRIPT_ND = "script_nd"
 
+META_OP_CREATION_AXES = "op_creation_axes"
+
 UUID_ATTR_NAME = "JoMRS_UUID"
 
 GOD_META_ND_ARRAY_PLUG_NAME = "meta_nodes"

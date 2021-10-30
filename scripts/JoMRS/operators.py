@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 04 / 10
+# Date:       2021 / 09 / 27
 
 """
 JoMRS main operator module. Handles the operators creation.
@@ -649,6 +649,7 @@ class ComponentOperator(MainOperatorNode):
         self.linear_curve_name = None
         self.parent = None
         self.parent_main_op_nd = None
+        self.lra_nd_aim_con = None
         # Check at init if a root operator/main operator/sub operator node is
         # passed into the class.
         if self.main_op_nd:
@@ -837,6 +838,7 @@ class ComponentOperator(MainOperatorNode):
         self.set_component_side(side)
         self.set_component_name(name)
         self.set_component_index(index)
+        self.set_op_creation_axes(axes)
         # Add main meta node to god meta node.
         self.add_node_to_god_meta_nd(self.main_op_nd)
         if sub_operators_count:
@@ -896,7 +898,7 @@ class ComponentOperator(MainOperatorNode):
                     up_vec = (0, 1, 0)
                 # create the aim constraint name based on the lra node name.
                 aim_con_name = "{}_CONST".format(str(self.lra_node_buffer_grp))
-                aim_con = pmc.aimConstraint(
+                self.lra_nd_aim_con = pmc.aimConstraint(
                     self.sub_operators[0],
                     self.lra_node_buffer_grp,
                     aim=aim_vec,
@@ -907,7 +909,7 @@ class ComponentOperator(MainOperatorNode):
                     n=aim_con_name,
                 )
                 # at the constraint to the container node list
-                self.all_container_nodes.append(aim_con)
+                self.all_container_nodes.append(self.lra_nd_aim_con)
                 # If sub operators local rotate axes enabled create the aim
                 # constraint setup.
                 if sub_operators_local_rotate_axes:
@@ -974,6 +976,18 @@ class ComponentOperator(MainOperatorNode):
         # the node list is set!
         if sub_operators_local_rotate_axes:
             self.get_sub_lra_nodes()
+
+    def add_node_to_node_list(self, node):
+        """
+        Will add a node to the component node list.
+
+        Args:
+            node(pmc.PyNode()) The node to connect.
+
+        """
+        attributes.connect_next_available(
+                node, self.main_op_nd, "message", constants.NODE_LIST_ATTR_NAME
+            )
 
     def set_component_type(self, type):
         """
@@ -1130,6 +1144,16 @@ class ComponentOperator(MainOperatorNode):
             return False
         types = ";".join(types)
         self.main_meta_nd.attr(constants.META_MAIN_CONNECTION_TYPES).set(types)
+
+    def set_op_creation_axes(self, value):
+        """
+        Set the op creation axes in the meta data.
+
+        Args:
+            value(str): The creation axes.
+
+        """
+        self.main_meta_nd.attr(constants.META_OP_CREATION_AXES).set(value)
 
     def get_component_type(self):
         """
@@ -1367,6 +1391,16 @@ class ComponentOperator(MainOperatorNode):
                 and node.attr(constants.SUB_OP_LRA_TAG_NAME).get() is True
             ):
                 self.sub_lra_nodes.append(node)
+
+    def get_op_creation_axes(self):
+        """
+        Get the operators creation axes.
+
+        Return:
+            String: The axes where the operator was created.
+
+        """
+        return self.main_meta_nd.attr(constants.META_OP_CREATION_AXES).get()
 
     def rename_operator_nodes(self, name):
         """
