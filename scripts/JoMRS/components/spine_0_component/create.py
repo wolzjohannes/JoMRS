@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 10 / 30
+# Date:       2021 / 11 / 15
 
 """
 Build a spine rig based on motion path nodes. With FK/IK blending and FK/IK
@@ -38,6 +38,7 @@ import mayautils
 
 reload(mayautils)
 reload(components.main)
+reload(constants)
 
 ##########################################################
 # GLOBALS
@@ -144,8 +145,11 @@ class MainCreate(components.main.Component):
             parent=parent,
             local_rotate_axes=self.LOCAL_ROTATION_AXES,
         )
-        length_control_name = "{}_length_{}_{}_CON".format(
-            self.side, self.name, self.index
+        length_control_name = "{}_length_{}_{}_{}".format(
+            self.side,
+            self.name,
+            self.index,
+            constants.NODE_NAMES_SUFFIX_DICT.get("control"),
         )
         length_control_ins = curves.BoxControl()
         length_control = length_control_ins.create_curve(
@@ -158,9 +162,6 @@ class MainCreate(components.main.Component):
         self.add_node_to_node_list(length_control.control)
         self.add_node_to_node_list(length_control.buffer_grp)
         # Refactor the operator for the component needs.
-        # for node in self.sub_operators[0 : len(self.sub_operators) - 1]:
-        #     self.sub_operators[-1].translate.connect(node.translate)
-        #     attributes.lock_and_hide_attributes(node)
         # Here i change the aim constraint to a different behaviour.
         length_control.control.parentMatrix[0].connect(
             self.lra_nd_aim_con.target[0].targetParentMatrix, force=True
@@ -174,7 +175,158 @@ class MainCreate(components.main.Component):
         length_control.control.translate.connect(
             self.lra_nd_aim_con.target[0].targetTranslate, force=True
         )
-        # self.lra_node.rotateY.set(lock=False, keyable=True)
+        self.lra_node_buffer_grp.addChild(self.sub_operators[0])
+        sub_node_buffer_grps = [
+            mayautils.create_parent_grp(sub_node, sub_node.getParent())
+            for sub_node in self.sub_operators
+        ]
+        [
+            self.add_node(sub_node_buffer_grp)
+            for sub_node_buffer_grp in sub_node_buffer_grps
+        ]
+        [
+            self.add_node_to_node_list(sub_node_buffer_grp)
+            for sub_node_buffer_grp in sub_node_buffer_grps
+        ]
+        sub_nodes_lock_axes = [
+            "tx",
+            "ty",
+            "tz",
+            "ro",
+            "rx",
+            "ry",
+            "rz",
+            "sx",
+            "sy",
+            "sz",
+        ]
+        sub_nodes_lock_axes.remove("t{}".format(self.axes.lower()))
+        [
+            attributes.lock_and_hide_attributes(
+                sub_node, attributes=sub_nodes_lock_axes
+            )
+            for sub_node in self.sub_operators
+        ]
+        dis_between_nd = pmc.createNode("distanceBetween")
+        dis_between_nd.rename(
+            "{}_{}_{}_0_{}".format(
+                self.side,
+                self.name,
+                self.index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("distance"),
+            )
+        )
+        decomp_nd_list = [
+            pmc.createNode(
+                "decomposeMatrix",
+                n="{}_{}_{}_{}_{}".format(
+                    self.side,
+                    self.name,
+                    self.index,
+                    x,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("decompose_matrix"),
+                ),
+            )
+            for x in range(2)
+        ]
+        self.add_node(dis_between_nd)
+        self.add_node_to_node_list(dis_between_nd)
+        [self.add_node(decomp_nd) for decomp_nd in decomp_nd_list]
+        [self.add_node_to_node_list(decomp_nd) for decomp_nd in decomp_nd_list]
+        decomp_nd_0, decomp_nd_1 = decomp_nd_list
+        self.main_op_nd.worldMatrix[0].connect(decomp_nd_0.inputMatrix)
+        length_control.control.worldMatrix[0].connect(decomp_nd_1.inputMatrix)
+        decomp_nd_0.outputTranslate.connect(dis_between_nd.point1)
+        decomp_nd_1.outputTranslate.connect(dis_between_nd.point2)
+        divider = 1.0 / len(self.sub_operators)
+        plus_minus_average_nd_0 = pmc.createNode("plusMinusAverage")
+        plus_minus_average_nd_0.rename(
+            "{}_{}_{}_0_{}".format(
+                self.side,
+                self.name,
+                self.index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("plus_minus_average"),
+            )
+        )
+        plus_minus_average_nd_1 = pmc.createNode("plusMinusAverage")
+        plus_minus_average_nd_1.rename(
+            "{}_{}_{}_1_{}".format(
+                self.side,
+                self.name,
+                self.index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("plus_minus_average"),
+            )
+        )
+        main_scale_mult_double_lin = pmc.createNode("multDoubleLinear")
+        main_scale_mult_double_lin.rename(
+            "{}_{}_{}_0_{}".format(
+                self.side,
+                self.name,
+                self.index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("mult_double_linear"),
+            )
+        )
+        [
+            (self.add_node(pl_ma_nd), self.add_node_to_node_list(pl_ma_nd))
+            for pl_ma_nd in [
+                plus_minus_average_nd_0,
+                plus_minus_average_nd_1,
+                main_scale_mult_double_lin,
+            ]
+        ]
+        dis_between_nd.distance.connect(plus_minus_average_nd_0.input1D[0])
+        plus_minus_average_nd_0.operation.set(2)
+        plus_minus_average_nd_1.operation.set(3)
+        plus_minus_average_nd_1.output1D.connect(
+            main_scale_mult_double_lin.input1
+        )
+        main_scale_mult_double_lin.output.connect(
+            plus_minus_average_nd_0.input1D[1]
+        )
+        dis_between_nd.distance.connect(main_scale_mult_double_lin.input2)
+        main_scale_mult_double_lin.input2.disconnect()
+        for index, axe in enumerate("XYZ"):
+            self.main_op_nd.attr("scale{}".format(axe)).connect(
+                plus_minus_average_nd_1.input1D[index]
+            )
+        for node_index, sub_node_buffer_grp in enumerate(sub_node_buffer_grps):
+            mult_double_linear_nd = pmc.createNode("multDoubleLinear")
+            mult_double_linear_nd.rename(
+                "{}_{}_{}_{}_{}".format(
+                    self.side,
+                    self.name,
+                    self.index,
+                    node_index + 1,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("mult_double_linear"),
+                )
+            )
+            multiply_divide_nd = pmc.createNode("multiplyDivide")
+            multiply_divide_nd.rename(
+                "{}_{}_{}_{}_{}".format(
+                    self.side,
+                    self.name,
+                    self.index,
+                    node_index,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("multiply_divide"),
+                )
+            )
+            multiply_divide_nd.operation.set(2)
+            plus_minus_average_nd_1.output1D.connect(multiply_divide_nd.input2X)
+            plus_minus_average_nd_0.output1D.connect(
+                mult_double_linear_nd.input1
+            )
+            mult_double_linear_nd.input2.set(divider)
+            mult_double_linear_nd.output.connect(multiply_divide_nd.input1X)
+            multiply_divide_nd.outputX.connect(
+                sub_node_buffer_grp.attr("translate{}".format(self.axes))
+            )
+            self.add_node(mult_double_linear_nd)
+            self.add_node(multiply_divide_nd)
+            self.add_node_to_node_list(mult_double_linear_nd)
+            self.add_node_to_node_list(multiply_divide_nd)
+        self.lra_node.attr("rotate{}".format(self.axes)).set(
+            lock=False, keyable=True
+        )
 
     def build_component_logic(self):
         """

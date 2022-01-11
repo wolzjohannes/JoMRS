@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 05 / 08
+# Date:       2021 / 11 / 14
 
 """
 JoMRS maya utils module. Utilities helps
@@ -42,7 +42,6 @@ import logger
 import constants
 import meta
 import uuid
-import curves
 
 ##########################################################
 # GLOBAL
@@ -77,6 +76,34 @@ def create_buffer_grp(node, name=None):
     if parent:
         parent.addChild(buffer_grp)
     return buffer_grp
+
+
+def create_parent_grp(node, match=None, name=None):
+    """
+    Create a parent node for given node.
+
+    Arg:
+        node(pmc.PyNode()): The node for the parent node.
+        match(pmc.datatypes.Matrix or pmc.Pynode()): The match position.
+        name(str): Parent node name. If name not given will take node name
+        and at a "_grp" suffix.
+
+    Return:
+        pmc.PyNode(): The created parent grp.
+
+    """
+    parent = node.getParent()
+    if not name:
+        name = "{}_grp".format(node.name())
+    parent_grp = pmc.createNode("transform", n=name)
+    if not isinstance(match, pmc.datatypes.Matrix):
+        match = match.getMatrix(worldSpace=True)
+    if parent:
+        parent.addChild(parent_grp)
+    if match:
+        parent_grp.setMatrix(match, worldSpace=True)
+    parent_grp.addChild(node)
+    return parent_grp
 
 
 def space_locator_on_position(node, buffer_grp=True):

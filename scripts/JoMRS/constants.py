@@ -28,14 +28,14 @@ JoMRS constants module for global values.
 
 import os
 
-DEFAULT_CONTROL_NAME_PATTERN = 'M_name_index_CON'
+DEFAULT_CONTROL_NAME_PATTERN = "M_name_index_CON"
 
-ICONS_PATH = os.path.normpath('{}/icons'.format(
-    os.environ.get("JoMRS").split("scripts")[0])
+ICONS_PATH = os.path.normpath(
+    "{}/icons".format(os.environ.get("JoMRS").split("scripts")[0])
 )
 
-BUILD_JSON_PATH = os.path.normpath('{}/json'.format(
-    os.environ.get("JoMRS").split("scripts")[0])
+BUILD_JSON_PATH = os.path.normpath(
+    "{}/json".format(os.environ.get("JoMRS").split("scripts")[0])
 )
 
 OP_ROOT_TAG_NAME = "JOMRS_op_root"
@@ -96,9 +96,9 @@ DEFAULT_SUB_OPERATORS_SCALE = [0.25, 0.25, 0.25]
 
 DEFAULT_CONNECTION_TYPES = "translate;rotate;scale"
 
-DEFAULT_COMPONENT_TYPE = 'None'
+DEFAULT_COMPONENT_TYPE = "None"
 
-META_DIRTY_EVAL_ATTR = 'dirty'
+META_DIRTY_EVAL_ATTR = "dirty"
 
 META_GOD_ND_NAME = "god_meta_0_METAND"
 
@@ -158,7 +158,7 @@ META_MAIN_PARENT_ND = "parent_nd"
 
 META_MAIN_CHILD_ND = "child_nd"
 
-META_GOD_META_ND_ATTR = 'meta_nd'
+META_GOD_META_ND_ATTR = "meta_nd"
 
 META_COMPONENT_DEFINED_ATTR = "component_defined_attributes"
 
@@ -194,38 +194,59 @@ NODE_LIST_ATTR_NAME = "node_list"
 
 RIG_ROOT_NODE = "M_RIG_name_0_GRP"
 
-CONTAINER_NODE_ATTR_NAME = 'container_nd'
+CONTAINER_NODE_ATTR_NAME = "container_nd"
 
-OP_ROOT_ND_UUID_SUFFIX = 'root_op'
+OP_ROOT_ND_UUID_SUFFIX = "root_op"
 
-MAIN_OP_ND_UUID_SUFFIX = 'main_op'
+MAIN_OP_ND_UUID_SUFFIX = "main_op"
 
-RIG_CONTAINER_UUID_SUFFIX = 'rig_container'
+RIG_CONTAINER_UUID_SUFFIX = "rig_container"
 
-COMP_CONTAINER_UUID_SUFFIX = 'comp_container'
+COMP_CONTAINER_UUID_SUFFIX = "comp_container"
 
-CONTAINER_UUID_SUFFIX = 'container_node'
+CONTAINER_UUID_SUFFIX = "container_node"
 
-OUTPUT_WS_PORT_INDEX = 'output_ws_matrix_index'
+OUTPUT_WS_PORT_INDEX = "output_ws_matrix_index"
 
-PARENT_OUTPUT_WS_PORT_INDEX = 'parent_output_ws_matrix_index'
+PARENT_OUTPUT_WS_PORT_INDEX = "parent_output_ws_matrix_index"
 
-INPUT_WS_MATRIX_OFFSET_ND = 'input_ws_matrix_offset_nd'
+INPUT_WS_MATRIX_OFFSET_ND = "input_ws_matrix_offset_nd"
 
-BND_JNT_DEFAULT_NAME = 'side_BND_name_index_count_JNT'
+BND_JNT_DEFAULT_NAME = "side_BND_name_index_count_JNT"
 
-BND_JNT_ROOT_ND_ATTR = 'BND_jnt_root_nd'
+BND_JNT_ROOT_ND_ATTR = "BND_jnt_root_nd"
 
-CONTAINER_TYPE_ATTR = 'container_type'
+CONTAINER_TYPE_ATTR = "container_type"
 
-RIG_CONTAINER_UUID_DIC_KEY = 'rig_container_uuid'
+RIG_CONTAINER_UUID_DIC_KEY = "rig_container_uuid"
 
-COMP_CONTAINER_UUID_DIC_KEY = 'comp_container_uuid'
+COMP_CONTAINER_UUID_DIC_KEY = "comp_container_uuid"
 
-RIG_CONTAINER_TYPE = 'RIG'
+RIG_CONTAINER_TYPE = "RIG"
 
-COMPONENT_CONTAINER_TYPE = 'COMP'
+COMPONENT_CONTAINER_TYPE = "COMP"
 
-META_DATA_DIC_ITEM_0 = 'root_meta_nd'
+META_DATA_DIC_ITEM_0 = "root_meta_nd"
 
-META_DATA_DIC_ITEM_1 = 'meta_data'
+META_DATA_DIC_ITEM_1 = "meta_data"
+
+NODE_NAMES_SUFFIX_DICT = {
+    "curve": "CRV",
+    "handle": "HANDLE",
+    "joint": "JNT",
+    "geo": "GEO",
+    "group": "GRP",
+    "control": "CON",
+    "motion_path": "MPND",
+    "decompose_matrix": "DEMAND",
+    "mult_matrix": "MUMAND",
+    "meta": "METAND",
+    "constraint": "CONST",
+    "mult_double_linear": "MULDOLIND",
+    "transform": "TRS",
+    "reverse": "REVND",
+    "pair_blend": "PABLND",
+    "distance": "DISND",
+    "plus_minus_average": "PMAND",
+    "multiply_divide": "MUDIVND"
+}
