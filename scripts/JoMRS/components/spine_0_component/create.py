@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 11 / 15
+# Date:       2022 / 01 / 12
 
 """
 Build a spine rig based on motion path nodes. With FK/IK blending and FK/IK
@@ -513,7 +513,8 @@ class MainCreate(components.main.Component):
             )
             for (count, mtx) in enumerate(
                 [lra_nd_tweaked_matrix, sub_op_tweaked_matrix[-1]]
-            )]
+            )
+        ]
         spine_ik_rev_sc_joints = [
             mayautils.create_joint(
                 name="{}_IK_REV_SC_{}_{}_{}_{}".format(
@@ -528,32 +529,39 @@ class MainCreate(components.main.Component):
             )
             for (count, mtx) in enumerate(
                 [sub_op_tweaked_matrix[-1], lra_nd_tweaked_matrix]
-            )]
+            )
+        ]
         local_y_space_record_trs_nodes = [
             mayautils.create_ref_transform(
                 name="{}_record".format(name),
                 side=side,
                 index=index,
                 count=count,
-                match_matrix=mtx
+                match_matrix=mtx,
             )
             for (count, mtx) in enumerate(
                 [sub_op_tweaked_matrix[-1], lra_nd_tweaked_matrix]
             )
         ]
-        # Put a ref transform on each sub op on the spline curve.
-        # spine_mop_param_list = []
-        # lra_nd_mop_param = spine_curve.getParamAtPoint(
-        #     lra_nd_tweaked_matrix.translate, "world"
-        # )
-        # spine_mop_param_list.append(lra_nd_mop_param)
         ####### Create nodes for atcual rig behaviour of the component.#########
         mayautils.create_hierarchy(spine_ik_sc_joints, match_joint_orient=True)
-        mayautils.create_hierarchy(spine_ik_rev_sc_joints,
-                                   match_joint_orient=True)
+        mayautils.create_hierarchy(
+            spine_ik_rev_sc_joints, match_joint_orient=True
+        )
         spine_ik_sc_joints[-1].jointOrient.set(0, 0, 0)
         spine_ik_rev_sc_joints[-1].jointOrient.set(0, 0, 0)
         spine_ik_sc_joints[-1].addChild(spine_ik_rev_sc_joints[0])
+        ik_sc_solver = mayautils.create_IK(
+            "{}_IK_SC_{}_0_{}_{}".format(
+                side,
+                name,
+                index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("handle"),
+            ),
+            start_jnt=spine_ik_sc_joints[0],
+            end_jnt=spine_ik_sc_joints[1],
+            parent=spine_curve_ik_controls[-1],
+        )
         logger.log(
             level="info",
             message="Component logic created "
