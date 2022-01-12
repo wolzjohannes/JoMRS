@@ -1151,14 +1151,17 @@ def create_motion_path(
     return mpnd
 
 
-def create_hierarchy(nodes=None, inverse_scale=None, include_parent=None):
+def create_hierarchy(nodes=None, inverse_scale=None, include_parent=None,
+                     match_joint_orient=None):
     """
     Create a hierarchy of nodes.
     Args:
             nodes(list): List of nodes.
             inverse_scale(bool): Disconnect the inverse scale
-            plugs of the joints.
+            plugs of joints. Works only with joints.
             include_parent(bool): Include the parent node into the hierarchy.
+            match_joint_orient(bool): Will get rotate values and pass it to
+                                      the joint orient. Works only with joints.
 
     Return:
             list: The list of nodes in the hierarchy.
@@ -1178,9 +1181,23 @@ def create_hierarchy(nodes=None, inverse_scale=None, include_parent=None):
             else:
                 logger.log(
                     level="error",
-                    message="Inverse scale option only" " available for joints",
+                    message="Inverse scale option only available for joints",
                     logger=_LOGGER,
                 )
+                return
+    if match_joint_orient:
+        for node in nodes:
+            if node.nodeType() == "joint":
+                node.jointOrient.set(node.rotate.get())
+                node.rotate.set(0, 0, 0)
+            else:
+                logger.log(
+                    level="error",
+                    message="Match joint orient option only available for "
+                            "joints",
+                    logger=_LOGGER,
+                )
+                return
     return nodes
 
 

@@ -374,14 +374,23 @@ class MainCreate(components.main.Component):
         spine_joints = list()
         spine_joints.append(
             mayautils.create_joint(
-                name="{}_DRV_spline_{}_{}_0_JNT".format(side, name, index),
+                name="{}_DRV_spline_{}_{}_0_{}".format(
+                    side,
+                    name,
+                    index,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("joint"),
+                ),
                 typ="DRV",
                 match_matrix=lra_nd_tweaked_matrix,
             )
         )
         for count, mtx in enumerate(sub_op_tweaked_matrix):
-            jnt_name = "{}_DRV_spline_{}_{}_{}_JNT".format(
-                side, name, index, count + 1
+            jnt_name = "{}_DRV_spline_{}_{}_{}_{}".format(
+                side,
+                name,
+                index,
+                count + 1,
+                constants.NODE_NAMES_SUFFIX_DICT.get("joint"),
             )
             jnt = mayautils.create_joint(
                 name=jnt_name, typ="DRV", match_matrix=mtx
@@ -395,7 +404,12 @@ class MainCreate(components.main.Component):
         pos_mult = 0.25
         box_control_instance = curves.BoxControl()
         curve_control_0 = box_control_instance.create_curve(
-            name="{}_IK_{}_{}_0_CON".format(side, name, index),
+            name="{}_IK_{}_{}_0_{}".format(
+                side,
+                name,
+                index,
+                constants.NODE_NAMES_SUFFIX_DICT.get("control"),
+            ),
             match=lra_nd_tweaked_matrix,
             scale=orig_lra_nd_match_matrix.scale * (10, 10, 10),
             color_index=control_curve_color,
@@ -404,7 +418,13 @@ class MainCreate(components.main.Component):
         spine_curve_ik_controls.append(curve_control_0.control)
         for x in range(4):
             curve_control = box_control_instance.create_curve(
-                name="{}_IK_{}_{}_{}_CON".format(side, name, index, x + 1),
+                name="{}_IK_{}_{}_{}_{}".format(
+                    side,
+                    name,
+                    index,
+                    x + 1,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("control"),
+                ),
                 match=sub_op_tweaked_matrix[-1],
                 scale=orig_lra_nd_match_matrix.scale * (10, 10, 10),
                 color_index=control_curve_color,
@@ -427,7 +447,13 @@ class MainCreate(components.main.Component):
         spine_curve_knots_control_trs = []
         for count_, node in enumerate(spine_curve_ik_control_buffer_groups):
             fk_control = curves.CircleControl().create_curve(
-                name="{}_FK_{}_{}_{}_CON".format(side, name, index, count_),
+                name="{}_FK_{}_{}_{}_{}".format(
+                    side,
+                    name,
+                    index,
+                    count_,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("control"),
+                ),
                 match=node,
                 scale=orig_lra_nd_match_matrix.scale * (10, 10, 10),
                 color_index=sub_control_curve_color,
@@ -441,7 +467,9 @@ class MainCreate(components.main.Component):
             spine_curve_fk_control_buffer_groups.append(fk_control.buffer_grp)
             spine_curve_fk_controls.append(fk_control.control)
         # Create the actual spine curve on base of the 5 transforms.
-        spine_curve_name = "{}_spine_{}_{}_CRV".format(side, name, index)
+        spine_curve_name = "{}_spine_{}_{}_{}".format(
+            side, name, index, constants.NODE_NAMES_SUFFIX_DICT.get("curve")
+        )
         spine_curve = mayautils.create_curve_from_transforms(
             transforms=spine_curve_knots_control_trs,
             name=spine_curve_name,
@@ -449,78 +477,83 @@ class MainCreate(components.main.Component):
             connect=True,
         )
         # Group the nodes.
-        ik_controls_grp = pmc.group(
-            spine_curve_ik_control_buffer_groups,
-            n="{}_IK_{}_{}_0_GRP".format(side, name, index),
+        ik_controls_grp = pmc.createNode(
+            "transform",
+            n="{}_IK_{}_{}_0_{}".format(
+                side, name, index, constants.NODE_NAMES_SUFFIX_DICT.get("group")
+            ),
         )
-        fk_control_grp = pmc.group(
-            spine_curve_fk_control_buffer_groups,
-            n="{}_FK_{}_{}_0_GRP".format(side, name, index),
+        fk_controls_grp = pmc.createNode(
+            "transform",
+            n="{}_FK_{}_{}_0_{"
+            "}".format(
+                side, name, index, constants.NODE_NAMES_SUFFIX_DICT.get("group")
+            ),
         )
-        ref_trs_grp = pmc.group(
-            spine_curve_knots_control_trs,
-            n="{}_REF_{}_{}_0_GRP".format(side, name, index),
+        ref_trs_grp = pmc.createNode(
+            "transform",
+            n="{}_REF_{}_{}_0_{}".format(
+                side, name, index, constants.NODE_NAMES_SUFFIX_DICT.get("group")
+            ),
         )
+        pmc.parent(spine_curve_ik_control_buffer_groups, ik_controls_grp)
+        pmc.parent(spine_curve_fk_control_buffer_groups, fk_controls_grp)
+        pmc.parent(spine_curve_knots_control_trs, ref_trs_grp)
         spine_ik_sc_joints = [
             mayautils.create_joint(
-                name="{}_IK_SC_{}_{"
-                "}_{}_JNT".format(side, name, index, count),
+                name="{}_IK_SC_{}_{}_{}_{}".format(
+                    side,
+                    name,
+                    index,
+                    count,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("joint"),
+                ),
                 typ="IK",
                 match_matrix=mtx,
             )
-            for count, mtx in enumerate(
+            for (count, mtx) in enumerate(
                 [lra_nd_tweaked_matrix, sub_op_tweaked_matrix[-1]]
-            )
-        ]
+            )]
         spine_ik_rev_sc_joints = [
             mayautils.create_joint(
-                name="{}_IK_REV_SC_{"
-                "}_{"
-                "}_{}_JNT".format(side, name, index, count),
+                name="{}_IK_REV_SC_{}_{}_{}_{}".format(
+                    side,
+                    name,
+                    index,
+                    count,
+                    constants.NODE_NAMES_SUFFIX_DICT.get("joint"),
+                ),
                 typ="IK",
                 match_matrix=mtx,
             )
-            for count, mtx in enumerate(
+            for (count, mtx) in enumerate(
                 [sub_op_tweaked_matrix[-1], lra_nd_tweaked_matrix]
-            )
-        ]
+            )]
         local_y_space_record_trs_nodes = [
             mayautils.create_ref_transform(
-                name=name, side=side, index=index, count=count, match_matrix=mtx
+                name="{}_record".format(name),
+                side=side,
+                index=index,
+                count=count,
+                match_matrix=mtx
             )
-            for count, mtx in enumerate(
+            for (count, mtx) in enumerate(
                 [sub_op_tweaked_matrix[-1], lra_nd_tweaked_matrix]
             )
         ]
         # Put a ref transform on each sub op on the spline curve.
-        spine_mop_param_list = []
-        lra_nd_mop_param = spine_curve.getParamAtPoint(
-            lra_nd_tweaked_matrix.translate, "world"
-        )
-        spine_mop_param_list.append(lra_nd_mop_param)
+        # spine_mop_param_list = []
+        # lra_nd_mop_param = spine_curve.getParamAtPoint(
+        #     lra_nd_tweaked_matrix.translate, "world"
+        # )
+        # spine_mop_param_list.append(lra_nd_mop_param)
         ####### Create nodes for atcual rig behaviour of the component.#########
-        for sc_jnt in spine_ik_sc_joints + spine_ik_rev_sc_joints:
-            sc_jnt.jointOrient.set(sc_jnt.rotate.get())
-            sc_jnt.rotate.set(0, 0, 0)
-        mayautils.create_hierarchy(spine_ik_sc_joints)
-        mayautils.create_hierarchy(spine_ik_rev_sc_joints)
+        mayautils.create_hierarchy(spine_ik_sc_joints, match_joint_orient=True)
+        mayautils.create_hierarchy(spine_ik_rev_sc_joints,
+                                   match_joint_orient=True)
         spine_ik_sc_joints[-1].jointOrient.set(0, 0, 0)
         spine_ik_rev_sc_joints[-1].jointOrient.set(0, 0, 0)
         spine_ik_sc_joints[-1].addChild(spine_ik_rev_sc_joints[0])
-        # self.main_fk_control = curves.BoxControl().create_curve(
-        #     name=self.fk_controls_name,
-        #     match=lra_nd_tweaked_matrix,
-        #     scale=orig_lra_nd_match_matrix.scale * (4, 4, 4),
-        #     color_index=sub_control_curve_color,
-        #     lock_visibility=True,
-        #     lock_scale=True,
-        # )
-        # self.fk_controls.append(self.main_fk_control)
-        # # At objects to output class lists.
-        # for control_curve in controls_curves_list:
-        #     self.controls.append(control_curve)
-        # self.component_rig_list.append(offset_grp)
-        # self.input_matrix_offset_grp.append(offset_grp)
         logger.log(
             level="info",
             message="Component logic created "
