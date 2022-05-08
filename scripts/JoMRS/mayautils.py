@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2021 / 11 / 14
+# Date:       2022 / 03 / 07
 
 """
 JoMRS maya utils module. Utilities helps
@@ -207,9 +207,11 @@ def create_IK(
     sticky=False,
     weight=1,
     po_weight=1,
+    constraint_target=None
 ):
     """
     Create a IK. Default is a single chain IK.
+
     Args:
             name(str): The IK name. You should follow
             the JoMRS naming convention. If not it will throw some
@@ -222,7 +224,12 @@ def create_IK(
             sticky(bool): Enable/Disalbe stickieness option of the IK.
             weight(float): Set handle weight.
             po_weight(float): Set the poleVector weight.
+            constraint_target(pmc.PyNode()): The node to constraint the
+                                             solver to.
+
     Return:
+            pmc.PyNode(): The new created ik handle.
+
     """
     data = {}
     name = strings.string_checkup(name, _LOGGER)
@@ -239,11 +246,15 @@ def create_IK(
         ik_handle[0].snapEnable.set(0)
     if sticky:
         ik_handle[0].stickiness.set(1)
+    if constraint_target:
+        create_matrix_constraint(ik_handle[0], constraint_target,
+                                 rotation=False,
+                                 scale=False)
     ik_handle[0].attr("weight").set(weight)
-    ik_handle[0].attr("po_weight").set(po_weight)
-    logger.log(
-        level="info", message=solver + ' "' + name + '" created', logger=_LOGGER
-    )
+    ik_handle[0].attr("poWeight").set(po_weight)
+    # logger.log(
+    #     level="info", message=solver + ' "' + name + '" created', logger=_LOGGER
+    # )
     return ik_handle
 
 
@@ -1072,16 +1083,18 @@ def create_motion_path(
     up_axes="y",
     follow=True,
     world_up_vector=[0, 0, 1],
+    on_nearest_position=True
 ):
     """
     Create a motionPath node. By default the world_up_type is objectUp. The
     aim_axes is 'x' and the upAxes is 'y'. Follow mode is enabled.
+
     Args:
             name(str): The name of the node. Try to use the JoMRS
             naming convention. If not it will throw a warning.
             curve_shape(dagnode): The curve shape node for the motion path.
             target(dagnode): The node to attach on the curve.
-            position(float): The position of the the target.
+            position(float): The position of the target.
             world_up_type(str): The upvector mode for the node.
             Valis is: [sceneUp, objectUp, objectRotationUp, vector, normal]
             up_vec_obj(dagnode): The transform for the up vector.
@@ -1089,8 +1102,12 @@ def create_motion_path(
             up_axes(str): The up axes. Valis is [x, y, z]
             follow(bool): Enable the aim and up axes of the node.
             world_up_vector(list): The axes for the world up vector.
+            on_nearest_position(bool): Enables a creation on the nearest
+                                       position of the target on the curve.
+
     Return:
             tuple: The created motion path node.
+
     """
     axes = ["X", "Y", "Z"]
     name = strings.string_checkup(name, _LOGGER)
@@ -1099,6 +1116,14 @@ def create_motion_path(
     mpnd.uValue.set(position)
     curve_shape.worldSpace[0].connect(mpnd.geometryPath)
     if target:
+        if on_nearest_position:
+            nearest_point_on_crv_nd = pmc.createNode("nearestPointOnCurve")
+            curve_shape.worldSpace[0].connect(nearest_point_on_crv_nd.inputCurve)
+            target_ws_pos = target.getMatrix(worldSpace=True).translate
+            nearest_point_on_crv_nd.inPosition.set(target_ws_pos)
+            param_on_crv = nearest_point_on_crv_nd.parameter.get()
+            pmc.delete(nearest_point_on_crv_nd)
+            mpnd.uValue.set(param_on_crv)
         for axe in axes:
             mpnd.attr("rotate" + axe).connect(
                 target.attr("rotate" + axe), force=True

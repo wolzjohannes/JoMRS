@@ -35,7 +35,6 @@ import re
 import logging
 import logger
 import constants
-reload(constants)
 
 ##########################################################
 # GLOBALS

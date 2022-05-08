@@ -104,10 +104,10 @@ def _pyqt4():
 
 def _pyside2():
     import PySide2
-    from PySide2 import QtGui, QtCore
+    # from PySide2 import QtGui, QtCore
 
     # Remap
-    QtCore.QStringListModel = QtGui.QStringListModel
+    # QtCore.QStringListModel = QtGui.QStringListModel
 
     # Add
     PySide2.__wrapper_version__ = __version__
