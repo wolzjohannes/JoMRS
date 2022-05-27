@@ -151,7 +151,7 @@ class TestSimpleBuild(TestCase):
         bnd_rig_container_content = bnd_rig_container.getNodeList()
         self.assertIsNotNone(bnd_rig_container_content)
         for jnt in bnd_rig_container_content:
-            self.assertEqual(jnt.nodeType(), "joint")
+            self.assertEquals(jnt.nodeType(), "joint")
             self.assertIn("_BND_", jnt.name())
         # Merge all joint names into one single string for a easier checkup.
         bnd_rig_container_content_string = "_".join(

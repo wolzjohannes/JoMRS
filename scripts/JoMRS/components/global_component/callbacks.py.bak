@@ -195,20 +195,20 @@ class ChangePivotCallback(object):
             try:
                 self.local_control_curve.addChild(self.change_pivot_tsr)
             except Exception as e:
-                print((
+                print(
                     "{}: Change pivot tsr is already a child of {}.".format(
                         e, self.local_control_curve
                     )
-                ))
+                )
         else:
             try:
                 self.cop_control_curve.addChild(self.change_pivot_tsr)
             except Exception as e:
-                print((
+                print(
                     "{}: Change pivot tsr is already a child of {}.".format(
                         e, self.cop_control_curve
                     )
-                ))
+                )
         pmc.select(self.change_pivot_control_curve)
 
     @staticmethod

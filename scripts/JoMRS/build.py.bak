@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2022 / 05 / 09
+# Date:       2021 / 03 / 14
 """
 Rig build module. Collect the rig data based on the specified rig operators
 in the scene. Based on that data it execute the rig build. This module produces
@@ -491,7 +491,7 @@ class MainBuild(object):
             # get the rig key.
             rig_key = [
                 key
-                for key in list(rig_container_instance.container_content.keys())
+                for key in rig_container_instance.container_content.keys()
                 if "_RIG_" in key
             ]
             rig_key = [key for key in rig_key if "_GRP" in key][0]
@@ -1140,7 +1140,7 @@ class RigContainer(mayautils.ContainerNode):
         # Get container content
         self.get_container_content()
         # Filter the component group
-        keys = list(self.container_content.keys())
+        keys = self.container_content.keys()
         component_key = [
             comp_key
             for comp_key in keys

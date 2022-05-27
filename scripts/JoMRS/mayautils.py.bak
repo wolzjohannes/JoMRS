@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2022 / 05 / 09
+# Date:       2022 / 03 / 07
 
 """
 JoMRS maya utils module. Utilities helps
@@ -1481,7 +1481,7 @@ def locators_on_cv(shape, connect=False, steps=None, locator_scale=(1, 1, 1)):
         if connect:
             loc.getShape().worldPosition[0].connect(shape.controlPoints[nm])
     if steps:
-        temp = list(range(len(result)))
+        temp = range(len(result))
         temp = temp[0::steps]
         while len(temp) > 1:
             for x in range(temp[0] + 1, temp[1]):
@@ -1664,7 +1664,7 @@ class ContainerNode(object):
         result = []
         if not self.container_content:
             self.get_container_content()
-        keys = list(self.container_content.keys())
+        keys = self.container_content.keys()
         for key in keys:
             if pattern in key:
                 result.append(self.container_content.get(key))

@@ -35,8 +35,7 @@ import logger
 import logging
 import constants
 import mayautils
-import importlib
-importlib.reload(operators)
+reload(operators)
 
 
 ##########################################################

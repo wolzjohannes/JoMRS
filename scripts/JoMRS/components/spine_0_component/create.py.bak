@@ -35,11 +35,10 @@ import components.main
 import logging
 import logger
 import mayautils
-import importlib
 
-importlib.reload(mayautils)
-importlib.reload(components.main)
-importlib.reload(constants)
+reload(mayautils)
+reload(components.main)
+reload(constants)
 
 ##########################################################
 # GLOBALS

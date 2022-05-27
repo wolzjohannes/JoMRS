@@ -26,9 +26,9 @@
 """
 Contains a user interface for the testing framework.
 """
-
-
-
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import logging
 import os
@@ -210,7 +210,7 @@ class MayaTestRunnerDialog(MayaQWidgetBaseMixin, QMainWindow):
         """
         self.reset_rollback_importer()
         test_suite = unittest.TestSuite()
-        for node in list(self.model.node_lookup.values()):
+        for node in self.model.node_lookup.values():
             if isinstance(
                 node.test, unittest.TestCase
             ) and node.get_status() in {TestStatus.fail, TestStatus.error}:
@@ -535,7 +535,7 @@ class RollbackImporter(object):
         self.previous_modules = set(sys.modules.keys())
 
     def uninstall(self):
-        for modname in list(sys.modules.keys()):
+        for modname in sys.modules.keys():
             if modname not in self.previous_modules:
                 # Force reload when modname next imported
                 del sys.modules[modname]

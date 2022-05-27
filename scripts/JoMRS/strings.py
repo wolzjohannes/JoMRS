@@ -20,7 +20,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2022 / 01 / 11
+# Date:       2022 / 05 / 09
 
 """
 JoMRS string module. Module for string handling and naming conventions.

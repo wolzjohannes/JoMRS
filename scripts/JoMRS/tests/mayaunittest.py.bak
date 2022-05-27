@@ -286,7 +286,7 @@ class TestCase(unittest.TestCase):
             self.assertAlmostEqual(a, b, places, msg, delta)
 
     def tearDown(self):
-        if Settings.file_new and JoMRS_TESTING_VAR not in list(os.environ.keys()):
+        if Settings.file_new and JoMRS_TESTING_VAR not in os.environ.keys():
             # If running tests without the custom runner,
             # like with PyCharm, the file new of the TestResult class isn't
             # used so call file new here
