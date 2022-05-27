@@ -76,8 +76,10 @@ def get_weight_connections_data(blendshape_node):
         plug = weight_plug.elementByPhysicalIndex(x)
         if plug.isConnected():
             source_nd_name, source_plug_name = plug.source().name().split(".")
-            data_tuple = ((source_nd_name, source_plug_name),
-                          plug.partialName(False, False, False, True))
+            data_tuple = (
+                (source_nd_name, source_plug_name),
+                plug.partialName(False, False, False, True),
+            )
             result.append(data_tuple)
     return result
 
@@ -293,7 +295,7 @@ def get_inbetween_name_from_plug_index(blendshape_node, plug_index):
                 return p_value
 
 
-def get_inbetween_plug(blendshape_node, index):
+def get_inbetween_plugs(blendshape_node, index):
     result_list = list()
     input_target_group_plug = get_input_target_group_plug(blendshape_node)
     input_target_item_plug = input_target_group_plug.elementByPhysicalIndex(
@@ -329,6 +331,44 @@ def get_input_target_array_plug_count(blendshape_node):
     return input_target_group_plug.getExistingArrayAttributeIndices(m_int_array)
 
 
+def collect_blendshape_data(blendshape_node):
+    target_deltas_list = list()
+    index_array = get_weight_indexes(blendshape_node)
+    for index in index_array:
+        target_temp_dict = dict()
+        inbetween_temp_list = list()
+        target_temp_dict["target_points"], target_temp_dict[
+            "target_components"
+        ] = get_blendshape_deltas_from_index(blendshape_node, index)
+        inbetween_plugs = get_inbetween_plugs(blendshape_node, index)
+        if inbetween_plugs:
+            for inbetween_dict in inbetween_plugs:
+                port_index = list(inbetween_dict.keys())[0]
+                inbetween_temp_dict = dict()
+                inbetween_temp_dict["target_points"], inbetween_temp_dict[
+                    "target_components"
+                ] = get_blendshape_deltas_from_index(
+                    blendshape_node, index, port_index
+                )
+                inbetween_temp_list.append({port_index:inbetween_temp_dict})
+        target_deltas_list.append(
+            {
+                "target_deltas": target_temp_dict,
+                "inbetween_deltas": inbetween_temp_list,
+            }
+        )
+    return target_deltas_list
+
+
+def generate_blendshape_data_dict(blendshape_node):
+    data_dict = dict()
+    data_dict["mesh_data"] = get_mesh_data(blendshape_node)
+    data_dict["weights_connections_data"] = get_weight_connections_data(
+        blendshape_node
+    )
+
+
 # print(get_mesh_data("blendShape1"))
 # create_blendshape_node("pSphere2")
-print(get_weight_connections_data("blendShape1"))
+# print(get_weight_connections_data("blendShape1"))
+print(collect_blendshape_data("blendShape1"))
