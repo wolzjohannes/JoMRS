@@ -1,6 +1,9 @@
 # Import python standart import
 from functools import wraps
 import logging
+import os
+import json
+import numpy
 
 # Import Maya specific modules
 import pymel.core
@@ -8,13 +11,24 @@ import maya.cmds as cmds
 from maya import OpenMaya as OpenMaya
 from maya import OpenMayaAnim as OpenMayaAnim
 
-# define local variables
-origin = OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin
-world_origin = OpenMayaAnim.MFnBlendShapeDeformer.kWorldOrigin
-front_of_chain = OpenMayaAnim.MFnBlendShapeDeformer.kFrontOfChain
-normal_chain = OpenMayaAnim.MFnBlendShapeDeformer.kNormal
-
+# define logger variables
 _LOGGER = logging.getLogger(__name__ + ".py")
+_LOGGER.setLevel(logging.INFO)
+DEBUG = False
+
+# define local variables
+BLENDSHAPE_INFO_DICT = {
+    "origin": [
+        OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin,
+        OpenMayaAnim.MFnBlendShapeDeformer.kWorldOrigin,
+    ],
+    "historyLocation": [
+        OpenMayaAnim.MFnBlendShapeDeformer.kFrontOfChain,
+        OpenMayaAnim.MFnBlendShapeDeformer.kNormal,
+        OpenMayaAnim.MFnBlendShapeDeformer.kPost,
+        OpenMayaAnim.MFnBlendShapeDeformer.kOther,
+    ],
+}
 
 
 def x_timer(func):
@@ -24,7 +38,9 @@ def x_timer(func):
         start = pymel.core.timerX()
         result = func(*args, **kwargs)
         total_time = pymel.core.timerX(st=start)
-        _LOGGER.info(
+        if DEBUG:
+            _LOGGER.setLevel(logging.DEBUG)
+        _LOGGER.debug(
             "Func/Method: {}(). Executed in [{}]".format(func_name, total_time)
         )
         return result
@@ -59,12 +75,21 @@ def get_mesh_data(blendshape_node):
     for x in range(num_polys):
         m_int_array = OpenMaya.MIntArray()
         base_obj.getPolygonVertices(x, m_int_array)
-        poly_vertex_id_list.append(m_int_array)
+        poly_vertex_id_list.append(list(m_int_array))
     return {
         "base_obj_name": base_obj.name(),
         "num_vertices": num_vertices,
         "num_polys": num_polys,
         "poly_vertex_id_list": poly_vertex_id_list,
+    }
+
+
+def get_blendshape_node_infos(blendshape_node):
+    blendshape_fn = get_blendshape_fn(blendshape_node)
+    return {
+        "name": blendshape_node,
+        "history_location": blendshape_fn.historyLocation(),
+        "origin": blendshape_fn.origin(),
     }
 
 
@@ -222,18 +247,53 @@ def add_target(
     )
 
 
-def create_blendshape_node(geo_transform, name=None):
+def create_blendshape_node(
+    geo_transform, name=None, origin_enum=0, history_location_enum=1
+):
     if isinstance(geo_transform, str):
         geo_transform = pymel.core.PyNode(geo_transform)
     mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
     mesh_shape_m_obj_array = get_m_obj_array(mesh_shape_nd_name)
     bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
-    bshp_fn.create(mesh_shape_m_obj_array, origin, normal_chain)
+    bshp_fn.create(
+        mesh_shape_m_obj_array,
+        BLENDSHAPE_INFO_DICT.get("origin")[origin_enum],
+        BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum],
+    )
     if name:
         rename_node(bshp_fn.object(), name)
 
 
-def get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
+def _OM_get_blendshape_deltas_from_index(
+    blendshape_node, index, bshp_port=6000
+):
+    points_pymel_attr = (
+        pymel.core.PyNode(blendshape_node)
+        .inputTarget[0]
+        .inputTargetGroup[index]
+        .inputTargetItem[bshp_port]
+        .inputPointsTarget
+    )
+    points_m_object = points_pymel_attr.__apimplug__().asMObject()
+    component_pymel_attr = (
+        pymel.core.PyNode(blendshape_node)
+        .inputTarget[0]
+        .inputTargetGroup[index]
+        .inputTargetItem[bshp_port]
+        .inputComponentsTarget
+    )
+    components_m_object = component_pymel_attr.__apimplug__().asMObject()
+    return (points_m_object, components_m_object)
+
+
+@x_timer
+def get_blendshape_deltas_from_index(
+    blendshape_node, index, bshp_port=6000, openMaya=False
+):
+    if openMaya:
+        return _OM_get_blendshape_deltas_from_index(
+            blendshape_node, index, bshp_port
+        )
     pt = cmds.getAttr(
         "{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem["
         "{}].inputPointsTarget".format(blendshape_node, index, bshp_port)
@@ -245,6 +305,35 @@ def get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
     return (pt, ct)
 
 
+@x_timer
+def _OM_set_blendshape_deltas_by_index(
+    blendshape_node, index, deltas_tuple, bshp_port=6000
+):
+    if index not in get_weight_indexes(blendshape_node):
+        raise AttributeError("Given index not exist. Will abort.")
+    target_points = deltas_tuple[0]
+    target_indices = deltas_tuple[1]
+    points_pymel_attr = (
+        pymel.core.PyNode(blendshape_node)
+        .inputTarget[0]
+        .inputTargetGroup[index]
+        .inputTargetItem[bshp_port]
+        .inputPointsTarget
+    )
+    points_m_plug = points_pymel_attr.__apimplug__()
+    points_m_plug.setMObject(target_points)
+    component_pymel_attr = (
+        pymel.core.PyNode(blendshape_node)
+        .inputTarget[0]
+        .inputTargetGroup[index]
+        .inputTargetItem[bshp_port]
+        .inputComponentsTarget
+    )
+    components_m_plug = component_pymel_attr.__apimplug__()
+    components_m_plug.setMObject(target_indices)
+
+
+@x_timer
 def set_blendshape_deltas_by_index(
     blendshape_node, index, deltas_tuple, bshp_port=6000
 ):
@@ -350,9 +439,13 @@ def collect_blendshape_data(blendshape_node):
                 ] = get_blendshape_deltas_from_index(
                     blendshape_node, index, port_index
                 )
-                inbetween_temp_list.append({port_index:inbetween_temp_dict})
+                inbetween_temp_list.append({port_index: inbetween_temp_dict})
         target_deltas_list.append(
             {
+                "target_name": get_weight_name_from_index(
+                    blendshape_node, index, True
+                ),
+                "target_index": index,
                 "target_deltas": target_temp_dict,
                 "inbetween_deltas": inbetween_temp_list,
             }
@@ -360,15 +453,52 @@ def collect_blendshape_data(blendshape_node):
     return target_deltas_list
 
 
-def generate_blendshape_data_dict(blendshape_node):
-    data_dict = dict()
-    data_dict["mesh_data"] = get_mesh_data(blendshape_node)
-    data_dict["weights_connections_data"] = get_weight_connections_data(
+# def generate_blendshape_data_dict(blendshape_node, prune=True):
+#     cmds.blendShape(blendshape_node, edit=True, pr=prune)
+#     data_dict = dict()
+#     data_dict["blendshape_node_infos"] = get_blendshape_node_infos(
+#         blendshape_node
+#     )
+#     data_dict["mesh_data"] = get_mesh_data(blendshape_node)
+#     data_dict["weights_connections_data"] = get_weight_connections_data(
+#         blendshape_node
+#     )
+#     # data_dict["blendshape_deltas"] = collect_blendshape_data(blendshape_node)
+#     return data_dict
+
+
+def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
+    if not name:
+        name = blendshape_node
+    if not os.path.exists(save_directory):
+        _LOGGER.warning(
+            "{} not exist. Can not save data json file.".format(save_directory)
+        )
+        return False
+    cmds.blendShape(blendshape_node, edit=True, pr=prune)
+    data = dict()
+    poly_vertex_id_npy_name = "{}_poly_vertex_id".format(name)
+    mesh_data_dict = get_mesh_data(blendshape_node)
+    poly_vertex_id_array = numpy.array(
+        mesh_data_dict.get("poly_vertex_id_list"), dtype=object
+    )
+    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_id_npy_name
+    data["blendshape_node_info"] = get_blendshape_node_infos(blendshape_node)
+    data["mesh_data"] = mesh_data_dict
+    data["weights_connections_data"] = get_weight_connections_data(
         blendshape_node
     )
+    poly_vertex_id_npy_dir = os.path.normpath(
+        "{}/{}".format(save_directory, poly_vertex_id_npy_name)
+    )
+    json_file_dir = os.path.normpath("{}/{}.json".format(save_directory, name))
+    with open(json_file_dir, "w") as json_file:
+        json.dump(data, json_file, sort_keys=True, indent=4)
+    numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
+    _LOGGER.info("Blendshape data saved to: {}".format(save_directory))
 
 
-# print(get_mesh_data("blendShape1"))
-# create_blendshape_node("pSphere2")
-# print(get_weight_connections_data("blendShape1"))
-print(collect_blendshape_data("blendShape1"))
+DEBUG = 1
+save_blenshape_data(
+    "blendShape1", r"/home/johanneswolz/Schreibtisch/maya_testing_files"
+)
