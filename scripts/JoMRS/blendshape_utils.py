@@ -452,20 +452,33 @@ def collect_blendshape_data(blendshape_node):
         )
     return target_deltas_list
 
-
-# def generate_blendshape_data_dict(blendshape_node, prune=True):
-#     cmds.blendShape(blendshape_node, edit=True, pr=prune)
-#     data_dict = dict()
-#     data_dict["blendshape_node_infos"] = get_blendshape_node_infos(
-#         blendshape_node
-#     )
-#     data_dict["mesh_data"] = get_mesh_data(blendshape_node)
-#     data_dict["weights_connections_data"] = get_weight_connections_data(
-#         blendshape_node
-#     )
-#     # data_dict["blendshape_deltas"] = collect_blendshape_data(blendshape_node)
-#     return data_dict
-
+@x_timer
+def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
+    blendshape_data_list_temp = collect_blendshape_data(blendshape_node)
+    for delta_dict in blendshape_data_list_temp:
+        file_name = "{}_bshp_delta_{}".format(name, delta_dict["target_index"])
+        target_points_list = delta_dict.get("target_deltas").get(
+            "target_points"
+        )
+        target_components_list = delta_dict.get("target_deltas").get(
+            "target_components"
+        )
+        target_points_list_npy_array = numpy.array(
+            target_points_list, dtype=object
+        )
+        target_components_list_npy_array = numpy.array(
+            target_components_list, dtype=object
+        )
+        deltas_npy_array_dir = os.path.normpath(
+            "{}/{}".format(save_directory, file_name)
+        )
+        numpy.savez_compressed(
+            deltas_npy_array_dir,
+            points=target_points_list_npy_array,
+            components=target_components_list_npy_array,
+        )
+        delta_dict["target_deltas"] = "{}.npz".format(file_name)
+    return blendshape_data_list_temp
 
 def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
     if not name:
@@ -488,6 +501,8 @@ def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
     data["weights_connections_data"] = get_weight_connections_data(
         blendshape_node
     )
+    data["target_deltas"] = save_deltas_as_numpy_arrays(blendshape_node,
+                                                        name, save_directory)
     poly_vertex_id_npy_dir = os.path.normpath(
         "{}/{}".format(save_directory, poly_vertex_id_npy_name)
     )
