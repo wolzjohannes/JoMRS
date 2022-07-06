@@ -455,8 +455,15 @@ def collect_blendshape_data(blendshape_node):
 @x_timer
 def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     blendshape_data_list_temp = collect_blendshape_data(blendshape_node)
+    deltas_package_dir = os.path.normpath(os.path.join(save_directory,
+                                                "targets_deltas"))
+    inbetween_deltas_package_dir = os.path.normpath(os.path.join(save_directory,
+                                                "inbetween_deltas"))
+    # first we care about the target deltas
+    if not os.path.exists(deltas_package_dir):
+        os.mkdir(deltas_package_dir)
     for delta_dict in blendshape_data_list_temp:
-        file_name = "{}_bshp_delta_{}".format(name, delta_dict["target_index"])
+        file_name = "{}_deltas_{}".format(name, delta_dict["target_index"])
         target_points_list = delta_dict.get("target_deltas").get(
             "target_points"
         )
@@ -470,7 +477,7 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
             target_components_list, dtype=object
         )
         deltas_npy_array_dir = os.path.normpath(
-            "{}/{}".format(save_directory, file_name)
+            "{}/{}".format(deltas_package_dir, file_name)
         )
         numpy.savez_compressed(
             deltas_npy_array_dir,
@@ -478,6 +485,30 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
             components=target_components_list_npy_array,
         )
         delta_dict["target_deltas"] = "{}.npz".format(file_name)
+    # Second we care about the inbetween deltas.
+    if not os.path.exists(inbetween_deltas_package_dir):
+        os.mkdir(inbetween_deltas_package_dir)
+    for delta_dict_ in blendshape_data_list_temp:
+        inbetweens_list = delta_dict_.get("inbetween_deltas")
+        if inbetweens_list:
+            for inb_dict in inbetweens_list:
+                port_index = list(inb_dict.keys())[0]
+                file_name_ = "{}_inbetween_deltas_{}_{}".format(name,
+                                                               delta_dict_[
+                    "target_index"], port_index)
+                inb_deltas_dict = list(inb_dict.values())[0]
+                inbetween_points_list = inb_deltas_dict.get("target_points")
+                inbetween_components_list = inb_deltas_dict.get("target_components")
+                inbetween_points_list_npy_array = numpy.array(
+                    inbetween_points_list, dtype=object)
+                inbetween_components_list_npy_array = numpy.array(
+                    inbetween_components_list, dtype=object)
+                inb_deltas_npy_array_dir = os.path.normpath("{}/{}".format(
+                    inbetween_deltas_package_dir, file_name_))
+                numpy.savez_compressed(inb_deltas_npy_array_dir,
+                                       points=inbetween_points_list_npy_array,
+                                       components=inbetween_components_list_npy_array)
+                inb_dict[port_index] = "{}.npz".format(file_name_)
     return blendshape_data_list_temp
 
 def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
@@ -488,6 +519,9 @@ def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
             "{} not exist. Can not save data json file.".format(save_directory)
         )
         return False
+    package_dir = os.path.normpath(os.path.join(save_directory, name))
+    if not os.path.exists(package_dir):
+        os.mkdir(package_dir)
     cmds.blendShape(blendshape_node, edit=True, pr=prune)
     data = dict()
     poly_vertex_id_npy_name = "{}_poly_vertex_id".format(name)
@@ -495,22 +529,24 @@ def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
     poly_vertex_id_array = numpy.array(
         mesh_data_dict.get("poly_vertex_id_list"), dtype=object
     )
-    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_id_npy_name
+    mesh_data_dict["poly_vertex_id_list"] = "{}.npy".format(
+        poly_vertex_id_npy_name)
     data["blendshape_node_info"] = get_blendshape_node_infos(blendshape_node)
     data["mesh_data"] = mesh_data_dict
     data["weights_connections_data"] = get_weight_connections_data(
         blendshape_node
     )
     data["target_deltas"] = save_deltas_as_numpy_arrays(blendshape_node,
-                                                        name, save_directory)
+                                                        name,
+                                                        package_dir)
     poly_vertex_id_npy_dir = os.path.normpath(
-        "{}/{}".format(save_directory, poly_vertex_id_npy_name)
+        "{}/{}".format(package_dir, poly_vertex_id_npy_name)
     )
-    json_file_dir = os.path.normpath("{}/{}.json".format(save_directory, name))
+    json_file_dir = os.path.normpath("{}/{}.json".format(package_dir, name))
     with open(json_file_dir, "w") as json_file:
         json.dump(data, json_file, sort_keys=True, indent=4)
     numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
-    _LOGGER.info("Blendshape data saved to: {}".format(save_directory))
+    _LOGGER.info("Blendshape data saved to: {}".format(package_dir))
 
 
 DEBUG = 1
