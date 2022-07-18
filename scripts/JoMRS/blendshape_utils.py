@@ -4,12 +4,13 @@ import logging
 import os
 import json
 import numpy
+import itertools
 
 # Import Maya specific modules
 import pymel.core
 import maya.cmds as cmds
-from maya import OpenMaya as OpenMaya
-from maya import OpenMayaAnim as OpenMayaAnim
+from maya import OpenMaya
+from maya import OpenMayaAnim
 
 # define logger variables
 _LOGGER = logging.getLogger(__name__ + ".py")
@@ -67,8 +68,7 @@ def get_m_object(node):
 
 
 @x_timer
-def get_mesh_data(blendshape_node):
-    base_obj = get_base_objects(blendshape_node)[0]
+def get_mesh_data(base_obj):
     num_vertices = base_obj.numVertices()
     num_polys = base_obj.numPolygons()
     poly_vertex_id_list = []
@@ -452,13 +452,16 @@ def collect_blendshape_data(blendshape_node):
         )
     return target_deltas_list
 
+
 @x_timer
 def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     blendshape_data_list_temp = collect_blendshape_data(blendshape_node)
-    deltas_package_dir = os.path.normpath(os.path.join(save_directory,
-                                                "targets_deltas"))
-    inbetween_deltas_package_dir = os.path.normpath(os.path.join(save_directory,
-                                                "inbetween_deltas"))
+    deltas_package_dir = os.path.normpath(
+        os.path.join(save_directory, "targets_deltas")
+    )
+    inbetween_deltas_package_dir = os.path.normpath(
+        os.path.join(save_directory, "inbetween_deltas")
+    )
     # first we care about the target deltas
     if not os.path.exists(deltas_package_dir):
         os.mkdir(deltas_package_dir)
@@ -493,25 +496,42 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
         if inbetweens_list:
             for inb_dict in inbetweens_list:
                 port_index = list(inb_dict.keys())[0]
-                file_name_ = "{}_inbetween_deltas_{}_{}".format(name,
-                                                               delta_dict_[
-                    "target_index"], port_index)
+                file_name_ = "{}_inbetween_deltas_{}_{}".format(
+                    name, delta_dict_["target_index"], port_index
+                )
                 inb_deltas_dict = list(inb_dict.values())[0]
                 inbetween_points_list = inb_deltas_dict.get("target_points")
-                inbetween_components_list = inb_deltas_dict.get("target_components")
+                inbetween_components_list = inb_deltas_dict.get(
+                    "target_components"
+                )
                 inbetween_points_list_npy_array = numpy.array(
-                    inbetween_points_list, dtype=object)
+                    inbetween_points_list, dtype=object
+                )
                 inbetween_components_list_npy_array = numpy.array(
-                    inbetween_components_list, dtype=object)
-                inb_deltas_npy_array_dir = os.path.normpath("{}/{}".format(
-                    inbetween_deltas_package_dir, file_name_))
-                numpy.savez_compressed(inb_deltas_npy_array_dir,
-                                       points=inbetween_points_list_npy_array,
-                                       components=inbetween_components_list_npy_array)
+                    inbetween_components_list, dtype=object
+                )
+                inb_deltas_npy_array_dir = os.path.normpath(
+                    "{}/{}".format(inbetween_deltas_package_dir, file_name_)
+                )
+                numpy.savez_compressed(
+                    inb_deltas_npy_array_dir,
+                    points=inbetween_points_list_npy_array,
+                    components=inbetween_components_list_npy_array,
+                )
                 inb_dict[port_index] = "{}.npz".format(file_name_)
     return blendshape_data_list_temp
 
-def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
+
+@x_timer
+def save_deltas_as_shp_file(blendshape_node, name, save_directory):
+    shp_file_path = os.path.normpath("{}/{}.shp".format(save_directory, name))
+    cmds.blendShape(blendshape_node, ep=shp_file_path, edit=True)
+    return shp_file_path
+
+
+def save_blenshape_data(
+    blendshape_node, save_directory, name=None, prune=True, as_shp_file=False
+):
     if not name:
         name = blendshape_node
     if not os.path.exists(save_directory):
@@ -525,31 +545,165 @@ def save_blenshape_data(blendshape_node, save_directory, name=None, prune=True):
     cmds.blendShape(blendshape_node, edit=True, pr=prune)
     data = dict()
     poly_vertex_id_npy_name = "{}_poly_vertex_id".format(name)
-    mesh_data_dict = get_mesh_data(blendshape_node)
+    base_obj = get_base_objects(blendshape_node)[0]
+    mesh_data_dict = get_mesh_data(base_obj)
     poly_vertex_id_array = numpy.array(
         mesh_data_dict.get("poly_vertex_id_list"), dtype=object
     )
     mesh_data_dict["poly_vertex_id_list"] = "{}.npy".format(
-        poly_vertex_id_npy_name)
+        poly_vertex_id_npy_name
+    )
     data["blendshape_node_info"] = get_blendshape_node_infos(blendshape_node)
     data["mesh_data"] = mesh_data_dict
     data["weights_connections_data"] = get_weight_connections_data(
         blendshape_node
     )
-    data["target_deltas"] = save_deltas_as_numpy_arrays(blendshape_node,
-                                                        name,
-                                                        package_dir)
     poly_vertex_id_npy_dir = os.path.normpath(
         "{}/{}".format(package_dir, poly_vertex_id_npy_name)
     )
+    numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
+    if not as_shp_file:
+        data["target_deltas"] = save_deltas_as_numpy_arrays(
+            blendshape_node, name, package_dir
+        )
+    else:
+        data["target_deltas"] = os.path.basename(
+            save_deltas_as_shp_file(blendshape_node, name, package_dir)
+        )
     json_file_dir = os.path.normpath("{}/{}.json".format(package_dir, name))
     with open(json_file_dir, "w") as json_file:
         json.dump(data, json_file, sort_keys=True, indent=4)
-    numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
     _LOGGER.info("Blendshape data saved to: {}".format(package_dir))
 
 
+def compare_mesh_data(mesh_data_dict_0, mesh_data_dict_1):
+    vertex_count = True
+    poly_count = True
+    vertex_ids = True
+    if mesh_data_dict_0.get("num_vertices") != mesh_data_dict_1.get(
+        "num_vertices"
+    ):
+        vertex_count = False
+        _LOGGER.error("Vertex count not equal.")
+    if mesh_data_dict_0.get("num_polys") != mesh_data_dict_1.get("num_polys"):
+        poly_count = False
+        _LOGGER.error("Poly count not equal.")
+    if mesh_data_dict_0.get("poly_vertex_id_list") != mesh_data_dict_1.get(
+        "poly_vertex_id_list"
+    ):
+        vertex_ids = False
+        _LOGGER.error("Vertex IDs not equal.")
+    return {
+        "vertex_count": vertex_count,
+        "poly_count": poly_count,
+        "poly_vertex_id_list": vertex_ids,
+    }
+
+
+def check_mesh_data_from_json(
+    json_file_path, diff_poly_vertex_id=False, diff_color_on_mesh=False
+):
+    base_name = os.path.basename(json_file_path)
+    data_dir = os.path.normpath(json_file_path.split(base_name)[0])
+    with open(json_file_path, "r") as json_file:
+        data_dict = json.load(json_file)
+        mesh_data_dict = data_dict.get("mesh_data")
+    poly_vertex_id_list_file = os.path.join(
+        data_dir, mesh_data_dict.get("poly_vertex_id_list")
+    )
+    base_obj = mesh_data_dict.get("base_obj_name")
+    mesh_data_dict["poly_vertex_id_list"] = list(
+        numpy.load(poly_vertex_id_list_file, allow_pickle=True)
+    )
+    if not pymel.core.objExists(base_obj):
+        _LOGGER.error("{} not exist. Abort mesh data check.".format(base_obj))
+        return False
+    mfn_mesh_obj = OpenMaya.MFnMesh(get_m_object(base_obj))
+    current_mesh_data = get_mesh_data(mfn_mesh_obj)
+    compare_mesh_data_dict = compare_mesh_data(
+        mesh_data_dict, current_mesh_data
+    )
+    if diff_poly_vertex_id:
+        compare_mesh_data_dict = diff_poly_vertex_id_func(
+            compare_mesh_data_dict, mesh_data_dict, current_mesh_data
+        )
+        if diff_color_on_mesh:
+            print(compare_mesh_data_dict)
+            diff_vertex_id_list_color_on_mesh(
+                compare_mesh_data_dict.get("diff_poly_vertex_id"), base_obj
+            )
+    return compare_mesh_data_dict
+
+
+def check_mesh_data(
+    source_mesh,
+    target_mesh,
+    diff_poly_vertex_id=False,
+    diff_color_on_mesh=False,
+):
+    source_mfn_mesh = OpenMaya.MFnMesh(get_m_object(source_mesh))
+    target_mfn_mesh = OpenMaya.MFnMesh(get_m_object(target_mesh))
+    mesh_data_dict_0 = get_mesh_data(source_mfn_mesh)
+    mesh_data_dict_1 = get_mesh_data(target_mfn_mesh)
+    compare_mesh_data_dict = compare_mesh_data(
+        mesh_data_dict_0, mesh_data_dict_1
+    )
+    if diff_poly_vertex_id:
+        compare_mesh_data_dict = diff_poly_vertex_id_func(
+            compare_mesh_data_dict, mesh_data_dict_0, mesh_data_dict_1
+        )
+        if diff_color_on_mesh:
+            diff_vertex_id_list_color_on_mesh(
+                compare_mesh_data_dict.get("diff_poly_vertex_id"), target_mesh
+            )
+    return compare_mesh_data_dict
+
+
+@x_timer
+def diff_poly_vertex_id_list(source_list, target_list):
+    diff_list = []
+    for id_source_list, id_target_list in itertools.zip_longest(
+        source_list, target_list
+    ):
+        if (
+            id_source_list != id_target_list
+            and id_source_list
+            and id_target_list
+        ):
+            diff_list.extend(id_target_list)
+    return diff_list
+
+
+def diff_vertex_id_list_color_on_mesh(diff_list, target_mesh):
+    color_list = [
+        "{}.vtx[{}]".format(target_mesh, vtx_id) for vtx_id in diff_list
+    ]
+    cmds.select(color_list)
+    cmds.polyColorPerVertex(rgb=(1.0, 0.0, 0.0))
+    pymel.core.mel.eval("PaintVertexColorToolOptions;")
+
+
+def diff_poly_vertex_id_func(
+    compare_mesh_data_dict, mesh_data_dict_0, mesh_data_dict_1
+):
+    if not compare_mesh_data_dict.get("poly_vertex_id_list"):
+        diff_list = diff_poly_vertex_id_list(
+            mesh_data_dict_0.get("poly_vertex_id_list"),
+            mesh_data_dict_1.get("poly_vertex_id_list"),
+        )
+        compare_mesh_data_dict["diff_poly_vertex_id"] = diff_list
+        return compare_mesh_data_dict
+
+
 DEBUG = 1
-save_blenshape_data(
-    "blendShape1", r"/home/johanneswolz/Schreibtisch/maya_testing_files"
+result = check_mesh_data_from_json(
+    r"/home/johanneswolz/Schreibtisch/maya_testing_files/blendShape1"
+    r"/blendShape1.json",
+    True,
+    True,
 )
+# result = check_mesh_data("pSphereShape2", "pSphere3Shape", True, True)
+print(result)
+# save_blenshape_data(
+#     "blendShape1", r"/home/johanneswolz/Schreibtisch/maya_testing_files",
+# )
