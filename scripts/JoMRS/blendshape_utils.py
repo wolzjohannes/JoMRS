@@ -67,6 +67,15 @@ def get_m_object(node):
         return node
 
 
+def get_dag_path(node, type):
+    om_sel = OpenMaya.MSelectionList()
+    om_sel.add(node)
+    iter_sel = OpenMaya.MItSelectionList(om_sel, type)
+    dag_path = OpenMaya.MDagPath()
+    iter_sel.getDagPath(dag_path)
+    return dag_path
+
+
 @x_timer
 def get_mesh_data(base_obj):
     num_vertices = base_obj.numVertices()
@@ -76,11 +85,24 @@ def get_mesh_data(base_obj):
         m_int_array = OpenMaya.MIntArray()
         base_obj.getPolygonVertices(x, m_int_array)
         poly_vertex_id_list.append(list(m_int_array))
+    vertex_m_point_array = OpenMaya.MPointArray()
+    m_dag_path = get_dag_path(base_obj.name(), OpenMaya.MFn.kMesh)
+    mfn_mesh = OpenMaya.MFnMesh(m_dag_path)
+    mfn_mesh.getPoints(vertex_m_point_array, OpenMaya.MSpace.kWorld)
+    verts_ws_pos_list = [
+        (
+            vertex_m_point_array[x][0],
+            vertex_m_point_array[x][1],
+            vertex_m_point_array[x][2],
+        )
+        for x in range(vertex_m_point_array.length())
+    ]
     return {
         "base_obj_name": base_obj.name(),
         "num_vertices": num_vertices,
         "num_polys": num_polys,
         "poly_vertex_id_list": poly_vertex_id_list,
+        "verts_ws_pos_list": verts_ws_pos_list,
     }
 
 
@@ -695,15 +717,15 @@ def diff_poly_vertex_id_func(
         return compare_mesh_data_dict
 
 
-DEBUG = 1
-result = check_mesh_data_from_json(
-    r"/home/johanneswolz/Schreibtisch/maya_testing_files/blendShape1"
-    r"/blendShape1.json",
-    True,
-    True,
-)
+# DEBUG = 1
+# result = check_mesh_data_from_json(
+#     r"/home/johanneswolz/Schreibtisch/maya_testing_files/blendShape1"
+#     r"/blendShape1.json",
+#     True,
+#     True,
+# )
 # result = check_mesh_data("pSphereShape2", "pSphere3Shape", True, True)
-print(result)
+# print(result)
 # save_blenshape_data(
 #     "blendShape1", r"/home/johanneswolz/Schreibtisch/maya_testing_files",
 # )
