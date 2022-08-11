@@ -1,10 +1,35 @@
+# Copyright (c) 2022 Johannes Wolz
+
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+
+# Author:     Johannes Wolz / Rigging TD
+# Date:       2022 / 08 / 08
+
+"""
+Util module for blendShape data management
+"""
+
 # Import python standart import
-from functools import wraps
 import logging
 import os
 import json
 import numpy
-import itertools
 
 # Import Maya specific modules
 import pymel.core
@@ -12,12 +37,21 @@ import maya.cmds as cmds
 from maya import OpenMaya
 from maya import OpenMayaAnim
 
-# define logger variables
+# Import local modules
+import decorators
+import openmaya_utils
+
+##########################################################
+# GLOBALS
+##########################################################
+
 _LOGGER = logging.getLogger(__name__ + ".py")
 _LOGGER.setLevel(logging.INFO)
-DEBUG = False
+_DECORATORS = decorators.Decorators()
+_DECORATORS.debug = False
+_DECORATORS.logger = _LOGGER
 
-# define local variables
+
 BLENDSHAPE_INFO_DICT = {
     "origin": [
         OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin,
@@ -31,74 +65,56 @@ BLENDSHAPE_INFO_DICT = {
     ],
 }
 
-
-def x_timer(func):
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        func_name = func.__name__
-        start = pymel.core.timerX()
-        result = func(*args, **kwargs)
-        total_time = pymel.core.timerX(st=start)
-        if DEBUG:
-            _LOGGER.setLevel(logging.DEBUG)
-        _LOGGER.debug(
-            "Func/Method: {}(). Executed in [{}]".format(func_name, total_time)
-        )
-        return result
-
-    return wrapper
+##########################################################
+# FUNCTIONS
+##########################################################
 
 
-def get_m_object(node):
-    if isinstance(node, pymel.core.PyNode):
-        return node.__apimobject__()
-    elif isinstance(node, str):
-        try:
-            om_sel = OpenMaya.MSelectionList()
-            om_sel.add(node)
-            node = OpenMaya.MObject()
-            om_sel.getDependNode(0, node)
-            return node
-        except:
-            raise RuntimeError(
-                "Unable to get MObject from given string: {}".format(node)
-            )
-    else:
-        return node
+@_DECORATORS.x_timer
+def get_mesh_data(mesh_shape):
+    """
+    Get data from given mesh. Like vertices number and vertex IDs and etc.
 
+    Args:
+        mesh_shape(str, OpenMaya.MFnMesh): The mesh shape to get the data from.
 
-def get_dag_path(node, type):
-    om_sel = OpenMaya.MSelectionList()
-    om_sel.add(node)
-    iter_sel = OpenMaya.MItSelectionList(om_sel, type)
-    dag_path = OpenMaya.MDagPath()
-    iter_sel.getDagPath(dag_path)
-    return dag_path
+    Return:
+        Dict: {
+        "mesh_shape": string
+        "num_vertices": integer,
+        "num_polys": integer,
+        "poly_vertex_id_list": List with each vertex ID of
+                               each vertex ordered by all polys,
+        "verts_ws_pos_list": List of all worldspace postions
+                             of each vertex of the mesh.
+        }
 
-
-@x_timer
-def get_mesh_data(base_obj):
-    num_vertices = base_obj.numVertices()
-    num_polys = base_obj.numPolygons()
+    """
+    if isinstance(mesh_shape, str):
+        mesh_shape = OpenMaya.MFnMesh(openmaya_utils.get_m_object(mesh_shape))
+    num_vertices = mesh_shape.numVertices()
+    num_polys = mesh_shape.numPolygons()
     poly_vertex_id_list = []
     for x in range(num_polys):
         m_int_array = OpenMaya.MIntArray()
-        base_obj.getPolygonVertices(x, m_int_array)
+        mesh_shape.getPolygonVertices(x, m_int_array)
         poly_vertex_id_list.append(list(m_int_array))
     vertex_m_point_array = OpenMaya.MPointArray()
-    m_dag_path = get_dag_path(base_obj.name(), OpenMaya.MFn.kMesh)
+    m_dag_path = openmaya_utils.get_dag_path(
+        mesh_shape.name(), OpenMaya.MFn.kMesh
+    )
     mfn_mesh = OpenMaya.MFnMesh(m_dag_path)
     mfn_mesh.getPoints(vertex_m_point_array, OpenMaya.MSpace.kWorld)
     verts_ws_pos_list = [
-        (
+        [
             vertex_m_point_array[x][0],
             vertex_m_point_array[x][1],
             vertex_m_point_array[x][2],
-        )
+        ]
         for x in range(vertex_m_point_array.length())
     ]
     return {
-        "base_obj_name": base_obj.name(),
+        "mesh_shape": mesh_shape.name(),
         "num_vertices": num_vertices,
         "num_polys": num_polys,
         "poly_vertex_id_list": poly_vertex_id_list,
@@ -107,6 +123,19 @@ def get_mesh_data(base_obj):
 
 
 def get_blendshape_node_infos(blendshape_node):
+    """
+    Get infos from given blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+         Dict: {
+        "name": blendshape_node,
+        "history_location": blendshape_fn.historyLocation(),
+        "origin": blendshape_fn.origin(),
+        }
+    """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     return {
         "name": blendshape_node,
@@ -116,6 +145,17 @@ def get_blendshape_node_infos(blendshape_node):
 
 
 def get_weight_connections_data(blendshape_node):
+    """
+    Get the connected nodes name and the connected plugs from all weight plugs.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+         List: [((node_name, node_plug_name), weight_name),
+                ((node_name, node_plug_name), weight_name)]
+
+    """
     result = []
     blendshape_fn = get_blendshape_fn(blendshape_node)
     weight_plug = blendshape_fn.findPlug("weight")
@@ -131,29 +171,29 @@ def get_weight_connections_data(blendshape_node):
     return result
 
 
-def get_m_obj_array(objects):
+def get_blendshape_nodes(
+    node, as_string=True, as_pynode=False, as_fn=False, levels=1
+):
     """
-    returns the objects as MObjectArray
-    :param objects:
-    :return: <OpenMaya.MObjectArray>
+    Get all source blendshape nodes from given shape node.
+
+    Args:
+        node(str, pymel.core..PyNode()): Mesh shape node.
+        as_string(bool): Give nodes names back.
+        as_pynode(bool): Give Pynodes back.
+        as_fn(bool): Give OpenMaya.MFnBlendshape back.
+        levels(int): The number of given back blendshape nodes found in
+                     connected history.
+
+    Return:
+        List: All found blendshape nodes.
+
     """
-    m_array = OpenMaya.MObjectArray()
-    for idx, obj in enumerate(objects):
-        m_array.insert(get_m_object(obj), idx)
-    return m_array
-
-
-def rename_node(object_name, new_name):
-    m_dag_mod = OpenMaya.MDagModifier()
-    m_dag_mod.renameNode(get_m_object(object_name), new_name)
-    m_dag_mod.doIt()
-    return new_name
-
-
-def get_blendshape_nodes(node, as_string=True, as_pynode=False, as_fn=False):
     if isinstance(node, str):
         node = pymel.core.PyNode(node)
-    bshp_nodes = node.listHistory(typ="blendShape")
+    bshp_nodes = node.listHistory(
+        typ="blendShape", allFuture=False, future=False, levels=levels
+    )
     if as_pynode:
         return bshp_nodes
     if as_fn:
@@ -163,17 +203,47 @@ def get_blendshape_nodes(node, as_string=True, as_pynode=False, as_fn=False):
 
 
 def is_blendshape_node(node):
-    m_object = get_m_object(node)
+    """
+    Gives back if given node is a blendshape node.
+
+    Args:
+        node(str): Name of the node to check.
+    
+    Return:
+        Bool: True/False
+
+    """
+    m_object = openmaya_utils.get_m_object(node)
     return bool(m_object.hasFn(OpenMaya.MFn.kBlendShape))
 
 
 def get_blendshape_fn(blendshape_node):
-    m_object = get_m_object(blendshape_node)
+    """
+    Get the OpenMaya.MFnBlendshapeDeformer from given blendshape node name.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+         OpenMaya.MFnBlendshapeDeformer.
+
+    """
+    m_object = openmaya_utils.get_m_object(blendshape_node)
     if is_blendshape_node(m_object):
         return OpenMayaAnim.MFnBlendShapeDeformer(m_object)
 
 
 def get_weight_indexes(blendshape_node):
+    """
+    Get all weight indexes from given blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+         List: All found weight indexes.
+
+    """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     m_int_array = OpenMaya.MIntArray()
     blendshape_fn.weightIndexList(m_int_array)
@@ -181,6 +251,18 @@ def get_weight_indexes(blendshape_node):
 
 
 def get_base_objects(blendshape_node):
+    """
+    Get all base objects from given blendshape node.
+    The base object is the shape node connected to the
+    blendshape deformer.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+        Tuple: OpenMaya.MFnMesh objects
+.
+    """
     if not isinstance(blendshape_node, pymel.core.PyNode):
         bshp_node = pymel.core.PyNode(blendshape_node)
     base_objects_list = bshp_node.getBaseObjects()
@@ -189,6 +271,16 @@ def get_base_objects(blendshape_node):
 
 
 def get_weight_names(blendshape_node):
+    """
+    Get the weight attribute names from given blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+        Tuple: All found weight names. Empty if None.
+
+    """
     weight_names = []
     blendshape_fn = get_blendshape_fn(blendshape_node)
     weight_plug = blendshape_fn.findPlug("weight")
@@ -199,6 +291,17 @@ def get_weight_names(blendshape_node):
 
 
 def target_index_exists(blendshape_node, index):
+    """
+    Check if given target index exist.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): Index to check for.
+
+    Return:
+         Bool: True or False
+
+    """
     indexes = get_weight_indexes(blendshape_node)
     if index in indexes:
         return True
@@ -208,6 +311,16 @@ def target_index_exists(blendshape_node, index):
 def get_weight_name_from_index(
     blendshape_node, index, partial_name=False, as_m_object_attr=False
 ):
+    """
+    Get weight alias name from given index.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index:
+        partial_name:
+        as_m_object_attr:
+    :return: 
+    """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     weight_plug = blendshape_fn.findPlug("weight")
     try:
@@ -244,7 +357,7 @@ def add_target(
 ):
     blendshape_fn = get_blendshape_fn(blendshape_node)
     base_obj = get_base_objects(blendshape_node)[0]
-    base_m_object = get_m_object(str(base_obj.name()))
+    base_m_object = openmaya_utils.get_m_object(str(base_obj.name()))
     input_target_array_plug_count = get_input_target_array_plug_count(
         blendshape_node
     )
@@ -275,7 +388,7 @@ def create_blendshape_node(
     if isinstance(geo_transform, str):
         geo_transform = pymel.core.PyNode(geo_transform)
     mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
-    mesh_shape_m_obj_array = get_m_obj_array(mesh_shape_nd_name)
+    mesh_shape_m_obj_array = openmaya_utils.get_m_obj_array(mesh_shape_nd_name)
     bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
     bshp_fn.create(
         mesh_shape_m_obj_array,
@@ -283,7 +396,7 @@ def create_blendshape_node(
         BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum],
     )
     if name:
-        rename_node(bshp_fn.object(), name)
+        openmaya_utils.rename_node(bshp_fn.object(), name)
 
 
 def _OM_get_blendshape_deltas_from_index(
@@ -308,7 +421,7 @@ def _OM_get_blendshape_deltas_from_index(
     return (points_m_object, components_m_object)
 
 
-@x_timer
+@_DECORATORS.x_timer
 def get_blendshape_deltas_from_index(
     blendshape_node, index, bshp_port=6000, openMaya=False
 ):
@@ -327,7 +440,7 @@ def get_blendshape_deltas_from_index(
     return (pt, ct)
 
 
-@x_timer
+@_DECORATORS.x_timer
 def _OM_set_blendshape_deltas_by_index(
     blendshape_node, index, deltas_tuple, bshp_port=6000
 ):
@@ -355,7 +468,7 @@ def _OM_set_blendshape_deltas_by_index(
     components_m_plug.setMObject(target_indices)
 
 
-@x_timer
+@_DECORATORS.x_timer
 def set_blendshape_deltas_by_index(
     blendshape_node, index, deltas_tuple, bshp_port=6000
 ):
@@ -475,7 +588,7 @@ def collect_blendshape_data(blendshape_node):
     return target_deltas_list
 
 
-@x_timer
+@_DECORATORS.x_timer
 def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     blendshape_data_list_temp = collect_blendshape_data(blendshape_node)
     deltas_package_dir = os.path.normpath(
@@ -544,14 +657,14 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     return blendshape_data_list_temp
 
 
-@x_timer
+@_DECORATORS.x_timer
 def save_deltas_as_shp_file(blendshape_node, name, save_directory):
     shp_file_path = os.path.normpath("{}/{}.shp".format(save_directory, name))
     cmds.blendShape(blendshape_node, ep=shp_file_path, edit=True)
     return shp_file_path
 
 
-def save_blenshape_data(
+def save_blendshape_data(
     blendshape_node, save_directory, name=None, prune=True, as_shp_file=False
 ):
     if not name:
@@ -567,6 +680,7 @@ def save_blenshape_data(
     cmds.blendShape(blendshape_node, edit=True, pr=prune)
     data = dict()
     poly_vertex_id_npy_name = "{}_poly_vertex_id".format(name)
+    verts_pos_npy_name = "{}_verts_ws_positions".format(name)
     base_obj = get_base_objects(blendshape_node)[0]
     mesh_data_dict = get_mesh_data(base_obj)
     poly_vertex_id_array = numpy.array(
@@ -575,6 +689,10 @@ def save_blenshape_data(
     mesh_data_dict["poly_vertex_id_list"] = "{}.npy".format(
         poly_vertex_id_npy_name
     )
+    vertex_ws_pos_array = numpy.array(
+        mesh_data_dict.get("verts_ws_pos_list"), dtype=object
+    )
+    mesh_data_dict["verts_ws_pos_list"] = "{}.npy".format(verts_pos_npy_name)
     data["blendshape_node_info"] = get_blendshape_node_infos(blendshape_node)
     data["mesh_data"] = mesh_data_dict
     data["weights_connections_data"] = get_weight_connections_data(
@@ -583,7 +701,11 @@ def save_blenshape_data(
     poly_vertex_id_npy_dir = os.path.normpath(
         "{}/{}".format(package_dir, poly_vertex_id_npy_name)
     )
+    verts_pos_npy_dir = os.path.normpath(
+        "{}/{}".format(package_dir, verts_pos_npy_name)
+    )
     numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
+    numpy.save(verts_pos_npy_dir, vertex_ws_pos_array)
     if not as_shp_file:
         data["target_deltas"] = save_deltas_as_numpy_arrays(
             blendshape_node, name, package_dir
@@ -602,6 +724,7 @@ def compare_mesh_data(mesh_data_dict_0, mesh_data_dict_1):
     vertex_count = True
     poly_count = True
     vertex_ids = True
+    vertex_ws_pos = True
     if mesh_data_dict_0.get("num_vertices") != mesh_data_dict_1.get(
         "num_vertices"
     ):
@@ -615,15 +738,28 @@ def compare_mesh_data(mesh_data_dict_0, mesh_data_dict_1):
     ):
         vertex_ids = False
         _LOGGER.error("Vertex IDs not equal.")
+    if mesh_data_dict_0.get("verts_ws_pos_list") != mesh_data_dict_1.get(
+        "verts_ws_pos_list"
+    ):
+        vertex_ws_pos = False
+        _LOGGER.error(
+            "World position of some vertices are not matching with"
+            " compared ones."
+        )
     return {
         "vertex_count": vertex_count,
         "poly_count": poly_count,
         "poly_vertex_id_list": vertex_ids,
+        "verts_ws_pos_list": vertex_ws_pos,
     }
 
 
 def check_mesh_data_from_json(
-    json_file_path, diff_poly_vertex_id=False, diff_color_on_mesh=False
+    json_file_path,
+    diff_poly_vertex_id=False,
+    diff_color_on_mesh=False,
+    diff_vertx_ws_pos=False,
+    diff_vertx_ws_on_mesh=False,
 ):
     base_name = os.path.basename(json_file_path)
     data_dir = os.path.normpath(json_file_path.split(base_name)[0])
@@ -633,26 +769,54 @@ def check_mesh_data_from_json(
     poly_vertex_id_list_file = os.path.join(
         data_dir, mesh_data_dict.get("poly_vertex_id_list")
     )
-    base_obj = mesh_data_dict.get("base_obj_name")
-    mesh_data_dict["poly_vertex_id_list"] = list(
-        numpy.load(poly_vertex_id_list_file, allow_pickle=True)
+    verts_ws_pos_list_file = os.path.join(
+        data_dir, mesh_data_dict.get("verts_ws_pos_list")
     )
+    base_obj = mesh_data_dict.get("mesh_shape")
+    poly_vertex_id_np_array = numpy.load(
+        poly_vertex_id_list_file, allow_pickle=True
+    )
+    verts_ws_pos_np_array = numpy.load(
+        verts_ws_pos_list_file, allow_pickle=True
+    )
+    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_id_np_array.tolist()
+    mesh_data_dict["verts_ws_pos_list"] = verts_ws_pos_np_array.tolist()
     if not pymel.core.objExists(base_obj):
         _LOGGER.error("{} not exist. Abort mesh data check.".format(base_obj))
         return False
-    mfn_mesh_obj = OpenMaya.MFnMesh(get_m_object(base_obj))
+    mfn_mesh_obj = OpenMaya.MFnMesh(openmaya_utils.get_m_object(base_obj))
     current_mesh_data = get_mesh_data(mfn_mesh_obj)
     compare_mesh_data_dict = compare_mesh_data(
         mesh_data_dict, current_mesh_data
     )
     if diff_poly_vertex_id:
-        compare_mesh_data_dict = diff_poly_vertex_id_func(
-            compare_mesh_data_dict, mesh_data_dict, current_mesh_data
+        compare_mesh_data_dict = _diff_mesh_data_arrays(
+            compare_mesh_data_dict,
+            mesh_data_dict,
+            current_mesh_data,
+            "poly_vertex_id_list",
+            "diff_poly_vertex_id",
         )
         if diff_color_on_mesh:
-            print(compare_mesh_data_dict)
-            diff_vertex_id_list_color_on_mesh(
-                compare_mesh_data_dict.get("diff_poly_vertex_id"), base_obj
+            _diff_color_on_mesh_func(
+                compare_mesh_data_dict.get("diff_poly_vertex_id"),
+                base_obj,
+                (1.0, 0.0, 0.0),
+            )
+    if diff_vertx_ws_pos:
+        compare_mesh_data_dict = _diff_mesh_data_arrays(
+            compare_mesh_data_dict,
+            mesh_data_dict,
+            current_mesh_data,
+            "verts_ws_pos_list",
+            "diff_verts_ws_pos",
+            True,
+        )
+        if diff_vertx_ws_on_mesh:
+            _diff_color_on_mesh_func(
+                compare_mesh_data_dict.get("diff_verts_ws_pos"),
+                base_obj,
+                (0.0, 0.0, 1.0),
             )
     return compare_mesh_data_dict
 
@@ -662,70 +826,88 @@ def check_mesh_data(
     target_mesh,
     diff_poly_vertex_id=False,
     diff_color_on_mesh=False,
+    diff_vertx_ws_pos=False,
+    diff_vertx_ws_on_mesh=False,
 ):
-    source_mfn_mesh = OpenMaya.MFnMesh(get_m_object(source_mesh))
-    target_mfn_mesh = OpenMaya.MFnMesh(get_m_object(target_mesh))
+    source_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(source_mesh))
+    target_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(target_mesh))
     mesh_data_dict_0 = get_mesh_data(source_mfn_mesh)
     mesh_data_dict_1 = get_mesh_data(target_mfn_mesh)
     compare_mesh_data_dict = compare_mesh_data(
         mesh_data_dict_0, mesh_data_dict_1
     )
     if diff_poly_vertex_id:
-        compare_mesh_data_dict = diff_poly_vertex_id_func(
-            compare_mesh_data_dict, mesh_data_dict_0, mesh_data_dict_1
+        compare_mesh_data_dict = _diff_mesh_data_arrays(
+            compare_mesh_data_dict,
+            mesh_data_dict_0,
+            mesh_data_dict_1,
+            "poly_vertex_id_list",
+            "diff_poly_vertex_id",
         )
         if diff_color_on_mesh:
-            diff_vertex_id_list_color_on_mesh(
-                compare_mesh_data_dict.get("diff_poly_vertex_id"), target_mesh
+            _diff_color_on_mesh_func(
+                compare_mesh_data_dict.get("diff_poly_vertex_id"),
+                target_mesh,
+                (1.0, 0.0, 0.0),
+            )
+    if diff_vertx_ws_pos:
+        compare_mesh_data_dict = _diff_mesh_data_arrays(
+            compare_mesh_data_dict,
+            mesh_data_dict_0,
+            mesh_data_dict_1,
+            "verts_ws_pos_list",
+            "diff_verts_ws_pos",
+            True,
+        )
+        if diff_vertx_ws_on_mesh:
+            _diff_color_on_mesh_func(
+                compare_mesh_data_dict.get("diff_verts_ws_pos"),
+                target_mesh,
+                (0.0, 0.0, 1.0),
             )
     return compare_mesh_data_dict
 
 
-@x_timer
-def diff_poly_vertex_id_list(source_list, target_list):
+@_DECORATORS.x_timer
+def _diff_two_arrays(source_list, target_list, use_order_index=False):
     diff_list = []
-    for id_source_list, id_target_list in itertools.zip_longest(
-        source_list, target_list
+    if len(source_list) != len(target_list):
+        raise IndexError("Arrays do not have the same length.")
+    for index, (id_source_list, id_target_list) in enumerate(
+        zip(source_list, target_list)
     ):
-        if (
-            id_source_list != id_target_list
-            and id_source_list
-            and id_target_list
-        ):
-            diff_list.extend(id_target_list)
+        if id_source_list != id_target_list:
+            if use_order_index:
+                diff_list.append(index)
+            else:
+                diff_list.extend(id_target_list)
     return diff_list
 
 
-def diff_vertex_id_list_color_on_mesh(diff_list, target_mesh):
+def _diff_color_on_mesh_func(diff_list, target_mesh, color_tuple):
     color_list = [
         "{}.vtx[{}]".format(target_mesh, vtx_id) for vtx_id in diff_list
     ]
+    cmds.softSelect(sse=0)
     cmds.select(color_list)
-    cmds.polyColorPerVertex(rgb=(1.0, 0.0, 0.0))
+    cmds.polyColorPerVertex(rgb=color_tuple)
     pymel.core.mel.eval("PaintVertexColorToolOptions;")
+    cmds.select(clear=True)
 
 
-def diff_poly_vertex_id_func(
-    compare_mesh_data_dict, mesh_data_dict_0, mesh_data_dict_1
+def _diff_mesh_data_arrays(
+    compare_mesh_data_dict,
+    mesh_data_dict_0,
+    mesh_data_dict_1,
+    array_name,
+    result_dict_key,
+    use_order_index=False,
 ):
-    if not compare_mesh_data_dict.get("poly_vertex_id_list"):
-        diff_list = diff_poly_vertex_id_list(
-            mesh_data_dict_0.get("poly_vertex_id_list"),
-            mesh_data_dict_1.get("poly_vertex_id_list"),
+    if not compare_mesh_data_dict.get(array_name):
+        diff_list = _diff_two_arrays(
+            mesh_data_dict_0.get(array_name),
+            mesh_data_dict_1.get(array_name),
+            use_order_index,
         )
-        compare_mesh_data_dict["diff_poly_vertex_id"] = diff_list
-        return compare_mesh_data_dict
-
-
-# DEBUG = 1
-# result = check_mesh_data_from_json(
-#     r"/home/johanneswolz/Schreibtisch/maya_testing_files/blendShape1"
-#     r"/blendShape1.json",
-#     True,
-#     True,
-# )
-# result = check_mesh_data("pSphereShape2", "pSphere3Shape", True, True)
-# print(result)
-# save_blenshape_data(
-#     "blendShape1", r"/home/johanneswolz/Schreibtisch/maya_testing_files",
-# )
+        compare_mesh_data_dict[result_dict_key] = diff_list
+    return compare_mesh_data_dict
