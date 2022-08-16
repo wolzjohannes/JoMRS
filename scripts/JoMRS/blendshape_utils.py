@@ -19,7 +19,7 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2022 / 08 / 08
+# Date:       2022 / 08 / 15
 
 """
 Util module for blendShape data management
@@ -40,6 +40,7 @@ from maya import OpenMayaAnim
 # Import local modules
 import decorators
 import openmaya_utils
+import mesh_utils
 
 ##########################################################
 # GLOBALS
@@ -47,79 +48,30 @@ import openmaya_utils
 
 _LOGGER = logging.getLogger(__name__ + ".py")
 _LOGGER.setLevel(logging.INFO)
-_DECORATORS = decorators.Decorators()
-_DECORATORS.debug = False
-_DECORATORS.logger = _LOGGER
+DECORATORS = decorators.Decorators()
+DECORATORS.debug = True
+DECORATORS.logger = _LOGGER
 
 
 BLENDSHAPE_INFO_DICT = {
     "origin": [
-        OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin,
-        OpenMayaAnim.MFnBlendShapeDeformer.kWorldOrigin,
+        (OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin, {"origin": "local"}),
+        (OpenMayaAnim.MFnBlendShapeDeformer.kWorldOrigin, {"origin": "world"}),
     ],
     "historyLocation": [
-        OpenMayaAnim.MFnBlendShapeDeformer.kFrontOfChain,
-        OpenMayaAnim.MFnBlendShapeDeformer.kNormal,
-        OpenMayaAnim.MFnBlendShapeDeformer.kPost,
-        OpenMayaAnim.MFnBlendShapeDeformer.kOther,
+        (
+            OpenMayaAnim.MFnBlendShapeDeformer.kFrontOfChain,
+            {"frontOfChain": True},
+        ),
+        (OpenMayaAnim.MFnBlendShapeDeformer.kNormal, {"automatic": True}),
+        (OpenMayaAnim.MFnBlendShapeDeformer.kPost, {"after": True}),
+        (OpenMayaAnim.MFnBlendShapeDeformer.kOther, {"afterReference": True}),
     ],
 }
 
 ##########################################################
 # FUNCTIONS
 ##########################################################
-
-
-@_DECORATORS.x_timer
-def get_mesh_data(mesh_shape):
-    """
-    Get data from given mesh. Like vertices number and vertex IDs and etc.
-
-    Args:
-        mesh_shape(str, OpenMaya.MFnMesh): The mesh shape to get the data from.
-
-    Return:
-        Dict: {
-        "mesh_shape": string
-        "num_vertices": integer,
-        "num_polys": integer,
-        "poly_vertex_id_list": List with each vertex ID of
-                               each vertex ordered by all polys,
-        "verts_ws_pos_list": List of all worldspace postions
-                             of each vertex of the mesh.
-        }
-
-    """
-    if isinstance(mesh_shape, str):
-        mesh_shape = OpenMaya.MFnMesh(openmaya_utils.get_m_object(mesh_shape))
-    num_vertices = mesh_shape.numVertices()
-    num_polys = mesh_shape.numPolygons()
-    poly_vertex_id_list = []
-    for x in range(num_polys):
-        m_int_array = OpenMaya.MIntArray()
-        mesh_shape.getPolygonVertices(x, m_int_array)
-        poly_vertex_id_list.append(list(m_int_array))
-    vertex_m_point_array = OpenMaya.MPointArray()
-    m_dag_path = openmaya_utils.get_dag_path(
-        mesh_shape.name(), OpenMaya.MFn.kMesh
-    )
-    mfn_mesh = OpenMaya.MFnMesh(m_dag_path)
-    mfn_mesh.getPoints(vertex_m_point_array, OpenMaya.MSpace.kWorld)
-    verts_ws_pos_list = [
-        [
-            vertex_m_point_array[x][0],
-            vertex_m_point_array[x][1],
-            vertex_m_point_array[x][2],
-        ]
-        for x in range(vertex_m_point_array.length())
-    ]
-    return {
-        "mesh_shape": mesh_shape.name(),
-        "num_vertices": num_vertices,
-        "num_polys": num_polys,
-        "poly_vertex_id_list": poly_vertex_id_list,
-        "verts_ws_pos_list": verts_ws_pos_list,
-    }
 
 
 def get_blendshape_node_infos(blendshape_node):
@@ -180,8 +132,8 @@ def get_blendshape_nodes(
     Args:
         node(str, pymel.core..PyNode()): Mesh shape node.
         as_string(bool): Give nodes names back.
-        as_pynode(bool): Give Pynodes back.
-        as_fn(bool): Give OpenMaya.MFnBlendshape back.
+        as_pynode(bool): Give PyNodes back.
+        as_fn(bool): Give OpenMaya.MFnBlendShapeDeformer back.
         levels(int): The number of given back blendshape nodes found in
                      connected history.
 
@@ -316,10 +268,15 @@ def get_weight_name_from_index(
 
     Args:
         blendshape_node(str): Blendshape node name.
-        index:
-        partial_name:
-        as_m_object_attr:
-    :return: 
+        index(int): The Index to search for.
+        partial_name(bool): Gives back as weight name.
+        as_m_object_attr: gives back as openMaya.MPlug.Attribute.
+
+    Return:
+         String: Weight name
+         OpenMaya.MPlug.Attribute object.
+         None if weight name not exist at given index.
+
     """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     weight_plug = blendshape_fn.findPlug("weight")
@@ -336,6 +293,15 @@ def get_weight_name_from_index(
 
 
 def rename_weight_name_from_index(blendshape_node, index, new_name):
+    """
+    Rename weight name found on given index.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The Index to search for.
+        new_name(str): The new name.
+
+    """
     attribute_from_index = get_weight_name_from_index(blendshape_node, index)
     alias_attributes = [
         attr
@@ -355,17 +321,30 @@ def add_target(
     weight=1.0,
     is_inbetween=False,
 ):
+    """
+    Add a new empty target to blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        target_name(str): The target name.
+        weight(float): The maximum weight the target will have an effect.
+        is_inbetween(bool): Define if new target is an inbetween. If it is
+        the index number will define to which target the inbetween belongs to.
+
+    """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     base_obj = get_base_objects(blendshape_node)[0]
     base_m_object = openmaya_utils.get_m_object(str(base_obj.name()))
-    input_target_array_plug_count = get_input_target_array_plug_count(
+    input_target_array_plug_count = _get_input_target_array_plug_count(
         blendshape_node
     )
     if is_inbetween:
         if target_index_exists(blendshape_node, index):
             if weight == 0.0 or weight == 1.0:
                 raise AttributeError(
-                    "Weight param can not be 0 or 1 if you add a inbetween."
+                    "Weight param can not be 0.0 or 1.0 if you add an "
+                    "inbetween."
                 )
             blendshape_fn.addTarget(base_m_object, index, weight)
         else:
@@ -382,26 +361,117 @@ def add_target(
     )
 
 
+@DECORATORS.x_timer
 def create_blendshape_node(
-    geo_transform, name=None, origin_enum=0, history_location_enum=1
+    geo_transform,
+    name=None,
+    origin_enum=0,
+    history_location_enum=1,
+    targets_name_list=None,
+    inbetweens_list=None,
+    topologyCheck=False,
 ):
-    if isinstance(geo_transform, str):
-        geo_transform = pymel.core.PyNode(geo_transform)
-    mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
-    mesh_shape_m_obj_array = openmaya_utils.get_m_obj_array(mesh_shape_nd_name)
-    bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
-    bshp_fn.create(
-        mesh_shape_m_obj_array,
-        BLENDSHAPE_INFO_DICT.get("origin")[origin_enum],
-        BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum],
-    )
+    """
+    Create a new blendshape node.
+
+    Args:
+        geo_transform(str, pymel.core.PyNode()): The tansform node of the
+                                                 geo for the blendshape node
+        name(str): Name of the blendshape node. If None will take maya
+                   default naming. Default is None.
+        origin_enum(int): Enum index in BLENDSHAPE_INFO_DICT["origin"] for
+                          the spaces of the deformation origin. Default is
+                          kLocalOrigin.
+        history_location_enum(int): Enum index in
+                                    BLENDSHAPE_INFO_DICT["historyLocation"]
+                                    for the place in the deformation order of
+                                    the mesh.
+                                    Default is kNormal("automatic").
+        targets_name_list(list): List with names(str) for the targets of the
+                                 node. The order of the list is the index order
+                                 of the targets.
+                                 Will just add targets if the list is not None.
+                                 By default is None.
+        inbetweens_list(List): The List to add inbetweens.It has to be filled
+                               with tuples of this template:
+                               (name(str), weight(float))
+                               The order of the tuples in the list is the index
+                               order of the inbetweens belonging.
+        topologyCheck(bool): Enable/Disable the topology check of the
+                             blendshape node.
+
+
+    """
+    if not topologyCheck:
+        if isinstance(geo_transform, str):
+            geo_transform = pymel.core.PyNode(geo_transform)
+        mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
+        mesh_shape_m_obj_array = openmaya_utils.get_m_obj_array(
+            mesh_shape_nd_name
+        )
+        bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
+        bshp_fn.create(
+            mesh_shape_m_obj_array,
+            BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][0],
+            BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][
+                0
+            ],
+        )
+    else:
+        pymel.core.select(geo_transform)
+        bshp_data_dict = {"topologyCheck": True}
+        bshp_data_dict.update(
+            BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][1]
+        )
+        bshp_data_dict.update(
+            BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][
+                1
+            ]
+        )
+        bshp_nd_name = pymel.core.blendShape(**bshp_data_dict)
+        bshp_fn = get_blendshape_fn(bshp_nd_name.name())
     if name:
-        openmaya_utils.rename_node(bshp_fn.object(), name)
+        bshp_fn.setName(name)
+        # openmaya_utils.rename_node(bshp_fn.object(), name)
+    if targets_name_list:
+        for index, target_name in enumerate(targets_name_list):
+            add_target(bshp_fn.name(), index, target_name)
+    if inbetweens_list:
+        for index_, inbetween_tuple in enumerate(inbetweens_list):
+            add_target(
+                bshp_fn.name(),
+                index_,
+                inbetween_tuple[0],
+                inbetween_tuple[1],
+                True,
+            )
 
 
-def _OM_get_blendshape_deltas_from_index(
-    blendshape_node, index, bshp_port=6000
-):
+@DECORATORS.x_timer
+def OM_get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
+    """
+    Get the blendshape delta values with openMaya.
+    This is really fast if you stay in maya.
+    But if you want to export this data, it is really slow.
+    This is because of the conversion from the openMaya.MPlug.MObject to an
+    array we can use further. For that Maya Commands and Mel is faster.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+                        Default is 6000.
+    Return:
+        Tuple: (points position as OpenMaya.MObject, affected components as
+                OpenMaya.MObject)
+
+    """
     points_pymel_attr = (
         pymel.core.PyNode(blendshape_node)
         .inputTarget[0]
@@ -421,14 +491,26 @@ def _OM_get_blendshape_deltas_from_index(
     return (points_m_object, components_m_object)
 
 
-@_DECORATORS.x_timer
-def get_blendshape_deltas_from_index(
-    blendshape_node, index, bshp_port=6000, openMaya=False
-):
-    if openMaya:
-        return _OM_get_blendshape_deltas_from_index(
-            blendshape_node, index, bshp_port
-        )
+@DECORATORS.x_timer
+def get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
+    """
+    Get the blendshape deltas.
+
+    Args
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+                        Default is 6000.
+    Return:
+        Tuple: (points positions as array, affected components as array)
+
+    """
     pt = cmds.getAttr(
         "{}.inputTarget[0].inputTargetGroup[{}].inputTargetItem["
         "{}].inputPointsTarget".format(blendshape_node, index, bshp_port)
@@ -440,10 +522,29 @@ def get_blendshape_deltas_from_index(
     return (pt, ct)
 
 
-@_DECORATORS.x_timer
-def _OM_set_blendshape_deltas_by_index(
+@DECORATORS.x_timer
+def OM_set_blendshape_deltas_by_index(
     blendshape_node, index, deltas_tuple, bshp_port=6000
 ):
+    """
+    Set the blendshape deltas with OpenMaya.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        deltas_tuple(tuple): Deltas for setting.
+                            (points position as OpenMaya.MObject, affected
+                            components as OpenMaya.MObject)
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+                        Default is 6000.
+
+    """
     if index not in get_weight_indexes(blendshape_node):
         raise AttributeError("Given index not exist. Will abort.")
     target_points = deltas_tuple[0]
@@ -468,10 +569,29 @@ def _OM_set_blendshape_deltas_by_index(
     components_m_plug.setMObject(target_indices)
 
 
-@_DECORATORS.x_timer
+@DECORATORS.x_timer
 def set_blendshape_deltas_by_index(
     blendshape_node, index, deltas_tuple, bshp_port=6000
 ):
+    """
+    Set the bendshape deltas with maya commands.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        deltas_tuple(tuple): Deltas for setting.
+                            (points position as array,
+                            affected components as array)
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+                        Default is 6000.
+
+    """
     pt = deltas_tuple[0]
     ct = deltas_tuple[1]
     cmds.setAttr(
@@ -491,6 +611,26 @@ def set_blendshape_deltas_by_index(
 
 
 def is_target_connected(blendshape_node, index, bshp_port):
+    """
+    Gets if target plug is connected to an mesh shape.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+        deltas_tuple(tuple): Deltas for setting.
+                            (points position as array,
+                            affected components as array)
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+    Return:
+        Bool: True or False.
+
+    """
     return (
         pymel.core.PyNode(blendshape_node)
         .inputTarget[0]
@@ -500,7 +640,25 @@ def is_target_connected(blendshape_node, index, bshp_port):
     )
 
 
-def get_inbetween_name_from_plug_index(blendshape_node, plug_index):
+def get_inbetween_name_from_bshp_port(blendshape_node, bshp_port):
+    """
+    Get the inbetween name from given bshp port number.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        bshp_port(int): Port number of the blendshape target. 6000 represents a
+                        weight value of 1.0 and 5000 a value of 0.0. 4000 is
+                        -1.0.
+                        And everything between 6000, 5000 and 4000 are the
+                        inbetween targets.
+                        This is because the blendshape node supports inbetweens
+                        and minus weight values.
+
+    Return:
+        None if no inbetween exist at bshp port number.
+        String if succeed.
+
+    """
     bshp_fn = get_blendshape_fn(blendshape_node)
     m_plug = bshp_fn.findPlug("inbetweenInfoGroup")
     info_plug = m_plug.elementByPhysicalIndex(0).child(0)
@@ -512,7 +670,7 @@ def get_inbetween_name_from_plug_index(blendshape_node, plug_index):
             )
             plug_name = plug_name.split("[")[1].split("]")[0]
             port_index = int(plug_name)
-            if plug_index == port_index:
+            if bshp_port == port_index:
                 p_value = (
                     info_plug.elementByPhysicalIndex(x).child(1).asString()
                 )
@@ -520,8 +678,20 @@ def get_inbetween_name_from_plug_index(blendshape_node, plug_index):
 
 
 def get_inbetween_plugs(blendshape_node, index):
+    """
+    Get all inbetween plug numbers from given target index.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        index(int): The target index.
+
+    Result:
+        List: [{port_index: inbetween_name},{5250: "test_inbetween_1"}]
+        None if no inbetweens exist.
+
+    """
     result_list = list()
-    input_target_group_plug = get_input_target_group_plug(blendshape_node)
+    input_target_group_plug = _get_input_target_group_plug(blendshape_node)
     input_target_item_plug = input_target_group_plug.elementByPhysicalIndex(
         index
     ).child(0)
@@ -536,26 +706,64 @@ def get_inbetween_plugs(blendshape_node, index):
             plug_name = plug_name.split("[")[1].split("]")[0]
             port_index = int(plug_name)
             if port_index != 6000:
-                inbetween_name = get_inbetween_name_from_plug_index(
+                inbetween_name = get_inbetween_name_from_bshp_port(
                     blendshape_node, port_index
                 )
                 result_list.append({port_index: inbetween_name})
     return result_list
 
 
-def get_input_target_group_plug(blendshape_node):
+def _get_input_target_group_plug(blendshape_node):
+    """
+    Get the input target group plug. Where all targets are stored.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+        OpenMaya.MPlug
+
+    """
     bshp_fn = get_blendshape_fn(blendshape_node)
     m_plug = bshp_fn.findPlug("inputTarget")
     return m_plug.elementByPhysicalIndex(0).child(0)
 
 
-def get_input_target_array_plug_count(blendshape_node):
-    input_target_group_plug = get_input_target_group_plug(blendshape_node)
+def _get_input_target_array_plug_count(blendshape_node):
+    """
+    Get the target count by the indices of the array plug on the node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+        Integer: Count of the plugs.
+
+    """
+    input_target_group_plug = _get_input_target_group_plug(blendshape_node)
     m_int_array = OpenMaya.MIntArray()
     return input_target_group_plug.getExistingArrayAttributeIndices(m_int_array)
 
 
-def collect_blendshape_data(blendshape_node):
+def get_targets_and_inbetweens_deltas_from_blendshape(blendshape_node):
+    """
+    Get all deltas of the all inbetweens and targets from given blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+
+    Return:
+          List: Filled with a multidimensional dict for each target.
+          [{"target_name": string,
+            "target_index": Integer,
+            "target_deltas": {"target_points": points position array,
+                              "target_components": affected component array}
+            "inbetween_deltas": [{bshp_port:
+                                 {"target_points": points position array,
+                                 "target_components": affected component
+                                 array}}]]
+
+    """
     target_deltas_list = list()
     index_array = get_weight_indexes(blendshape_node)
     for index in index_array:
@@ -588,9 +796,53 @@ def collect_blendshape_data(blendshape_node):
     return target_deltas_list
 
 
-@_DECORATORS.x_timer
-def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
-    blendshape_data_list_temp = collect_blendshape_data(blendshape_node)
+@DECORATORS.x_timer
+def save_deltas_as_numpy_arrays(
+    blendshape_node, save_directory, file_prefix=None
+):
+    """
+    Save the target and inbetween deltas as numpy array zip file.
+
+    Directory order is:
+        - blendshape_name
+            - targets_deltas
+                - {file_prefix}_deltas_{target_index}.npz
+            - inbetween_deltas
+                - {file_prefix}_inbetween_deltas_{target_index}.npz
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        save_directory(str): The directory to save the files into.
+        file_prefix(str): Optional prefix for the files. If None will take the
+                          blendshape name. Default is None.
+
+    Return:
+        List:
+            [
+            {
+                "inbetween_deltas": [
+                    {
+                        "5542": "blendShape1_inbetween_deltas_0_5542.npz"
+                    }
+                ],
+                "target_deltas": "blendShape1_deltas_0.npz",
+                "target_index": 0,
+                "target_name": "pSphere2"
+            },
+            {
+                "inbetween_deltas": [],
+                "target_deltas": "blendShape1_deltas_1.npz",
+                "target_index": 1,
+                "target_name": "pSphere3"
+            }
+            ]
+
+    """
+    if not file_prefix:
+        file_prefix = blendshape_node
+    blendshape_data_list_temp = get_targets_and_inbetweens_deltas_from_blendshape(
+        blendshape_node
+    )
     deltas_package_dir = os.path.normpath(
         os.path.join(save_directory, "targets_deltas")
     )
@@ -601,7 +853,9 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     if not os.path.exists(deltas_package_dir):
         os.mkdir(deltas_package_dir)
     for delta_dict in blendshape_data_list_temp:
-        file_name = "{}_deltas_{}".format(name, delta_dict["target_index"])
+        file_name = "{}_deltas_{}".format(
+            file_prefix, delta_dict["target_index"]
+        )
         target_points_list = delta_dict.get("target_deltas").get(
             "target_points"
         )
@@ -632,7 +886,7 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
             for inb_dict in inbetweens_list:
                 port_index = list(inb_dict.keys())[0]
                 file_name_ = "{}_inbetween_deltas_{}_{}".format(
-                    name, delta_dict_["target_index"], port_index
+                    file_prefix, delta_dict_["target_index"], port_index
                 )
                 inb_deltas_dict = list(inb_dict.values())[0]
                 inbetween_points_list = inb_deltas_dict.get("target_points")
@@ -657,32 +911,69 @@ def save_deltas_as_numpy_arrays(blendshape_node, name, save_directory):
     return blendshape_data_list_temp
 
 
-@_DECORATORS.x_timer
-def save_deltas_as_shp_file(blendshape_node, name, save_directory):
-    shp_file_path = os.path.normpath("{}/{}.shp".format(save_directory, name))
+@DECORATORS.x_timer
+def save_deltas_as_shp_file(blendshape_node, save_directory, file_prefix=None):
+    """
+    Save deltas as maya ./shp file. Thats very fast but has not a good
+    inbetween support.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        save_directory(str): The directory to save the files into.
+        file_prefix(str): Optional prefix for the name. If None will take the
+                          blendshape name. Default is None.
+
+    Return:
+        String: The file directory.
+
+    """
+    if not file_prefix:
+        file_prefix = blendshape_node
+    shp_file_path = os.path.normpath(
+        "{}/{}.shp".format(save_directory, file_prefix)
+    )
     cmds.blendShape(blendshape_node, ep=shp_file_path, edit=True)
     return shp_file_path
 
 
 def save_blendshape_data(
-    blendshape_node, save_directory, name=None, prune=True, as_shp_file=False
+    blendshape_node,
+    save_directory,
+    file_prefix=None,
+    prune=True,
+    as_shp_file=False,
 ):
-    if not name:
-        name = blendshape_node
+    """
+    Save the blendshape data into directory for further usage.
+    You can save the data as numpy array or as ./shp file. Default is numpy.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        save_directory(str): The directory to save the files into.
+        file_prefix(str): Optional prefix for the name. If None will take the
+                          blendshape name. Default is None.
+        prune(bool): Removes any points not being deformed by the deformer
+                     in its current configuration from the deformer set.
+                     Default is True.
+        as_shp_file(bool): Will save the target deltas as shp file.
+
+    """
+    if not file_prefix:
+        file_prefix = blendshape_node
     if not os.path.exists(save_directory):
         _LOGGER.warning(
             "{} not exist. Can not save data json file.".format(save_directory)
         )
         return False
-    package_dir = os.path.normpath(os.path.join(save_directory, name))
+    package_dir = os.path.normpath(os.path.join(save_directory, file_prefix))
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
     cmds.blendShape(blendshape_node, edit=True, pr=prune)
     data = dict()
-    poly_vertex_id_npy_name = "{}_poly_vertex_id".format(name)
-    verts_pos_npy_name = "{}_verts_ws_positions".format(name)
+    poly_vertex_id_npy_name = "{}_poly_vertex_id".format(file_prefix)
+    verts_pos_npy_name = "{}_verts_ws_positions".format(file_prefix)
     base_obj = get_base_objects(blendshape_node)[0]
-    mesh_data_dict = get_mesh_data(base_obj)
+    mesh_data_dict = mesh_utils.get_mesh_data(base_obj)
     poly_vertex_id_array = numpy.array(
         mesh_data_dict.get("poly_vertex_id_list"), dtype=object
     )
@@ -704,210 +995,23 @@ def save_blendshape_data(
     verts_pos_npy_dir = os.path.normpath(
         "{}/{}".format(package_dir, verts_pos_npy_name)
     )
+    base_obj_export_name = "{}_base_obj".format(file_prefix)
+    data["base_obj_export"] = "{}.obj".format(base_obj_export_name)
+    base_obj_mesh_export_dir = os.path.normpath("{}/{}".format(package_dir,
+                                                               base_obj_export_name))
     numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
     numpy.save(verts_pos_npy_dir, vertex_ws_pos_array)
     if not as_shp_file:
         data["target_deltas"] = save_deltas_as_numpy_arrays(
-            blendshape_node, name, package_dir
+            blendshape_node, package_dir, file_prefix
         )
     else:
         data["target_deltas"] = os.path.basename(
-            save_deltas_as_shp_file(blendshape_node, name, package_dir)
+            save_deltas_as_shp_file(blendshape_node, package_dir, file_prefix)
         )
-    json_file_dir = os.path.normpath("{}/{}.json".format(package_dir, name))
+    json_file_dir = os.path.normpath(
+        "{}/{}.json".format(package_dir, file_prefix)
+    )
     with open(json_file_dir, "w") as json_file:
         json.dump(data, json_file, sort_keys=True, indent=4)
     _LOGGER.info("Blendshape data saved to: {}".format(package_dir))
-
-
-def compare_mesh_data(mesh_data_dict_0, mesh_data_dict_1):
-    vertex_count = True
-    poly_count = True
-    vertex_ids = True
-    vertex_ws_pos = True
-    if mesh_data_dict_0.get("num_vertices") != mesh_data_dict_1.get(
-        "num_vertices"
-    ):
-        vertex_count = False
-        _LOGGER.error("Vertex count not equal.")
-    if mesh_data_dict_0.get("num_polys") != mesh_data_dict_1.get("num_polys"):
-        poly_count = False
-        _LOGGER.error("Poly count not equal.")
-    if mesh_data_dict_0.get("poly_vertex_id_list") != mesh_data_dict_1.get(
-        "poly_vertex_id_list"
-    ):
-        vertex_ids = False
-        _LOGGER.error("Vertex IDs not equal.")
-    if mesh_data_dict_0.get("verts_ws_pos_list") != mesh_data_dict_1.get(
-        "verts_ws_pos_list"
-    ):
-        vertex_ws_pos = False
-        _LOGGER.error(
-            "World position of some vertices are not matching with"
-            " compared ones."
-        )
-    return {
-        "vertex_count": vertex_count,
-        "poly_count": poly_count,
-        "poly_vertex_id_list": vertex_ids,
-        "verts_ws_pos_list": vertex_ws_pos,
-    }
-
-
-def check_mesh_data_from_json(
-    json_file_path,
-    diff_poly_vertex_id=False,
-    diff_color_on_mesh=False,
-    diff_vertx_ws_pos=False,
-    diff_vertx_ws_on_mesh=False,
-):
-    base_name = os.path.basename(json_file_path)
-    data_dir = os.path.normpath(json_file_path.split(base_name)[0])
-    with open(json_file_path, "r") as json_file:
-        data_dict = json.load(json_file)
-        mesh_data_dict = data_dict.get("mesh_data")
-    poly_vertex_id_list_file = os.path.join(
-        data_dir, mesh_data_dict.get("poly_vertex_id_list")
-    )
-    verts_ws_pos_list_file = os.path.join(
-        data_dir, mesh_data_dict.get("verts_ws_pos_list")
-    )
-    base_obj = mesh_data_dict.get("mesh_shape")
-    poly_vertex_id_np_array = numpy.load(
-        poly_vertex_id_list_file, allow_pickle=True
-    )
-    verts_ws_pos_np_array = numpy.load(
-        verts_ws_pos_list_file, allow_pickle=True
-    )
-    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_id_np_array.tolist()
-    mesh_data_dict["verts_ws_pos_list"] = verts_ws_pos_np_array.tolist()
-    if not pymel.core.objExists(base_obj):
-        _LOGGER.error("{} not exist. Abort mesh data check.".format(base_obj))
-        return False
-    mfn_mesh_obj = OpenMaya.MFnMesh(openmaya_utils.get_m_object(base_obj))
-    current_mesh_data = get_mesh_data(mfn_mesh_obj)
-    compare_mesh_data_dict = compare_mesh_data(
-        mesh_data_dict, current_mesh_data
-    )
-    if diff_poly_vertex_id:
-        compare_mesh_data_dict = _diff_mesh_data_arrays(
-            compare_mesh_data_dict,
-            mesh_data_dict,
-            current_mesh_data,
-            "poly_vertex_id_list",
-            "diff_poly_vertex_id",
-        )
-        if diff_color_on_mesh:
-            _diff_color_on_mesh_func(
-                compare_mesh_data_dict.get("diff_poly_vertex_id"),
-                base_obj,
-                (1.0, 0.0, 0.0),
-            )
-    if diff_vertx_ws_pos:
-        compare_mesh_data_dict = _diff_mesh_data_arrays(
-            compare_mesh_data_dict,
-            mesh_data_dict,
-            current_mesh_data,
-            "verts_ws_pos_list",
-            "diff_verts_ws_pos",
-            True,
-        )
-        if diff_vertx_ws_on_mesh:
-            _diff_color_on_mesh_func(
-                compare_mesh_data_dict.get("diff_verts_ws_pos"),
-                base_obj,
-                (0.0, 0.0, 1.0),
-            )
-    return compare_mesh_data_dict
-
-
-def check_mesh_data(
-    source_mesh,
-    target_mesh,
-    diff_poly_vertex_id=False,
-    diff_color_on_mesh=False,
-    diff_vertx_ws_pos=False,
-    diff_vertx_ws_on_mesh=False,
-):
-    source_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(source_mesh))
-    target_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(target_mesh))
-    mesh_data_dict_0 = get_mesh_data(source_mfn_mesh)
-    mesh_data_dict_1 = get_mesh_data(target_mfn_mesh)
-    compare_mesh_data_dict = compare_mesh_data(
-        mesh_data_dict_0, mesh_data_dict_1
-    )
-    if diff_poly_vertex_id:
-        compare_mesh_data_dict = _diff_mesh_data_arrays(
-            compare_mesh_data_dict,
-            mesh_data_dict_0,
-            mesh_data_dict_1,
-            "poly_vertex_id_list",
-            "diff_poly_vertex_id",
-        )
-        if diff_color_on_mesh:
-            _diff_color_on_mesh_func(
-                compare_mesh_data_dict.get("diff_poly_vertex_id"),
-                target_mesh,
-                (1.0, 0.0, 0.0),
-            )
-    if diff_vertx_ws_pos:
-        compare_mesh_data_dict = _diff_mesh_data_arrays(
-            compare_mesh_data_dict,
-            mesh_data_dict_0,
-            mesh_data_dict_1,
-            "verts_ws_pos_list",
-            "diff_verts_ws_pos",
-            True,
-        )
-        if diff_vertx_ws_on_mesh:
-            _diff_color_on_mesh_func(
-                compare_mesh_data_dict.get("diff_verts_ws_pos"),
-                target_mesh,
-                (0.0, 0.0, 1.0),
-            )
-    return compare_mesh_data_dict
-
-
-@_DECORATORS.x_timer
-def _diff_two_arrays(source_list, target_list, use_order_index=False):
-    diff_list = []
-    if len(source_list) != len(target_list):
-        raise IndexError("Arrays do not have the same length.")
-    for index, (id_source_list, id_target_list) in enumerate(
-        zip(source_list, target_list)
-    ):
-        if id_source_list != id_target_list:
-            if use_order_index:
-                diff_list.append(index)
-            else:
-                diff_list.extend(id_target_list)
-    return diff_list
-
-
-def _diff_color_on_mesh_func(diff_list, target_mesh, color_tuple):
-    color_list = [
-        "{}.vtx[{}]".format(target_mesh, vtx_id) for vtx_id in diff_list
-    ]
-    cmds.softSelect(sse=0)
-    cmds.select(color_list)
-    cmds.polyColorPerVertex(rgb=color_tuple)
-    pymel.core.mel.eval("PaintVertexColorToolOptions;")
-    cmds.select(clear=True)
-
-
-def _diff_mesh_data_arrays(
-    compare_mesh_data_dict,
-    mesh_data_dict_0,
-    mesh_data_dict_1,
-    array_name,
-    result_dict_key,
-    use_order_index=False,
-):
-    if not compare_mesh_data_dict.get(array_name):
-        diff_list = _diff_two_arrays(
-            mesh_data_dict_0.get(array_name),
-            mesh_data_dict_1.get(array_name),
-            use_order_index,
-        )
-        compare_mesh_data_dict[result_dict_key] = diff_list
-    return compare_mesh_data_dict
