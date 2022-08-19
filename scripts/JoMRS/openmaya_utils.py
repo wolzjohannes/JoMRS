@@ -101,19 +101,29 @@ def get_m_obj_array(objects):
     return m_array
 
 
-def rename_node(object_name, new_name):
+def rename_node(object, new_name):
     """
     Rename a node.
 
     Args:
-        object_name(str): Nodes name.
+        object(str, OpenMaya.MObject): Nodes name.
         new_name(str): New name.
 
     Return:
         String: New node name.
 
     """
+    print(isinstance(object, str))
+    if isinstance(object, str):
+        m_obj = get_m_object(object)
+    elif isinstance(object, OpenMaya.MObject):
+        m_obj = object
+    else:
+        raise TypeError(
+            "{} is a not supported object type. You need a string or a "
+            "OpenMaya.MObject".format(object)
+        )
     m_dag_mod = OpenMaya.MDagModifier()
-    m_dag_mod.renameNode(get_m_object(object_name), new_name)
+    m_dag_mod.renameNode(m_obj, new_name)
     m_dag_mod.doIt()
     return new_name

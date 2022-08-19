@@ -30,6 +30,8 @@ import logging
 import os
 import json
 import numpy
+import importlib
+import glob
 
 # Import Maya specific modules
 import pymel.core
@@ -41,6 +43,9 @@ from maya import OpenMayaAnim
 import decorators
 import openmaya_utils
 import mesh_utils
+
+importlib.reload(openmaya_utils)
+importlib.reload(mesh_utils)
 
 ##########################################################
 # GLOBALS
@@ -86,13 +91,16 @@ def get_blendshape_node_infos(blendshape_node):
         "name": blendshape_node,
         "history_location": blendshape_fn.historyLocation(),
         "origin": blendshape_fn.origin(),
+        "topologCheck": int
         }
     """
     blendshape_fn = get_blendshape_fn(blendshape_node)
+    top_check_m_plug = blendshape_fn.findPlug("topologyCheck")
     return {
         "name": blendshape_node,
         "history_location": blendshape_fn.historyLocation(),
         "origin": blendshape_fn.origin(),
+        "topologyCheck": top_check_m_plug.asBool(),
     }
 
 
@@ -144,7 +152,7 @@ def get_blendshape_nodes(
     if isinstance(node, str):
         node = pymel.core.PyNode(node)
     bshp_nodes = node.listHistory(
-        typ="blendShape", allFuture=False, future=False, levels=levels
+        type="blendShape", allFuture=False, future=False, levels=levels
     )
     if as_pynode:
         return bshp_nodes
@@ -347,9 +355,10 @@ def add_target(
                     "inbetween."
                 )
             blendshape_fn.addTarget(base_m_object, index, weight)
+            return True
         else:
             raise IndexError("Target index not exist. Unable to add inbetween.")
-    if weight != 1.0 or weight != 0.0:
+    if weight < 1.0 and weight > 0.0:
         raise AttributeError(
             "Weights between 0.0 and 1.0 can just be used as inbetween target."
         )
@@ -369,7 +378,7 @@ def create_blendshape_node(
     history_location_enum=1,
     targets_name_list=None,
     inbetweens_list=None,
-    topologyCheck=False,
+    topologyCheck=True,
 ):
     """
     Create a new blendshape node.
@@ -393,8 +402,13 @@ def create_blendshape_node(
                                  Will just add targets if the list is not None.
                                  By default is None.
         inbetweens_list(List): The List to add inbetweens.It has to be filled
-                               with tuples of this template:
-                               (name(str), weight(float))
+                               with this template:
+                               [
+                               {"target_points": points array,
+                                 "target_components": components array,
+                                 "name": string,
+                                 "weight": float}
+                                ]
                                The order of the tuples in the list is the index
                                order of the inbetweens belonging.
         topologyCheck(bool): Enable/Disable the topology check of the
@@ -402,49 +416,35 @@ def create_blendshape_node(
 
 
     """
-    if not topologyCheck:
-        if isinstance(geo_transform, str):
-            geo_transform = pymel.core.PyNode(geo_transform)
-        mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
-        mesh_shape_m_obj_array = openmaya_utils.get_m_obj_array(
-            mesh_shape_nd_name
-        )
-        bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
-        bshp_fn.create(
-            mesh_shape_m_obj_array,
-            BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][0],
-            BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][
-                0
-            ],
-        )
-    else:
-        pymel.core.select(geo_transform)
-        bshp_data_dict = {"topologyCheck": True}
-        bshp_data_dict.update(
-            BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][1]
-        )
-        bshp_data_dict.update(
-            BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][
-                1
-            ]
-        )
-        bshp_nd_name = pymel.core.blendShape(**bshp_data_dict)
-        bshp_fn = get_blendshape_fn(bshp_nd_name.name())
+    if isinstance(geo_transform, str):
+        geo_transform = pymel.core.PyNode(geo_transform)
+    mesh_shape_nd_name = [geo_transform.getShape().name(long=None)]
+    mesh_shape_m_obj_array = openmaya_utils.get_m_obj_array(mesh_shape_nd_name)
+    bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
+    bshp_fn.create(
+        mesh_shape_m_obj_array,
+        BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][0],
+        BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][0],
+    )
     if name:
         bshp_fn.setName(name)
-        # openmaya_utils.rename_node(bshp_fn.object(), name)
     if targets_name_list:
         for index, target_name in enumerate(targets_name_list):
             add_target(bshp_fn.name(), index, target_name)
     if inbetweens_list:
-        for index_, inbetween_tuple in enumerate(inbetweens_list):
-            add_target(
-                bshp_fn.name(),
-                index_,
-                inbetween_tuple[0],
-                inbetween_tuple[1],
-                True,
-            )
+        for index_, list_ in enumerate(inbetweens_list):
+            for inbetween_dict in list_:
+                dict_items = list(inbetween_dict.items())
+                for item in dict_items:
+                    add_target(
+                        bshp_fn.name(),
+                        index_,
+                        item[1].get("name"),
+                        item[1].get("weight"),
+                        True,
+                    )
+    if topologyCheck:
+        pymel.core.PyNode(bshp_fn.name()).topologyCheck.set(True)
 
 
 @DECORATORS.x_timer
@@ -724,9 +724,16 @@ def _get_input_target_group_plug(blendshape_node):
         OpenMaya.MPlug
 
     """
-    bshp_fn = get_blendshape_fn(blendshape_node)
-    m_plug = bshp_fn.findPlug("inputTarget")
-    return m_plug.elementByPhysicalIndex(0).child(0)
+    try:
+        bshp_fn = get_blendshape_fn(blendshape_node)
+        m_plug = bshp_fn.findPlug("inputTarget")
+        return m_plug.elementByPhysicalIndex(0).child(0)
+    except:
+        return (
+            pymel.core.PyNode(blendshape_node)
+            .inputTarget.inputTarget[0]
+            .inputTargetGroup.__apimplug__()
+        )
 
 
 def _get_input_target_array_plug_count(blendshape_node):
@@ -745,23 +752,34 @@ def _get_input_target_array_plug_count(blendshape_node):
     return input_target_group_plug.getExistingArrayAttributeIndices(m_int_array)
 
 
-def get_targets_and_inbetweens_deltas_from_blendshape(blendshape_node):
+def get_targets_and_inbetweens_deltas_from_blendshape(
+    blendshape_node, as_MObjects
+):
     """
     Get all deltas of the all inbetweens and targets from given blendshape node.
 
     Args:
         blendshape_node(str): Blendshape node name.
+        as_MObjects(bool): Get the targets and inbetween deltas as
+                           OpenMaya.MObject. This is really fast if you stay
+                           in the maya session. And do not use the data for
+                           an export.
 
     Return:
           List: Filled with a multidimensional dict for each target.
           [{"target_name": string,
             "target_index": Integer,
-            "target_deltas": {"target_points": points position array,
-                              "target_components": affected component array}
+            "target_deltas": {"target_points": points position array
+                              or OpenMaya.MObject,
+                              "target_components": affected component array
+                              or OpenMaya.MObject}
             "inbetween_deltas": [{bshp_port:
-                                 {"target_points": points position array,
+                                 {"target_points": points position array or
+                                 OpenMaya.MObject,
                                  "target_components": affected component
-                                 array}}]]
+                                 array or OpenMaya.MObject, "name": String,
+                                 "weight": float},
+                                 ]
 
     """
     target_deltas_list = list()
@@ -769,19 +787,37 @@ def get_targets_and_inbetweens_deltas_from_blendshape(blendshape_node):
     for index in index_array:
         target_temp_dict = dict()
         inbetween_temp_list = list()
-        target_temp_dict["target_points"], target_temp_dict[
-            "target_components"
-        ] = get_blendshape_deltas_from_index(blendshape_node, index)
+        if as_MObjects:
+            target_temp_dict["target_points"], target_temp_dict[
+                "target_components"
+            ] = OM_get_blendshape_deltas_from_index(blendshape_node, index)
+        else:
+            target_temp_dict["target_points"], target_temp_dict[
+                "target_components"
+            ] = get_blendshape_deltas_from_index(blendshape_node, index)
         inbetween_plugs = get_inbetween_plugs(blendshape_node, index)
         if inbetween_plugs:
             for inbetween_dict in inbetween_plugs:
                 port_index = list(inbetween_dict.keys())[0]
-                inbetween_temp_dict = dict()
-                inbetween_temp_dict["target_points"], inbetween_temp_dict[
-                    "target_components"
-                ] = get_blendshape_deltas_from_index(
-                    blendshape_node, index, port_index
+                name = get_inbetween_name_from_bshp_port(
+                    blendshape_node, port_index
                 )
+                weight = float("0.{}".format(str(port_index)[1:]))
+                inbetween_temp_dict = dict()
+                if as_MObjects:
+                    inbetween_temp_dict["target_points"], inbetween_temp_dict[
+                        "target_components"
+                    ] = OM_get_blendshape_deltas_from_index(
+                        blendshape_node, index, port_index
+                    )
+                else:
+                    inbetween_temp_dict["target_points"], inbetween_temp_dict[
+                        "target_components"
+                    ] = get_blendshape_deltas_from_index(
+                        blendshape_node, index, port_index
+                    )
+                inbetween_temp_dict["name"] = name
+                inbetween_temp_dict["weight"] = weight
                 inbetween_temp_list.append({port_index: inbetween_temp_dict})
         target_deltas_list.append(
             {
@@ -794,6 +830,65 @@ def get_targets_and_inbetweens_deltas_from_blendshape(blendshape_node):
             }
         )
     return target_deltas_list
+
+
+def get_blendshape_data(
+    blendshape_node, target_deltas=True, deltas_as_MObjects=True, mesh_data=True
+):
+    """
+    Get all needed data from given blendshape node.
+
+    Args:
+        blendshape_node(str): Blendshape node name.
+        target_deltas(bool): Get target deltas or not. Default is True.
+        deltas_as_MObjects(bool): Get target deltas as OpenMaya.MObject.
+                                  Default is True.
+        mesh_data(bool): Get mesh data or not.
+
+    Return:
+        Dict:
+        {
+        "blendshape_node_info": {
+                                "name": blendshape_node,
+                                "history_location":
+                                blendshape_fn.historyLocation(),
+                                "origin": blendshape_fn.origin(),
+                                },
+        "mesh_data": {
+                    "mesh_shape": string
+                    "num_vertices": integer,
+                    "num_polys": integer,
+                    "poly_vertex_id_list": List with each vertex ID of
+                                           each vertex ordered by all polys,
+                    "verts_ws_pos_list": List of all worldspace postions
+                                         of each vertex of the mesh.
+                    },
+        "weights_connections_data": [
+                                     ((node_name, node_plug_name), weight_name),
+                                     ((node_name, node_plug_name), weight_name)
+                                     ]
+        "target_deltas": List
+        }
+
+    """
+    data_dict = dict()
+    base_obj = get_base_objects(blendshape_node)[0]
+    if mesh_data:
+        data_dict["mesh_data"] = mesh_utils.get_mesh_data(base_obj)
+    data_dict["blendshape_node_info"] = get_blendshape_node_infos(
+        blendshape_node
+    )
+    data_dict["weights_connections_data"] = get_weight_connections_data(
+        blendshape_node
+    )
+    data_dict["target_deltas"] = None
+    if target_deltas:
+        data_dict[
+            "target_deltas"
+        ] = get_targets_and_inbetweens_deltas_from_blendshape(
+            blendshape_node, deltas_as_MObjects
+        )
+    return data_dict
 
 
 @DECORATORS.x_timer
@@ -841,7 +936,7 @@ def save_deltas_as_numpy_arrays(
     if not file_prefix:
         file_prefix = blendshape_node
     blendshape_data_list_temp = get_targets_and_inbetweens_deltas_from_blendshape(
-        blendshape_node
+        blendshape_node, False
     )
     deltas_package_dir = os.path.normpath(
         os.path.join(save_directory, "targets_deltas")
@@ -888,7 +983,7 @@ def save_deltas_as_numpy_arrays(
                 file_name_ = "{}_inbetween_deltas_{}_{}".format(
                     file_prefix, delta_dict_["target_index"], port_index
                 )
-                inb_deltas_dict = list(inb_dict.values())[0]
+                inb_deltas_dict = inb_dict.get(port_index)
                 inbetween_points_list = inb_deltas_dict.get("target_points")
                 inbetween_components_list = inb_deltas_dict.get(
                     "target_components"
@@ -907,7 +1002,10 @@ def save_deltas_as_numpy_arrays(
                     points=inbetween_points_list_npy_array,
                     components=inbetween_components_list_npy_array,
                 )
-                inb_dict[port_index] = "{}.npz".format(file_name_)
+                inb_deltas_dict["target_points"] = "{}.npz".format(file_name_)
+                inb_deltas_dict["target_components"] = "{}.npz".format(
+                    file_name_
+                )
     return blendshape_data_list_temp
 
 
@@ -969,11 +1067,11 @@ def save_blendshape_data(
     if not os.path.exists(package_dir):
         os.mkdir(package_dir)
     cmds.blendShape(blendshape_node, edit=True, pr=prune)
-    data = dict()
+    bshp_data = get_blendshape_data(blendshape_node, False)
     poly_vertex_id_npy_name = "{}_poly_vertex_id".format(file_prefix)
     verts_pos_npy_name = "{}_verts_ws_positions".format(file_prefix)
     base_obj = get_base_objects(blendshape_node)[0]
-    mesh_data_dict = mesh_utils.get_mesh_data(base_obj)
+    mesh_data_dict = bshp_data.get("mesh_data")
     poly_vertex_id_array = numpy.array(
         mesh_data_dict.get("poly_vertex_id_list"), dtype=object
     )
@@ -984,34 +1082,198 @@ def save_blendshape_data(
         mesh_data_dict.get("verts_ws_pos_list"), dtype=object
     )
     mesh_data_dict["verts_ws_pos_list"] = "{}.npy".format(verts_pos_npy_name)
-    data["blendshape_node_info"] = get_blendshape_node_infos(blendshape_node)
-    data["mesh_data"] = mesh_data_dict
-    data["weights_connections_data"] = get_weight_connections_data(
-        blendshape_node
-    )
     poly_vertex_id_npy_dir = os.path.normpath(
         "{}/{}".format(package_dir, poly_vertex_id_npy_name)
     )
     verts_pos_npy_dir = os.path.normpath(
         "{}/{}".format(package_dir, verts_pos_npy_name)
     )
-    base_obj_export_name = "{}_base_obj".format(file_prefix)
-    data["base_obj_export"] = "{}.obj".format(base_obj_export_name)
-    base_obj_mesh_export_dir = os.path.normpath("{}/{}".format(package_dir,
-                                                               base_obj_export_name))
+    base_obj_export_name = "{}_base_geo".format(file_prefix)
+    bshp_data["base_obj_export"] = "{}.obj".format(base_obj_export_name)
+    base_obj_export_dir = os.path.normpath(
+        "{}/{}".format(package_dir, base_obj_export_name)
+    )
+    base_obj_duplicate_m_obj = base_obj.duplicate()
+    mfn_transform = OpenMaya.MFnTransform(base_obj_duplicate_m_obj)
+    mfn_transform.setName(base_obj_export_name)
+    cmds.select(base_obj_export_name)
+    pymel.core.exportSelected(
+        base_obj_export_dir,
+        constructionHistory=False,
+        force=True,
+        channels=False,
+        constraints=False,
+        expressions=False,
+        shader=False,
+        preserveReferences=False,
+        type="mayaBinary",
+    )
+    cmds.delete(base_obj_export_name)
     numpy.save(poly_vertex_id_npy_dir, poly_vertex_id_array)
     numpy.save(verts_pos_npy_dir, vertex_ws_pos_array)
     if not as_shp_file:
-        data["target_deltas"] = save_deltas_as_numpy_arrays(
+        bshp_data["target_deltas"] = save_deltas_as_numpy_arrays(
             blendshape_node, package_dir, file_prefix
         )
     else:
-        data["target_deltas"] = os.path.basename(
+        bshp_data["target_deltas"] = os.path.basename(
             save_deltas_as_shp_file(blendshape_node, package_dir, file_prefix)
         )
     json_file_dir = os.path.normpath(
         "{}/{}.json".format(package_dir, file_prefix)
     )
     with open(json_file_dir, "w") as json_file:
-        json.dump(data, json_file, sort_keys=True, indent=4)
+        json.dump(bshp_data, json_file, sort_keys=True, indent=4)
     _LOGGER.info("Blendshape data saved to: {}".format(package_dir))
+
+
+def build_blendshape_setup(
+    target, blendshape_data, blendshape_name=False, OM_deltas=True
+):
+    if not blendshape_name:
+        blendshape_name = "{}_new".format(
+            blendshape_data.get("blendshape_node_info").get("name")
+        )
+    target_names_list = [
+        target_dict.get("target_name")
+        for target_dict in blendshape_data.get("target_deltas")
+    ]
+    inbetween_list = [
+        target_dict.get("inbetween_deltas")
+        for target_dict in blendshape_data.get("target_deltas")
+    ]
+    create_blendshape_node(
+        target,
+        blendshape_name,
+        blendshape_data.get("blendshape_node_info").get("origin"),
+        blendshape_data.get("blendshape_node_info").get("history_location"),
+        target_names_list,
+        inbetween_list,
+        blendshape_data.get("blendshape_node_info").get("topologyCheck"),
+    )
+    for index, target_dict in enumerate(blendshape_data.get("target_deltas")):
+        # First we set the target deltas.
+        if OM_deltas:
+            OM_set_blendshape_deltas_by_index(
+                blendshape_name,
+                index,
+                (
+                    target_dict.get("target_deltas").get("target_points"),
+                    target_dict.get("target_deltas").get("target_components"),
+                ),
+            )
+        else:
+            set_blendshape_deltas_by_index(
+                blendshape_name,
+                index,
+                (
+                    target_dict.get("target_deltas").get("target_points"),
+                    target_dict.get("target_deltas").get("target_components"),
+                ),
+            )
+        # Second the inbetween deltas
+        inbetween_deltas = target_dict.get("inbetween_deltas")
+        for inbetween_dict in inbetween_deltas:
+            items = list(inbetween_dict.items())
+            for item in items:
+                if OM_deltas:
+                    OM_set_blendshape_deltas_by_index(
+                        blendshape_name,
+                        index,
+                        (
+                            item[1].get("target_points"),
+                            item[1].get("target_components"),
+                        ),
+                        item[0],
+                    )
+                else:
+                    set_blendshape_deltas_by_index(
+                        blendshape_name,
+                        index,
+                        (
+                            item[1].get("target_points"),
+                            item[1].get("target_components"),
+                        ),
+                        item[0],
+                    )
+
+
+def transfer_blendshape_data(source, target, valiade_meshes=True):
+    if valiade_meshes:
+        mesh_data_dict = mesh_utils.check_mesh_data(source, target)
+        if not mesh_data_dict.get("vertex_count"):
+            raise Exception(
+                "The vertex count is not equal. New blendshape would "
+                "not work probably. Abort transfer."
+            )
+        if not mesh_data_dict.get("poly_count"):
+            raise Exception(
+                "The poly count is not equal. New blendshape would "
+                "not work probably. Abort transfer."
+            )
+        if not mesh_data_dict.get("poly_vertex_id_list"):
+            raise Exception(
+                "The vertex IDs not equal. New blendshape would "
+                "not work probably. Abort transfer."
+            )
+        if not mesh_data_dict.get("verts_ws_pos_list"):
+            raise Exception(
+                "The world position of some vertices are different. "
+                "Blendshape targets would have wrong results. Abort "
+                "Transfer"
+            )
+    source_blendshape_nd_name = get_blendshape_nodes(source)[0]
+    source_blendshape_data = get_blendshape_data(
+        source_blendshape_nd_name, mesh_data=False
+    )
+    build_blendshape_setup(target, source_blendshape_data)
+
+
+def import_blendshape_data(directory):
+    normalized_dir = os.path.normpath(directory)
+    json_data_file = glob.glob(os.path.join(normalized_dir, r"*.json"))
+    if json_data_file:
+        with open(json_data_file[0], "r") as json_file:
+            blendshape_data_dict = json.load(json_file)
+    else:
+        raise ImportError(
+            "No blendshape data file exist in {}".format(normalized_dir)
+        )
+    mesh_data_dict = mesh_utils.check_mesh_data_from_json(json_data_file[0])
+    if not mesh_data_dict.get("vertex_count"):
+        raise Exception(
+            "The vertex count is not equal. New blendshape would "
+            "not work probably. Abort transfer."
+        )
+    if not mesh_data_dict.get("poly_count"):
+        raise Exception(
+            "The poly count is not equal. New blendshape would "
+            "not work probably. Abort transfer."
+        )
+    if not mesh_data_dict.get("poly_vertex_id_list"):
+        raise Exception(
+            "The vertex IDs not equal. New blendshape would "
+            "not work probably. Abort transfer."
+        )
+    if not mesh_data_dict.get("verts_ws_pos_list"):
+        raise Exception(
+            "The world position of some vertices are different. "
+            "Blendshape targets would have wrong results. Abort "
+            "Transfer"
+        )
+    target_deltas_dir = os.path.normpath(
+        os.path.join(normalized_dir, "targets_deltas")
+    )
+    if not os.path.exists(target_deltas_dir):
+        raise OSError("Directory not exist: {}".format(target_deltas_dir))
+    for delta_data_dict in blendshape_data_dict.get("target_deltas"):
+        npy_file = os.path.normpath(
+            os.path.join(
+                target_deltas_dir, delta_data_dict.get("target_deltas")
+            )
+        )
+        np_data = numpy.load(npy_file, allow_pickle=True)
+        target_points = np_data["points"].tolist()
+        target_components = np_data["components"].tolist()
+        np_data.close()
+

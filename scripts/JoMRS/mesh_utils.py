@@ -207,14 +207,14 @@ def check_mesh_data_from_json(
         data_dir, mesh_data_dict.get("verts_ws_pos_list")
     )
     base_obj = mesh_data_dict.get("mesh_shape")
-    poly_vertex_id_np_array = numpy.load(
+    poly_vertex_np_data = numpy.load(
         poly_vertex_id_list_file, allow_pickle=True
     )
-    verts_ws_pos_np_array = numpy.load(
+    verts_ws_pos_np_data = numpy.load(
         verts_ws_pos_list_file, allow_pickle=True
     )
-    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_id_np_array.tolist()
-    mesh_data_dict["verts_ws_pos_list"] = verts_ws_pos_np_array.tolist()
+    mesh_data_dict["poly_vertex_id_list"] = poly_vertex_np_data.tolist()
+    mesh_data_dict["verts_ws_pos_list"] = verts_ws_pos_np_data.tolist()
     if not pymel.core.objExists(base_obj):
         _LOGGER.error("{} not exist. Abort mesh data check.".format(base_obj))
         return False
@@ -278,6 +278,12 @@ def check_mesh_data(
         }
 
     """
+    source_mesh = pymel.core.PyNode(source_mesh)
+    target_mesh = pymel.core.PyNode(target_mesh)
+    if source_mesh.nodeType() == "transform":
+        source_mesh = source_mesh.getShape().name(long=None)
+    if target_mesh.nodeType() == "transform":
+        target_mesh = target_mesh.getShape()
     source_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(source_mesh))
     target_mfn_mesh = OpenMaya.MFnMesh(openmaya_utils.get_m_object(target_mesh))
     mesh_data_dict_0 = get_mesh_data(source_mfn_mesh)
