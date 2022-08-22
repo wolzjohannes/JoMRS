@@ -270,8 +270,8 @@ def get_base_objects(blendshape_node):
         blendshape_node(str): Blendshape node name.
 
     Return:
-        Tuple: OpenMaya.MFnMesh objects
-.
+        Tuple: OpenMaya.MFnMesh objects.
+
     """
     if not isinstance(blendshape_node, pymel.core.PyNode):
         bshp_node = pymel.core.PyNode(blendshape_node)
@@ -803,7 +803,7 @@ def _get_input_target_array_plug_count(blendshape_node):
 
 
 def get_targets_and_inbetweens_deltas_from_blendshape(
-    blendshape_node, as_MObjects
+    blendshape_node, as_MObjects=True
 ):
     """
     Get all deltas of the all inbetweens and targets from given blendshape node.
@@ -813,7 +813,7 @@ def get_targets_and_inbetweens_deltas_from_blendshape(
         as_MObjects(bool): Get the targets and inbetween deltas as
                            OpenMaya.MObject. This is really fast if you stay
                            in the maya session. And do not use the data for
-                           an export.
+                           an export. Default is True
 
     Return:
           List: Filled with a multidimensional dict for each target.
@@ -1260,9 +1260,9 @@ def build_blendshape_setup(
                     )
 
 
-def _valiade_meshes(source_mesh=None, target_mesh=None, json_file_dir=False):
+def _validate_meshes(source_mesh=None, target_mesh=None, json_file_dir=False):
     """
-    Compare two meshes and valiade it. You can do it with given source and
+    Compare two meshes and validate it. You can do it with given source and
     target mesh. Or from a json_file.
 
     Args:
@@ -1317,19 +1317,19 @@ def _valiade_meshes(source_mesh=None, target_mesh=None, json_file_dir=False):
     return mesh_data_dict
 
 
-def transfer_blendshape_setup(source, target, valiade_meshes=True):
+def transfer_blendshape_setup(source, target, validate_meshes=True):
     """
     Transfer a blendshape setup from source to target.
 
     Args:
-       source_mesh(str): The source mesh shape node.
-        target_mesh(str): The target mesh shape node.
-        valiade_meshes(bool): Enable/Disable mesh validation before transfer.
+        source(str): The source mesh shape node.
+        target(str): The target mesh shape node.
+        validate_meshes(bool): Enable/Disable mesh validation before transfer.
                               This makes sure that your transfer result is
                               not problematic. Default is True.
     """
-    if valiade_meshes:
-        _valiade_meshes(source, target)
+    if validate_meshes:
+        _validate_meshes(source, target)
     source_blendshape_nd_name = get_blendshape_nodes(source)[0]
     source_blendshape_data = get_blendshape_data(
         source_blendshape_nd_name, mesh_data=False
@@ -1340,13 +1340,13 @@ def transfer_blendshape_setup(source, target, valiade_meshes=True):
     )
 
 
-def import_blendshape_setup(directory, valiade_meshes=True):
+def import_blendshape_setup(directory, validate_meshes=True):
     """
     Import blendshape setup from given directory.
 
     Args:
         directory(str): Setup directory.
-        valiade_meshes(bool): Enable/Disable mesh validation before import.
+        validate_meshes(bool): Enable/Disable mesh validation before import.
                               This makes sure that your import result is
                               not problematic. Default is True.
 
@@ -1360,8 +1360,8 @@ def import_blendshape_setup(directory, valiade_meshes=True):
         raise ImportError(
             "No blendshape data file exist in {}".format(normalized_dir)
         )
-    if valiade_meshes:
-        _valiade_meshes(json_file_dir=json_data_file[0])
+    if validate_meshes:
+        _validate_meshes(json_file_dir=json_data_file[0])
     target_deltas_dir = os.path.normpath(
         os.path.join(normalized_dir, "targets_deltas")
     )
