@@ -19,10 +19,59 @@
 # SOFTWARE.
 
 # Author:     Johannes Wolz / Rigging TD
-# Date:       2022 / 08 / 15
+# Date:       2022 / 08 / 22
 
 """
-Util module for blendShape data management
+Util module for blendShape data management.
+With the utils functions you can mainly export and import whole blendShape
+setups. But it contains even functions to edit and create blendShape nodes and
+targets.
+The export data dict is called 'blendshape_data_dict'. This will be reused a
+lot of times in a lot of functions and looks like this:
+
+{
+    "base_obj_export": "blendShape1_base_geo.obj",
+    "blendshape_node_info": {
+        "history_location": 0,
+        "name": "blendShape1",
+        "origin": 0,
+        "topologyCheck": true
+    },
+    "mesh_data": {
+        "mesh_shape": "pSphere1Shape",
+        "num_polys": 1000000,
+        "num_vertices": 999002,
+        "poly_vertex_id_list": "blendShape1_poly_vertex_id.npy",
+        "verts_ws_pos_list": "blendShape1_verts_ws_positions.npy"
+    },
+    "target_deltas": [
+        {
+            "inbetween_deltas": [
+                {
+                    "5542": {
+                        "name": "pSphere2_0.542",
+                        "target_components":
+                        "blendShape1_inbetween_deltas_0_5542.npz",
+                        "target_points":
+                        "blendShape1_inbetween_deltas_0_5542.npz",
+                        "weight": 0.542
+                    }
+                }
+            ],
+            "target_deltas": "blendShape1_deltas_0.npz",
+            "target_index": 0,
+            "target_name": "pSphere2"
+        },
+        {
+            "inbetween_deltas": [],
+            "target_deltas": "blendShape1_deltas_1.npz",
+            "target_index": 1,
+            "target_name": "pSphere3"
+        }
+    ],
+    "weights_connections_data": []
+}
+
 """
 
 # Import python standart import
@@ -43,6 +92,7 @@ from maya import OpenMayaAnim
 import decorators
 import openmaya_utils
 import mesh_utils
+from exceptions import MeshError
 
 importlib.reload(openmaya_utils)
 importlib.reload(mesh_utils)
@@ -58,7 +108,7 @@ DECORATORS.debug = True
 DECORATORS.logger = _LOGGER
 
 
-BLENDSHAPE_INFO_DICT = {
+_BLENDSHAPE_INFO_DICT = {
     "origin": [
         (OpenMayaAnim.MFnBlendShapeDeformer.kLocalOrigin, {"origin": "local"}),
         (OpenMayaAnim.MFnBlendShapeDeformer.kWorldOrigin, {"origin": "world"}),
@@ -384,15 +434,15 @@ def create_blendshape_node(
     Create a new blendshape node.
 
     Args:
-        geo_transform(str, pymel.core.PyNode()): The tansform node of the
+        geo_transform(str, pymel.core.PyNode()): The transform node of the
                                                  geo for the blendshape node
         name(str): Name of the blendshape node. If None will take maya
                    default naming. Default is None.
-        origin_enum(int): Enum index in BLENDSHAPE_INFO_DICT["origin"] for
+        origin_enum(int): Enum index in _BLENDSHAPE_INFO_DICT["origin"] for
                           the spaces of the deformation origin. Default is
                           kLocalOrigin.
         history_location_enum(int): Enum index in
-                                    BLENDSHAPE_INFO_DICT["historyLocation"]
+                                    _BLENDSHAPE_INFO_DICT["historyLocation"]
                                     for the place in the deformation order of
                                     the mesh.
                                     Default is kNormal("automatic").
@@ -423,8 +473,8 @@ def create_blendshape_node(
     bshp_fn = OpenMayaAnim.MFnBlendShapeDeformer()
     bshp_fn.create(
         mesh_shape_m_obj_array,
-        BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][0],
-        BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][0],
+        _BLENDSHAPE_INFO_DICT.get("origin")[origin_enum][0],
+        _BLENDSHAPE_INFO_DICT.get("historyLocation")[history_location_enum][0],
     )
     if name:
         bshp_fn.setName(name)
@@ -1034,7 +1084,7 @@ def save_deltas_as_shp_file(blendshape_node, save_directory, file_prefix=None):
     return shp_file_path
 
 
-def save_blendshape_data(
+def save_blendshape_setup(
     blendshape_node,
     save_directory,
     file_prefix=None,
@@ -1130,6 +1180,18 @@ def save_blendshape_data(
 def build_blendshape_setup(
     target, blendshape_data, blendshape_name=False, OM_deltas=True
 ):
+    """
+    Build the blendshape setup for given target mesh.
+
+    Args:
+        target(str, pymel.core.PyNode()): The transform node of the geo for
+                                          the blendshape node.
+        blendshape_data(dict): The blendshape data dict for the build.
+        blendshape_name(str): The blendshape node name. If False will take
+                              name from blendshape_data. Default is False.
+        OM_deltas(bool): Set the target deltas with OpenMaya.MObject.
+
+    """
     if not blendshape_name:
         blendshape_name = "{}_new".format(
             blendshape_data.get("blendshape_node_info").get("name")
@@ -1198,38 +1260,97 @@ def build_blendshape_setup(
                     )
 
 
-def transfer_blendshape_data(source, target, valiade_meshes=True):
+def _valiade_meshes(source_mesh=None, target_mesh=None, json_file_dir=False):
+    """
+    Compare two meshes and valiade it. You can do it with given source and
+    target mesh. Or from a json_file.
+
+    Args:
+        source_mesh(str): The source mesh shape node.
+        target_mesh(str): The target mesh shape node.
+        json_file_path(str): Path to the saved json file.
+
+    Return:
+        Dict: {
+        "mesh_shape": string
+        "num_vertices": integer,
+        "num_polys": integer,
+        "poly_vertex_id_list": List with each vertex ID of
+                               each vertex ordered by all polys,
+        "verts_ws_pos_list": List of all worldspace postions
+                             of each vertex of the mesh.
+        }
+
+    """
+    if not json_file_dir:
+        try:
+            mesh_data_dict = mesh_utils.check_mesh_data(
+                source_mesh, target_mesh
+            )
+        except:
+            raise AttributeError(
+                "json_file flag is False. You need to give the "
+                "source_mesh and target_mesh flag."
+            )
+    else:
+        mesh_data_dict = mesh_utils.check_mesh_data_from_json(json_file_dir)
+    if not mesh_data_dict.get("vertex_count"):
+        raise MeshError(
+            "The vertex count is not equal. New blendshape would "
+            "not work probably. Exit execution."
+        )
+    if not mesh_data_dict.get("poly_count"):
+        raise MeshError(
+            "The poly count is not equal. New blendshape would "
+            "not work probably. Exit execution."
+        )
+    if not mesh_data_dict.get("poly_vertex_id_list"):
+        raise MeshError(
+            "The vertex IDs not equal. New blendshape would "
+            "not work probably. Exit execution."
+        )
+    if not mesh_data_dict.get("verts_ws_pos_list"):
+        raise MeshError(
+            "The world position of some vertices are different. "
+            "Blendshape targets would have wrong results. Exit execution."
+        )
+    return mesh_data_dict
+
+
+def transfer_blendshape_setup(source, target, valiade_meshes=True):
+    """
+    Transfer a blendshape setup from source to target.
+
+    Args:
+       source_mesh(str): The source mesh shape node.
+        target_mesh(str): The target mesh shape node.
+        valiade_meshes(bool): Enable/Disable mesh validation before transfer.
+                              This makes sure that your transfer result is
+                              not problematic. Default is True.
+    """
     if valiade_meshes:
-        mesh_data_dict = mesh_utils.check_mesh_data(source, target)
-        if not mesh_data_dict.get("vertex_count"):
-            raise Exception(
-                "The vertex count is not equal. New blendshape would "
-                "not work probably. Abort transfer."
-            )
-        if not mesh_data_dict.get("poly_count"):
-            raise Exception(
-                "The poly count is not equal. New blendshape would "
-                "not work probably. Abort transfer."
-            )
-        if not mesh_data_dict.get("poly_vertex_id_list"):
-            raise Exception(
-                "The vertex IDs not equal. New blendshape would "
-                "not work probably. Abort transfer."
-            )
-        if not mesh_data_dict.get("verts_ws_pos_list"):
-            raise Exception(
-                "The world position of some vertices are different. "
-                "Blendshape targets would have wrong results. Abort "
-                "Transfer"
-            )
+        _valiade_meshes(source, target)
     source_blendshape_nd_name = get_blendshape_nodes(source)[0]
     source_blendshape_data = get_blendshape_data(
         source_blendshape_nd_name, mesh_data=False
     )
     build_blendshape_setup(target, source_blendshape_data)
+    _LOGGER.info(
+        "Blendshape setup transferred from {} to {}".format(source, target)
+    )
 
 
-def import_blendshape_data(directory):
+def import_blendshape_setup(directory, valiade_meshes=True):
+    """
+    Import blendshape setup from given directory.
+
+    Args:
+        directory(str): Setup directory.
+        valiade_meshes(bool): Enable/Disable mesh validation before import.
+                              This makes sure that your import result is
+                              not problematic. Default is True.
+
+    """
     normalized_dir = os.path.normpath(directory)
     json_data_file = glob.glob(os.path.join(normalized_dir, r"*.json"))
     if json_data_file:
@@ -1239,41 +1360,84 @@ def import_blendshape_data(directory):
         raise ImportError(
             "No blendshape data file exist in {}".format(normalized_dir)
         )
-    mesh_data_dict = mesh_utils.check_mesh_data_from_json(json_data_file[0])
-    if not mesh_data_dict.get("vertex_count"):
-        raise Exception(
-            "The vertex count is not equal. New blendshape would "
-            "not work probably. Abort transfer."
-        )
-    if not mesh_data_dict.get("poly_count"):
-        raise Exception(
-            "The poly count is not equal. New blendshape would "
-            "not work probably. Abort transfer."
-        )
-    if not mesh_data_dict.get("poly_vertex_id_list"):
-        raise Exception(
-            "The vertex IDs not equal. New blendshape would "
-            "not work probably. Abort transfer."
-        )
-    if not mesh_data_dict.get("verts_ws_pos_list"):
-        raise Exception(
-            "The world position of some vertices are different. "
-            "Blendshape targets would have wrong results. Abort "
-            "Transfer"
-        )
+    if valiade_meshes:
+        _valiade_meshes(json_file_dir=json_data_file[0])
     target_deltas_dir = os.path.normpath(
         os.path.join(normalized_dir, "targets_deltas")
     )
+    inbetweens_deltas_dir = os.path.normpath(
+        os.path.join(normalized_dir, "inbetween_deltas")
+    )
     if not os.path.exists(target_deltas_dir):
         raise OSError("Directory not exist: {}".format(target_deltas_dir))
-    for delta_data_dict in blendshape_data_dict.get("target_deltas"):
-        npy_file = os.path.normpath(
-            os.path.join(
-                target_deltas_dir, delta_data_dict.get("target_deltas")
+    if isinstance(blendshape_data_dict.get("target_deltas"), list):
+        for delta_data_dict in blendshape_data_dict.get("target_deltas"):
+            npy_file = os.path.normpath(
+                os.path.join(
+                    target_deltas_dir, delta_data_dict.get("target_deltas")
+                )
+            )
+            np_data = numpy.load(npy_file, allow_pickle=True)
+            target_points = np_data["points"].tolist()
+            target_components = np_data["components"].tolist()
+            np_data.close()
+            delta_data_dict["target_deltas"] = {
+                "target_points": target_points,
+                "target_components": target_components,
+            }
+            if delta_data_dict.get("inbetween_deltas"):
+                for inbetween_data_dict in delta_data_dict.get(
+                    "inbetween_deltas"
+                ):
+                    items = list(inbetween_data_dict.items())
+                    for item in items:
+                        inb_npy_file = os.path.normpath(
+                            os.path.join(
+                                inbetweens_deltas_dir,
+                                item[1].get("target_points"),
+                            )
+                        )
+                        inb_np_data = numpy.load(
+                            inb_npy_file, allow_pickle=True
+                        )
+                        item[1]["target_points"] = inb_np_data[
+                            "points"
+                        ].tolist()
+                        item[1]["target_components"] = inb_np_data[
+                            "components"
+                        ].tolist()
+                        inb_np_data.close()
+        target_shape = pymel.core.PyNode(
+            blendshape_data_dict.get("mesh_data").get("mesh_shape")
+        )
+        build_blendshape_setup(
+            target_shape.getTransform().name(),
+            blendshape_data_dict,
+            blendshape_data_dict.get("blendshape_node_info").get("name"),
+            False,
+        )
+        _LOGGER.info(
+            "Blendshape setup build with numpy arrays from {}.".format(
+                normalized_dir
             )
         )
-        np_data = numpy.load(npy_file, allow_pickle=True)
-        target_points = np_data["points"].tolist()
-        target_components = np_data["components"].tolist()
-        np_data.close()
-
+    if isinstance(blendshape_data_dict.get("target_deltas"), str):
+        file_extension = os.path.splitext(
+            blendshape_data_dict.get("target_deltas")
+        )
+        if file_extension != ".shp":
+            raise TypeError(
+                "Given file type:{}. Is not a '.shp' file. Will "
+                "abort import.".format(file_extension)
+            )
+        shp_file = os.path.normpath(
+            os.path.join(
+                normalized_dir, blendshape_data_dict.get("target_deltas")
+            )
+        )
+        cmds.blendShape(ip=shp_file)
+        _LOGGER.info(
+            "Blendshape setup build with '.shp' file from {}.".format(
+                normalized_dir
+            )
+        )

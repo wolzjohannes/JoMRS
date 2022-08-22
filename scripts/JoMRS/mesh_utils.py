@@ -66,7 +66,7 @@ def get_mesh_data(mesh_shape):
         "num_polys": integer,
         "poly_vertex_id_list": List with each vertex ID of
                                each vertex ordered by all polys,
-        "verts_ws_pos_list": List of all worldspace postions
+        "verts_ws_pos_list": List of all worldspace positions
                              of each vertex of the mesh.
         }
 
