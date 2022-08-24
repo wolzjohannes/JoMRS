@@ -72,6 +72,27 @@ lot of times in a lot of functions and looks like this:
     "weights_connections_data": []
 }
 
+The blendshape export directory looks like this:
+
+blendshape1(source blendshape node name):
+    - blendshape1.json (Inherits all data about the blendshape, the mesh and
+                        file names)
+    - blendShape1_base_geo.mb (Export of the base obj geo for a setup transfer)
+    - blendShape1_poly_vertex_id.npy (Inherits the poly vertex id array)
+    - blendShape1_verts_ws_positions.npy (Inherits the vertices world
+                                          position array)
+    - inbetween_deltas:
+        - blendShape1_inbetween_deltas_0_5542.npz (Delta points and component arrays)
+    - target_deltas:
+        - blendShape1_deltas_0.npz (Delta points and component arrays)
+
+
+NOT SUPPORTED YET:
+- Weight driver connections.
+- Inbetween names if you rebuild the blendshape node.
+- Automatic transfer if the meshes are different at import or transfer
+- Find inbetween plug by port index.
+
 """
 
 # Import python standart import
@@ -79,7 +100,6 @@ import logging
 import os
 import json
 import numpy
-import importlib
 import glob
 
 # Import Maya specific modules
@@ -93,10 +113,6 @@ import decorators
 import openmaya_utils
 import mesh_utils
 import wrap_utils
-
-importlib.reload(openmaya_utils)
-importlib.reload(mesh_utils)
-importlib.reload(decorators)
 
 ##########################################################
 # GLOBALS
@@ -144,6 +160,7 @@ def get_blendshape_node_infos(blendshape_node):
         "origin": blendshape_fn.origin(),
         "topologCheck": bool
         }
+
     """
     blendshape_fn = get_blendshape_fn(blendshape_node)
     top_check_m_plug = blendshape_fn.findPlug("topologyCheck")
@@ -315,6 +332,20 @@ def get_weight_from_inbetween_plug_index(plug_index):
     return float("0.{}".format(str(plug_index)[1:]))
 
 
+def get_inbetween_plug_index_from_weight(weight):
+    """
+    Get the inbetween plug index.
+
+    Args:
+        weight(float): The inbetween weight value.
+
+    Return:
+        Integer: The plug index.
+
+    """
+    return int(str(weight.replace("0.", "5")))
+
+
 def target_index_exists(blendshape_node, index):
     """
     Check if given target index exist.
@@ -397,8 +428,7 @@ def rename_weight_name_from_index(blendshape_node, index, new_name):
         new_name = "{}{}".format(new_name, len(similar_attributes))
     cmds.aliasAttr(new_name, attribute_from_index)
 
-# To do:
-# Inbetweens get no name yet. Have to go over the inbetween info name port.
+
 def add_target(
     blendshape_node,
     index=None,
@@ -451,9 +481,7 @@ def add_target(
             base_m_object, input_target_array_plug_count, weight
         )
         rename_weight_name_from_index(
-            blendshape_node,
-            input_target_array_plug_count,
-            target,
+            blendshape_node, input_target_array_plug_count, target
         )
         return True
     blendshape_fn.addTarget(
@@ -510,8 +538,6 @@ def create_blendshape_node(
                                order of the inbetweens belonging.
         topologyCheck(bool): Enable/Disable the topology check of the
                              blendshape node.
-
-
     """
     if isinstance(geo_transform, str):
         geo_transform = pymel.core.PyNode(geo_transform)
@@ -565,6 +591,7 @@ def OM_get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
                         This is because the blendshape node supports inbetweens
                         and minus weight values.
                         Default is 6000.
+
     Return:
         Tuple: (points position as OpenMaya.MObject, affected components as
                 OpenMaya.MObject)
@@ -605,6 +632,7 @@ def get_blendshape_deltas_from_index(blendshape_node, index, bshp_port=6000):
                         This is because the blendshape node supports inbetweens
                         and minus weight values.
                         Default is 6000.
+
     Return:
         Tuple: (points positions as array, affected components as array)
 
@@ -641,7 +669,6 @@ def OM_set_blendshape_deltas_by_index(
                         This is because the blendshape node supports inbetweens
                         and minus weight values.
                         Default is 6000.
-
     """
     if index not in get_weight_indexes(blendshape_node):
         raise AttributeError("Given index not exist. Will abort.")
@@ -688,7 +715,6 @@ def set_blendshape_deltas_by_index(
                         This is because the blendshape node supports inbetweens
                         and minus weight values.
                         Default is 6000.
-
     """
     pt = deltas_tuple[0]
     ct = deltas_tuple[1]
@@ -1523,18 +1549,34 @@ def import_blendshape_setup(directory, validate_meshes=True):
                 )
             )
 
-@DECORATORS.undo
+
 def transfer_blendshape_deltas(source_mesh, target_mesh, result_smoothing=2):
+    """
+    Transfer the blendshape deltas from source mesh to target mesh.
+    This is based on a wrap deformer and deltmush.
+    This command is not undoable.
+
+    Args:
+        source_mesh(str): Name of the source mesh shape node.
+        target_mesh(str): Name of the target mesh shape node.
+        result_smoothing(int): This will smooth aout the results a bit. Is
+                               very interesting if the target mesh has a
+                               higher subdiv as the source mesh.
+                               Default is 2.
+    """
     target_shapes_list = []
     inbetween_shapes_list = []
     source_trs = pymel.core.PyNode(source_mesh).getTransform()
     target_trs = pymel.core.PyNode(target_mesh).getTransform()
     shapes_extract_target = target_trs.duplicate(n="evaluation_mesh")[0]
-    source_blendshape_node = get_blendshape_nodes(source_mesh)[0]
+    source_blendshape_fn = get_blendshape_nodes(source_mesh, as_fn=True)[0]
     source_blendshape_info_data = get_blendshape_node_infos(
-        source_blendshape_node
+        source_blendshape_fn.name()
     )
-    source_weight_indeces = get_weight_indexes(source_blendshape_node)
+    source_blendshape_fn.setName(
+        "{}_old".format(source_blendshape_info_data.get("name"))
+    )
+    source_weight_indeces = get_weight_indexes(source_blendshape_fn.name())
     wrap_deformer = wrap_utils.create_wrap_deformer(
         source_trs, shapes_extract_target
     )
@@ -1542,10 +1584,9 @@ def transfer_blendshape_deltas(source_mesh, target_mesh, result_smoothing=2):
     delta_mush.setGeometry(shapes_extract_target)
     extract_grp = pymel.core.createNode("transform", n="extracted_shapes_grp")
     for index in source_weight_indeces:
-        bshp_fn = get_blendshape_fn(source_blendshape_node)
-        bshp_fn.setWeight(index, 1.0)
+        source_blendshape_fn.setWeight(index, 1.0)
         weight_name = get_weight_name_from_index(
-            source_blendshape_node, index, True
+            source_blendshape_fn.name(), index, True
         )
         extracted_target_shape = shapes_extract_target.duplicate()[0]
         extracted_target_shape.setParent(extract_grp)
@@ -1554,9 +1595,9 @@ def transfer_blendshape_deltas(source_mesh, target_mesh, result_smoothing=2):
             weight_name
         )
         target_shapes_list.append(extracted_target_shape_nd.__apimobject__())
-        bshp_fn.setWeight(index, 0.0)
+        source_blendshape_fn.setWeight(index, 0.0)
         inbetween_plugs_list = get_inbetween_plugs(
-            source_blendshape_node, index
+            source_blendshape_fn.name(), index
         )
         temp_inb_list = []
         if inbetween_plugs_list:
@@ -1564,22 +1605,23 @@ def transfer_blendshape_deltas(source_mesh, target_mesh, result_smoothing=2):
                 port_index = list(inb_dict.keys())[0]
                 inb_name = inb_dict.get(port_index)
                 weight = get_weight_from_inbetween_plug_index(port_index)
-                bshp_fn.setWeight(index, weight)
+                source_blendshape_fn.setWeight(index, weight)
                 extract_name = "{}_{}_{}".format(weight_name, index, port_index)
                 extract_inb_target_shape = shapes_extract_target.duplicate()[0]
-                extract_inb_target_shape_nd = extract_inb_target_shape.getShape(
-
-                ).rename(inb_name)
+                extract_inb_target_shape_nd = extract_inb_target_shape.getShape().rename(
+                    inb_name
+                )
                 extract_inb_target_shape.setParent(extract_grp)
                 extract_inb_target_shape.rename(extract_name)
-                temp_inb_list.append({port_index:
+                temp_inb_list.append(
                     {
-                        "name": extract_inb_target_shape_nd.__apimobject__(),
-                        "weight": weight,
+                        port_index: {
+                            "name": extract_inb_target_shape_nd.__apimobject__(),
+                            "weight": weight,
+                        }
                     }
-                }
                 )
-                bshp_fn.setWeight(index, 0.0)
+                source_blendshape_fn.setWeight(index, 0.0)
         inbetween_shapes_list.append(temp_inb_list)
     create_blendshape_node(
         target_trs,
@@ -1590,5 +1632,11 @@ def transfer_blendshape_deltas(source_mesh, target_mesh, result_smoothing=2):
         inbetween_shapes_list,
         source_blendshape_info_data.get("topologCheck"),
     )
-    pymel.core.delete([wrap_deformer, delta_mush, shapes_extract_target])
-
+    pymel.core.delete(
+        [wrap_deformer, delta_mush, shapes_extract_target, extract_grp]
+    )
+    _LOGGER.info(
+        "Blendshape deltas transferred from {} to {}".format(
+            source_mesh, target_mesh
+        )
+    )
