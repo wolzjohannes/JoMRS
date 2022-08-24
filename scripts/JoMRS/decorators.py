@@ -83,3 +83,11 @@ class Decorators(object):
             return result
 
         return wrapper
+
+    def undo(self, func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            with pmc.UndoChunk():
+                result = func(*args, **kwargs)
+            return result
+        return wrapper
